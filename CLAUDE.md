@@ -21,11 +21,19 @@ PWA emballée par Capacitor, Fastify, PostgreSQL via Drizzle, contrats Zod
 versionnés via `ts-rest`, Supabase pour l'authentification et la base, Astro et
 Starlight pour le site public. Monorepo pnpm et Turborepo.
 
-**Avant toute décision technique, lire
-[`docs/architecture/2026-08-23-choix-de-stack.md`](docs/architecture/2026-08-23-choix-de-stack.md)** :
-il contient le découpage du monorepo et ses règles de dépendance, le modèle de
-temps, les frontières de modules, la posture de sécurité et la stratégie de
-test, avec les alternatives écartées et leurs motifs.
+**Deux documents à lire avant toute décision. Ils sont la mémoire du projet :**
+
+- [`docs/architecture/2026-08-23-choix-de-stack.md`](docs/architecture/2026-08-23-choix-de-stack.md)
+  — **décisions techniques**, figées : découpage du monorepo et règles de
+  dépendance, modèle de temps, frontières de modules, sécurité, stratégie de
+  test, versions épinglées. Avec les alternatives écartées et leurs motifs.
+- [`docs/design/conception-du-jeu.md`](docs/design/conception-du-jeu.md)
+  — **conception du jeu**, vivant : vocabulaire, archétypes de planètes, grille à
+  empreintes, mécaniques arrêtées, lignes rouges de monétisation, risques
+  identifiés, feuille de route des spécifications et questions ouvertes.
+
+Ne réinventez aucune décision qu'ils contiennent, et ne les contredisez pas sans
+les amender.
 
 ## Où écrire quoi
 
@@ -34,6 +42,8 @@ test, avec les alternatives écartées et leurs motifs.
 | Règle dont la violation doit bloquer une fusion | `.specify/memory/constitution.md` (via `/speckit-constitution`) |
 | Convention, commande, piège connu, repère de navigation | ce fichier |
 | Vision produit, personas, périmètre | `README.md` |
+| Mécanique de jeu, équilibrage, vocabulaire, feuille de route | `docs/design/conception-du-jeu.md` |
+| Décision technique structurante et son alternative écartée | `docs/architecture/AAAA-MM-JJ-<sujet>.md` |
 | Le quoi et le pourquoi d'une fonctionnalité | `specs/NNN-*/spec.md` (via `/speckit-specify`) |
 | Le comment technique, choix de stack, alternatives écartées | `specs/NNN-*/plan.md` (via `/speckit-plan`) |
 | Unités de travail exécutables | `specs/NNN-*/tasks.md` (via `/speckit-tasks`) |
@@ -94,12 +104,10 @@ Identifiants, code et messages techniques destinés aux logs en **anglais**.
 
 ## Décisions ouvertes
 
-- Principes produit du README dérivés des personas : à valider ou corriger
-  avant la première spécification.
-- Nom des ressources : « métal » est jugé trop sérieux, un registre plus loufoque
-  reste à trouver. Sans effet technique, les ressources étant des données.
-- Modélisation propriétaire / occupant d'une planète : deux notions distinctes,
-  à poser dès la première spécification.
-- Règles du marché libre : mécanique la plus risquée du projet, mérite sa propre
-  spécification avant le marché lui-même.
-- Fournisseur PaaS du conteneur applicatif : à trancher au premier déploiement.
+Elles sont tenues à jour dans les deux documents de référence, jamais ici — une
+liste dupliquée dérive :
+
+- **Questions de conception du jeu** : section « Questions ouvertes » de
+  [`docs/design/conception-du-jeu.md`](docs/design/conception-du-jeu.md).
+- **Questions techniques** : section « Ce qui reste à décider » de
+  [`docs/architecture/2026-08-23-choix-de-stack.md`](docs/architecture/2026-08-23-choix-de-stack.md).
