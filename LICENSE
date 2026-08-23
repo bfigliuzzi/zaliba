@@ -1,118 +1,79 @@
-Copyright (c) 2026 Benoît FIGLIUZZI. Tous droits réservés.
-Copyright (c) 2026 Benoît FIGLIUZZI. All rights reserved.
+Required Notice: Copyright 2026 Benoît FIGLIUZZI (https://github.com/bfigliuzzi/zaliba)
 
-================================================================================
-LICENCE PROPRIÉTAIRE — VERSION FRANÇAISE (fait foi)
-================================================================================
+# PolyForm Noncommercial License 1.0.0
 
-1. TITULARITÉ
+<https://polyformproject.org/licenses/noncommercial/1.0.0>
 
-Le présent projet, désigné « Zaliba » (ci-après le « Logiciel »), ainsi que son
-code source, sa documentation, ses spécifications et l'ensemble des éléments
-qu'il contient, sont la propriété exclusive de Benoît FIGLIUZZI (ci-après le
-« Titulaire »).
+## Acceptance
 
-2. ABSENCE DE LICENCE OUVERTE
+In order to get any license under these terms, you must agree to them as both strict obligations and conditions to all your licenses.
 
-Le Logiciel n'est pas un logiciel libre ni un logiciel open source. La mise à
-disposition publique de son code source, notamment via un dépôt d'hébergement
-accessible au public, a pour seule finalité la consultation. Elle ne constitue
-en aucun cas une renonciation aux droits du Titulaire, ni l'octroi d'une
-quelconque licence, expresse ou implicite.
+## Copyright License
 
-3. DROITS NON ACCORDÉS
+The licensor grants you a copyright license for the software to do everything you might do with the software that would otherwise infringe the licensor's copyright in it for any permitted purpose.  However, you may only distribute the software according to [Distribution License](#distribution-license) and make changes or new works based on the software according to [Changes and New Works License](#changes-and-new-works-license).
 
-Sauf autorisation écrite, préalable et expresse du Titulaire, il est interdit à
-toute personne physique ou morale autre que le Titulaire de :
+## Distribution License
 
-  a) reproduire, copier ou télécharger le Logiciel à d'autres fins que sa
-     simple consultation ;
-  b) exécuter, déployer ou héberger le Logiciel, en tout ou partie ;
-  c) modifier, adapter, traduire ou créer des œuvres dérivées du Logiciel ;
-  d) distribuer, publier, sous-licencier, prêter, louer ou céder le Logiciel ;
-  e) intégrer le Logiciel, en tout ou partie, dans un autre projet, produit,
-     service ou modèle, y compris à des fins d'entraînement de systèmes
-     d'apprentissage automatique ;
-  f) supprimer ou altérer les mentions de propriété et de droits d'auteur.
+The licensor grants you an additional copyright license to distribute copies of the software.  Your license to distribute covers distributing the software with changes and new works permitted by [Changes and New Works License](#changes-and-new-works-license).
 
-4. INTERDICTION D'EXPLOITATION COMMERCIALE
+## Notices
 
-Toute exploitation commerciale du Logiciel est réservée exclusivement au
-Titulaire. Est notamment interdite, à toute personne autre que le Titulaire,
-l'utilisation du Logiciel, en tout ou partie, directement ou indirectement, en
-vue d'un avantage commercial, d'une rémunération, de la fourniture d'un produit
-ou d'un service, ou de tout autre gain économique.
+You must ensure that anyone who gets a copy of any part of the software from you also gets a copy of these terms or the URL for them above, as well as copies of any plain-text lines beginning with `Required Notice:` that the licensor provided with the software.  For example:
 
-5. DROITS RÉSERVÉS AU TITULAIRE
+> Required Notice: Copyright Yoyodyne, Inc. (http://example.com)
 
-Le Titulaire conserve la faculté d'utiliser, d'exploiter et de commercialiser
-librement le Logiciel, sans restriction, ainsi que d'accorder à des tiers des
-licences aux conditions de son choix.
+## Changes and New Works License
 
-6. COMPOSANTS TIERS
+The licensor grants you an additional copyright license to make changes and new works based on the software for any permitted purpose.
 
-Le Logiciel intègre des composants qui ne sont pas la propriété du Titulaire et
-qui restent régis par les conditions fixées par leurs auteurs respectifs. Sont
-concernés, à la date de la présente licence, les répertoires « .specify/ » et
-« .claude/skills/ », issus de l'outillage Spec Kit. La présente licence ne
-s'applique pas à ces composants et ne saurait étendre ou restreindre les droits
-que leurs auteurs y attachent.
+## Patent License
 
-7. ABSENCE DE GARANTIE
+The licensor grants you a patent license for the software that covers patent claims the licensor can license, or becomes able to license, that you would infringe by using the software.
 
-LE LOGICIEL EST FOURNI « EN L'ÉTAT », SANS GARANTIE D'AUCUNE SORTE, EXPRESSE OU
-IMPLICITE, NOTAMMENT SANS GARANTIE DE QUALITÉ MARCHANDE, D'ADÉQUATION À UN
-USAGE PARTICULIER OU D'ABSENCE DE CONTREFAÇON. LE TITULAIRE NE SAURAIT ÊTRE
-TENU RESPONSABLE D'UN QUELCONQUE DOMMAGE, DIRECT OU INDIRECT, RÉSULTANT DE
-L'UTILISATION DU LOGICIEL OU DE L'IMPOSSIBILITÉ DE L'UTILISER.
+## Noncommercial Purposes
 
-8. DEMANDES D'AUTORISATION
+Any noncommercial purpose is a permitted purpose.
 
-Toute demande d'autorisation doit être adressée au Titulaire, à l'adresse
-benoit.figliuzzi@gmail.com.
+## Personal Uses
 
-================================================================================
-PROPRIETARY LICENSE — ENGLISH VERSION (courtesy translation)
-================================================================================
+Personal use for research, experiment, and testing for the benefit of public knowledge, personal study, private entertainment, hobby projects, amateur pursuits, or religious observance, without any anticipated commercial application, is use for a permitted purpose.
 
-1. OWNERSHIP. This project, "Zaliba" (the "Software"), including its source
-code, documentation and specifications, is the exclusive property of Benoît
-FIGLIUZZI (the "Owner").
+## Noncommercial Organizations
 
-2. NOT OPEN SOURCE. The Software is neither free nor open source software.
-Publishing its source code in a publicly accessible repository is for viewing
-purposes only and grants no licence, express or implied, and waives none of the
-Owner's rights.
+Use by any charitable organization, educational institution, public research organization, public safety or health organization, environmental protection organization, or government institution is use for a permitted purpose regardless of the source of funding or obligations resulting from the funding.
 
-3. RIGHTS NOT GRANTED. Except with the Owner's prior express written
-permission, no person or entity other than the Owner may: (a) reproduce or copy
-the Software other than for mere viewing; (b) run, deploy or host it, in whole
-or in part; (c) modify, adapt, translate or create derivative works of it;
-(d) distribute, publish, sublicense, lend, lease or assign it; (e) incorporate
-it, in whole or in part, into any other project, product, service or model,
-including for the purpose of training machine-learning systems; or (f) remove
-or alter proprietary or copyright notices.
+## Fair Use
 
-4. NO COMMERCIAL USE. Commercial exploitation of the Software is reserved
-exclusively to the Owner. Any use of the Software by any other person, in whole
-or in part, directly or indirectly, for commercial advantage, remuneration, the
-provision of a product or service, or any other economic gain, is prohibited.
+You may have "fair use" rights for the software under the law. These terms do not limit them.
 
-5. OWNER'S RESERVED RIGHTS. The Owner retains the unrestricted right to use,
-exploit and commercialise the Software, and to license it to third parties on
-any terms.
+## No Other Rights
 
-6. THIRD-PARTY COMPONENTS. The Software includes components not owned by the
-Owner, which remain governed by their respective authors' terms — as of this
-licence, the ".specify/" and ".claude/skills/" directories, originating from
-the Spec Kit tooling. This licence does not apply to those components.
+These terms do not allow you to sublicense or transfer any of your licenses to anyone else, or prevent the licensor from granting licenses to anyone else.  These terms do not imply any other licenses.
 
-7. NO WARRANTY. THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE WARRANTIES OF
-MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO
-EVENT SHALL THE OWNER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY
-ARISING FROM THE USE OF OR INABILITY TO USE THE SOFTWARE.
+## Patent Defense
 
-8. PERMISSION REQUESTS. Requests should be sent to benoit.figliuzzi@gmail.com.
+If you make any written claim that the software infringes or contributes to infringement of any patent, your patent license for the software granted under these terms ends immediately. If your company makes such a claim, your patent license ends immediately for work on behalf of your company.
 
-In case of divergence between the two versions, the French version prevails.
+## Violations
+
+The first time you are notified in writing that you have violated any of these terms, or done anything with the software not covered by your licenses, your licenses can nonetheless continue if you come into full compliance with these terms, and take practical steps to correct past violations, within 32 days of receiving notice.  Otherwise, all your licenses end immediately.
+
+## No Liability
+
+***As far as the law allows, the software comes as is, without any warranty or condition, and the licensor will not be liable to you for any damages arising out of these terms or the use or nature of the software, under any kind of legal claim.***
+
+## Definitions
+
+The **licensor** is the individual or entity offering these terms, and the **software** is the software the licensor makes available under these terms.
+
+**You** refers to the individual or entity agreeing to these terms.
+
+**Your company** is any legal entity, sole proprietorship, or other kind of organization that you work for, plus all organizations that have control over, are under the control of, or are under common control with that organization.  **Control** means ownership of substantially all the assets of an entity, or the power to direct its management and policies by vote, contract, or otherwise.  Control can be direct or indirect.
+
+**Your licenses** are all the licenses granted to you for the software under these terms.
+
+**Use** means anything you do with the software requiring one of your licenses.
+
+---
+
+See NOTICE.md for third-party components not covered by this license.
