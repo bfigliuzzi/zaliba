@@ -1,18 +1,24 @@
 <!--
 Sync Impact Report
-Version change: 1.0.0 → 1.1.0
-Type de bump: MINOR — résolution du TODO(TECH_STACK) par l'ajout d'une sous-section
-normative « Stack technique », et extension matérielle de la règle de revue pour
-la rendre applicable à un développement mené par une seule personne.
+Version change: 1.1.0 → 2.0.0
+Type de bump: MAJOR — suppression d'une exigence normative. La relecture par un
+tiers cesse d'être la règle, et le dispositif de substitution qui l'imitait en
+contexte solo — demande de fusion systématique et auto-relecture différée d'au
+moins quatre heures — est retiré. Un projet mené par une seule personne ne peut
+pas tenir une cérémonie conçue pour deux; une règle qui ne sera pas tenue est
+pire qu'une règle absente, parce qu'elle rend le manquement ordinaire.
 Principes: aucun ajout, aucune suppression, aucun renommage.
 Sections modifiées:
-  - Contraintes techniques et sécurité → ajout de la sous-section « Stack technique »
-    (remplace TODO(TECH_STACK), désormais résolu)
-  - Workflow de développement et portes de qualité → règle « Revue » étendue
-Artefacts impactés:
-  - docs/architecture/2026-08-23-choix-de-stack.md — raisonnement et alternatives
-    écartées ayant conduit à la stack consignée ici (créé le 2026-08-23)
-  - CLAUDE.md — guide runtime, créé le 2026-08-23; TODO(GUIDANCE_FILE) résolu
+  - Workflow de développement et portes de qualité → règle « Revue » réécrite
+Ce qui subsiste, et qui n'est pas négociable: la relecture avant fusion existe
+toujours, elle est celle de l'auteur, elle se conduit contre une liste de
+contrôle écrite énumérant les cinq principes, et les portes automatiques de CI
+en sont le second relecteur.
+Condition de retour en arrière: dès que le projet compte plus d'un contributeur,
+la relecture par un tiers redevient la règle, par amendement.
+Artefacts impactés: aucun. CLAUDE.md ne redit pas cette règle, le document de
+stack ne s'y adosse pas, et aucune tâche de specs/001-la-planete-mere ne la
+prend pour prérequis.
 TODO différés: aucun.
 -->
 
@@ -172,17 +178,15 @@ Deux invariants d'architecture prévalent sur toute commodité d'implémentation
   bloquantes, non consultatives.
 - **Couverture**: la couverture des modules de domaine MUST être mesurée et ne
   MUST pas régresser d'une fusion à l'autre.
-- **Revue**: chaque changement MUST être relu avant fusion. La revue vérifie
-  explicitement la conformité aux cinq principes et refuse tout code sans test
-  préalable au titre du principe III. Lorsqu'un relecteur distinct de l'auteur
-  est disponible, la relecture par ce tiers MUST être la règle. Lorsque le
-  projet est mené par une seule personne, elle MUST être remplacée par le
-  dispositif suivant, et par lui seul: demande de fusion ouverte même en
-  l'absence de tiers, auto-relecture différée d'au moins quatre heures conduite
-  contre une liste de contrôle écrite énumérant les cinq principes, et portes
-  automatiques de CI faisant office de relecteur mécanique. Se dispenser de ce
-  dispositif au motif que l'on est seul est un manquement au même titre qu'une
-  fusion sans revue.
+- **Revue**: chaque changement MUST être relu avant fusion, contre une liste de
+  contrôle écrite énumérant les cinq principes. La revue vérifie explicitement
+  la conformité à ces principes et refuse tout code sans test préalable au titre
+  du principe III. Le projet étant mené par une seule personne, cette relecture
+  est celle de l'auteur, et les portes automatiques de CI en sont le second
+  relecteur, mécanique et non négociable. Aucun relecteur tiers, aucune demande
+  de fusion et aucun délai de carence ne sont exigés. Dès que le projet compte
+  plus d'un contributeur, la relecture par un tiers MUST redevenir la règle, par
+  amendement.
 - **Périmètre des commits**: un commit MUST représenter un changement cohérent
   et son message MUST énoncer l'intention, pas la liste des fichiers touchés.
 - **Contournement**: désactiver une porte de qualité MUST faire l'objet d'un
@@ -217,4 +221,4 @@ préexiste, enregistré comme tâche de mise en conformité.
 sont maintenues dans `CLAUDE.md` à la racine du projet. Ce guide MUST rester
 cohérent avec la présente constitution, qui prévaut en cas de divergence.
 
-**Version**: 1.1.0 | **Ratified**: 2026-08-23 | **Last Amended**: 2026-08-23
+**Version**: 2.0.0 | **Ratified**: 2026-08-23 | **Last Amended**: 2026-08-24
