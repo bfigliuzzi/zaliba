@@ -1,0 +1,25 @@
+# Réglages Claude Code propres à la machine (permissions locales, etc.)
+.claude/settings.local.json
+
+# Secrets et configuration d'environnement — jamais versionnés
+# (cf. constitution, section « Contraintes techniques et sécurité »)
+.env
+.env.*
+!.env.example
+
+# Système
+.DS_Store
+Thumbs.db
+
+# Éditeurs
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.swp
+
+# Dépendances et artefacts de build
+node_modules/
+dist/
+build/
+coverage/
+*.log
