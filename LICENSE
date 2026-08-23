@@ -1,0 +1,118 @@
+Copyright (c) 2026 Benoît FIGLIUZZI. Tous droits réservés.
+Copyright (c) 2026 Benoît FIGLIUZZI. All rights reserved.
+
+================================================================================
+LICENCE PROPRIÉTAIRE — VERSION FRANÇAISE (fait foi)
+================================================================================
+
+1. TITULARITÉ
+
+Le présent projet, désigné « Zaliba » (ci-après le « Logiciel »), ainsi que son
+code source, sa documentation, ses spécifications et l'ensemble des éléments
+qu'il contient, sont la propriété exclusive de Benoît FIGLIUZZI (ci-après le
+« Titulaire »).
+
+2. ABSENCE DE LICENCE OUVERTE
+
+Le Logiciel n'est pas un logiciel libre ni un logiciel open source. La mise à
+disposition publique de son code source, notamment via un dépôt d'hébergement
+accessible au public, a pour seule finalité la consultation. Elle ne constitue
+en aucun cas une renonciation aux droits du Titulaire, ni l'octroi d'une
+quelconque licence, expresse ou implicite.
+
+3. DROITS NON ACCORDÉS
+
+Sauf autorisation écrite, préalable et expresse du Titulaire, il est interdit à
+toute personne physique ou morale autre que le Titulaire de :
+
+  a) reproduire, copier ou télécharger le Logiciel à d'autres fins que sa
+     simple consultation ;
+  b) exécuter, déployer ou héberger le Logiciel, en tout ou partie ;
+  c) modifier, adapter, traduire ou créer des œuvres dérivées du Logiciel ;
+  d) distribuer, publier, sous-licencier, prêter, louer ou céder le Logiciel ;
+  e) intégrer le Logiciel, en tout ou partie, dans un autre projet, produit,
+     service ou modèle, y compris à des fins d'entraînement de systèmes
+     d'apprentissage automatique ;
+  f) supprimer ou altérer les mentions de propriété et de droits d'auteur.
+
+4. INTERDICTION D'EXPLOITATION COMMERCIALE
+
+Toute exploitation commerciale du Logiciel est réservée exclusivement au
+Titulaire. Est notamment interdite, à toute personne autre que le Titulaire,
+l'utilisation du Logiciel, en tout ou partie, directement ou indirectement, en
+vue d'un avantage commercial, d'une rémunération, de la fourniture d'un produit
+ou d'un service, ou de tout autre gain économique.
+
+5. DROITS RÉSERVÉS AU TITULAIRE
+
+Le Titulaire conserve la faculté d'utiliser, d'exploiter et de commercialiser
+librement le Logiciel, sans restriction, ainsi que d'accorder à des tiers des
+licences aux conditions de son choix.
+
+6. COMPOSANTS TIERS
+
+Le Logiciel intègre des composants qui ne sont pas la propriété du Titulaire et
+qui restent régis par les conditions fixées par leurs auteurs respectifs. Sont
+concernés, à la date de la présente licence, les répertoires « .specify/ » et
+« .claude/skills/ », issus de l'outillage Spec Kit. La présente licence ne
+s'applique pas à ces composants et ne saurait étendre ou restreindre les droits
+que leurs auteurs y attachent.
+
+7. ABSENCE DE GARANTIE
+
+LE LOGICIEL EST FOURNI « EN L'ÉTAT », SANS GARANTIE D'AUCUNE SORTE, EXPRESSE OU
+IMPLICITE, NOTAMMENT SANS GARANTIE DE QUALITÉ MARCHANDE, D'ADÉQUATION À UN
+USAGE PARTICULIER OU D'ABSENCE DE CONTREFAÇON. LE TITULAIRE NE SAURAIT ÊTRE
+TENU RESPONSABLE D'UN QUELCONQUE DOMMAGE, DIRECT OU INDIRECT, RÉSULTANT DE
+L'UTILISATION DU LOGICIEL OU DE L'IMPOSSIBILITÉ DE L'UTILISER.
+
+8. DEMANDES D'AUTORISATION
+
+Toute demande d'autorisation doit être adressée au Titulaire, à l'adresse
+benoit.figliuzzi@gmail.com.
+
+================================================================================
+PROPRIETARY LICENSE — ENGLISH VERSION (courtesy translation)
+================================================================================
+
+1. OWNERSHIP. This project, "Zaliba" (the "Software"), including its source
+code, documentation and specifications, is the exclusive property of Benoît
+FIGLIUZZI (the "Owner").
+
+2. NOT OPEN SOURCE. The Software is neither free nor open source software.
+Publishing its source code in a publicly accessible repository is for viewing
+purposes only and grants no licence, express or implied, and waives none of the
+Owner's rights.
+
+3. RIGHTS NOT GRANTED. Except with the Owner's prior express written
+permission, no person or entity other than the Owner may: (a) reproduce or copy
+the Software other than for mere viewing; (b) run, deploy or host it, in whole
+or in part; (c) modify, adapt, translate or create derivative works of it;
+(d) distribute, publish, sublicense, lend, lease or assign it; (e) incorporate
+it, in whole or in part, into any other project, product, service or model,
+including for the purpose of training machine-learning systems; or (f) remove
+or alter proprietary or copyright notices.
+
+4. NO COMMERCIAL USE. Commercial exploitation of the Software is reserved
+exclusively to the Owner. Any use of the Software by any other person, in whole
+or in part, directly or indirectly, for commercial advantage, remuneration, the
+provision of a product or service, or any other economic gain, is prohibited.
+
+5. OWNER'S RESERVED RIGHTS. The Owner retains the unrestricted right to use,
+exploit and commercialise the Software, and to license it to third parties on
+any terms.
+
+6. THIRD-PARTY COMPONENTS. The Software includes components not owned by the
+Owner, which remain governed by their respective authors' terms — as of this
+licence, the ".specify/" and ".claude/skills/" directories, originating from
+the Spec Kit tooling. This licence does not apply to those components.
+
+7. NO WARRANTY. THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO
+EVENT SHALL THE OWNER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY
+ARISING FROM THE USE OF OR INABILITY TO USE THE SOFTWARE.
+
+8. PERMISSION REQUESTS. Requests should be sent to benoit.figliuzzi@gmail.com.
+
+In case of divergence between the two versions, the French version prevails.
