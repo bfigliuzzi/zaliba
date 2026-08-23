@@ -25,13 +25,15 @@ Le registre lexical du jeu est délibérément décalé. « Métal », « crista
 
 | Terme | Nature | Rôle |
 | --- | --- | --- |
-| **Camelote** | ressource | matière première de base |
-| **Jus** | ressource | énergie et carburant |
-| **Bave d'étoiles** | ressource | ressource rare |
+| **Camelote** | ressource | matière première de base : construction et recherche |
+| **Jus** | ressource | carburant : propulsion des flottes, et recherche |
+| **Bave d'étoiles** | ressource | ressource rare : construction et recherche |
+| **Énergie** | ressource à part | grandeur instantanée, ni stockée ni transportée (§3.8) |
 | **Le Toboggan** | technologie | transport de ressources entre planètes d'un même système |
 | **Le Chamboule-Tout** | technologie | permutation de deux planètes dans le système |
 | **Berceau** | archétype | la planète mère, polyvalente |
 | **Veine** / **geyser** / **récif** | case spéciale | gisement de Camelote / Jus / Bave d'étoiles |
+| **Mine** / **puits** / **racloir** | bâtiment | extracteur de Camelote / Jus / Bave d'étoiles |
 
 Les ressources étant des **données déclaratives** et non des colonnes nommées en
 dur, tout renommage reste sans coût technique à n'importe quel stade.
@@ -59,7 +61,7 @@ Sept archétypes, à équilibrer, donnés ici à titre indicatif :
 
 | Archétype | Grille | Ce qu'elle impose |
 | --- | --- | --- |
-| **Berceau** | 6×6 régulière, peu d'obstacles, une veine de chaque ressource | Polyvalente. Sert de tutoriel : tout y rentre, rien n'y excelle. |
+| **Berceau** | 6×6 régulière, 10 obstacles sur 36, une veine de chaque ressource | Polyvalente. Sert de tutoriel : tout y rentre, rien n'y excelle. |
 | **Plaine** | 8×4 très ouverte, trois veines de Camelote alignées | Appelle les grandes empreintes. Exclut le 3×3. |
 | **Archipel** | 6×6 fragmentée en quatre poches de 4 à 6 cases | N'accepte que du petit : stockage, laboratoires, utilitaires. |
 | **Faille** | 3×10 étroite, geysers de Jus en profondeur | Le 3×3 est physiquement exclu. Industrie en ligne. |
@@ -106,7 +108,7 @@ vérification et l'écriture.
 
 ---
 
-## 3. La planète : la grille
+## 3. La planète : la grille, le stockage et l'énergie
 
 ### 3.1 Format
 
@@ -126,14 +128,21 @@ petit pour rester reconnaissable à l'œil :
 | --- | --- | --- |
 | 1×1 | 1 | utilitaires, relais |
 | 1×2 | 2 | annexes, petits stockages |
-| 1×3 | 3 | conduits, lignes |
-| L, T | 3 à 4 | bâtiments qui épousent les recoins |
+| 1×3 | 3 | conduits, lignes — non retenue en 001 |
+| L, T | 4 | bâtiments qui épousent les recoins |
 | 2×2 | 4 | le standard |
 | 2×3 | 6 | grosses industries |
 | 3×3 | 9 | bâtiments uniques |
 
 **Rotation par quart de tour, pas de symétrie miroir.** Convention de Tetris,
 comprise sans explication.
+
+**Un type de bâtiment peut proposer plusieurs variantes d'empreinte**, de même
+surface et de caractéristiques identiques — le carré de quatre, le L et le T sont
+interchangeables pour un même bâtiment. Le joueur choisit la variante et
+l'orientation à la pose ; les deux sont figées pour la vie du bâtiment. Le choix
+reste ainsi purement géométrique, jamais chiffré, cohérent avec le refus des
+bonus d'archétype (§2.1).
 
 **L'empreinte ne change jamais avec le niveau.** Elle est choisie une fois pour
 toutes à la pose. Réserve pour plus tard : des *paliers d'empreinte* — un
@@ -173,6 +182,45 @@ permettre la réorganisation quand de la place se libère.
 
 **Un seul chantier à la fois par planète**, qu'il s'agisse d'une construction,
 d'une amélioration, d'une démolition ou d'un déblaiement.
+
+Un chantier lancé n'est **ni annulable ni remplaçable** ; une confirmation
+explicite, postérieure à l'affichage du coût et de la durée, tient lieu de
+garde-fou contre l'erreur de manipulation.
+
+### 3.7 Stockage et saturation
+
+Chaque ressource a un **plafond**, somme d'une capacité de base de la planète et
+de celle des entrepôts posés. **À saturation, la production est perdue.**
+
+*Tension assumée* : la perte contredit le principe produit 5 du README, « le temps
+n'est pas une taxe d'attention ». Trois contreparties la rendent tenable — le
+temps restant avant saturation est affiché avant la déconnexion, la capacité est
+améliorable, et aucun achat ne peut lever un plafond ni compenser une perte. La
+promesse faite au joueur devient : *exactement ce que les règles publiées donnent,
+saturation incluse*. À réexaminer à l'équilibrage (§11).
+
+### 3.8 L'énergie
+
+**L'énergie est une ressource à part**, et elle n'est pas le Jus. Elle est
+**instantanée** : ni stockée, ni accumulée, ni transportée. Elle n'a ni plafond,
+ni gisement, ni entrepôt. Elle est produite par un **bâtiment dédié**, la
+centrale, en plus d'une quantité de base fournie par la planète — et
+**consommée par tous les autres bâtiments**, pas seulement par les extracteurs.
+
+En déficit, la production de chaque bâtiment producteur est multipliée par le
+**rapport de l'énergie produite à l'énergie consommée**.
+
+*Ce que le rapport ne touche pas.* Un bâtiment qui ne produit rien — un entrepôt —
+consomme quand même, mais sa capacité n'est **pas** réduite. Sa consommation n'est
+pas gratuite pour autant : elle pèse sur le dénominateur, donc elle dégrade le
+rapport de toute la planète. Le coût est réel, il est simplement payé par les
+autres bâtiments. Cette dissymétrie est délibérée : un plafond qui rétrécit
+pourrait passer sous la quantité détenue, ce qui obligerait à décider du sort du
+surplus et rendrait la saturation dépendante de l'énergie.
+
+*Motif du choix de règle* : ce rapport unique est affichable et reproductible à la
+main, contrairement à un empilement de pourcentages par niveau — même raisonnement
+que pour la célérité du Toboggan (§5.1).
 
 ---
 
@@ -396,6 +444,8 @@ Non encore ordonnancés : flottes, colonisation, combat, marché, alliances,
 - **Paliers d'empreinte** : à activer seulement si le puzzle s'essouffle (§9).
 - **Plafonds et taxes du marché libre**, indexés sur l'écart de développement
   entre les parties.
+- **La perte par saturation est-elle tenable ?** Elle est en tension avec le
+  principe produit 5 du README (§3.7). À réexaminer à l'équilibrage.
 
 ---
 
@@ -404,3 +454,6 @@ Non encore ordonnancés : flottes, colonisation, combat, marché, alliances,
 | Date | Modification |
 | --- | --- |
 | 2026-08-23 | Création. Consigne les décisions de la session de conception initiale : vocabulaire, sept archétypes et équité par permutation contrainte, grille à empreintes, gisements, obstacles, adjacence, Toboggan, Chamboule-Tout, lignes rouges de monétisation, risques et feuille de route. |
+| 2026-08-23 | Corrections induites par la spécification 001 : nom des extracteurs, Berceau à 10 obstacles, L et T fixés à quatre cases, 1×3 écartée en 001, variantes d'empreinte, chantier non annulable, ajout du stockage avec saturation (§3.7) et de l'énergie (§3.8), trois questions ouvertes nouvelles. |
+| 2026-08-23 | Rôle des ressources tranché (§1) : Camelote et Bave d'étoiles pour la construction et la recherche, Jus pour la propulsion des flottes et la recherche. **Le conflit lexical Jus / énergie est clos** : l'énergie est une ressource à part, le Jus est un carburant. §3.8 réécrit — l'énergie est produite par un bâtiment dédié et consommée par **tous** les autres bâtiments, et le rapport ne dégrade que la production. |
+| 2026-08-23 | **Nom de l'extracteur de Bave d'étoiles tranché : « racloir ».** La proposition issue de la spécification 001 est retenue ; la question ouverte du §11 est close. C'était la dernière question de vocabulaire en suspens. |
