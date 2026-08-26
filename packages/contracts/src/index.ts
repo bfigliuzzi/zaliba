@@ -1,7 +1,10 @@
 /**
  * Point d'entrée public de `@zaliba/contracts`.
  *
- * Vide à dessein : la phase 1 amorce un dépôt qui compile, se vérifie et refuse
- * une fusion fautive. Aucun code applicatif n'y figure encore.
+ * Les schémas Zod et les routes versionnées. Ce paquet **n'importe pas
+ * `domain`** : les notions y sont redéclarées, et la duplication est
+ * volontaire. Sans elle, une refactorisation interne changerait silencieusement
+ * le format transmis et casserait les clients anciens sans qu'aucune
+ * compilation n'échoue.
  */
-export {}
+export * from './v1/errors.js'

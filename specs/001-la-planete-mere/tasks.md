@@ -141,9 +141,9 @@ précède le schéma qu'il éprouve.
 
 ### Socle HTTP
 
-- [ ] T035 [P] Écrire le test du modèle d'erreur dans `packages/contracts/tests/errors.test.ts` : forme unique `{ code, message, details?, requestId }`, et la table de statuts 400 / 401 / 403 / 404 / 409 / 500 de `contracts/README.md` § 7. Observer l'échec.
-- [ ] T036 Implémenter `packages/contracts/src/v1/errors.ts` : le modèle d'erreur commun et le squelette de l'union fermée `RefusalV1`, enrichie tranche par tranche.
-- [ ] T037 Implémenter le harnais d'instantané de JSON Schema dans `packages/contracts/tests/snapshots/` : le schéma dérivé de chaque route est figé en fichier de référence ; tout changement de forme fait échouer la porte (`contracts/README.md` § 8).
+- [x] T035 [P] Écrire le test du modèle d'erreur dans `packages/contracts/tests/errors.test.ts` : forme unique `{ code, message, details?, requestId }`, et la table de statuts 400 / 401 / 403 / 404 / 409 / 500 de `contracts/README.md` § 7. Observer l'échec.
+- [x] T036 Implémenter `packages/contracts/src/v1/errors.ts` : le modèle d'erreur commun et le squelette de l'union fermée `RefusalV1`, enrichie tranche par tranche.
+- [x] T037 Implémenter le harnais d'instantané de JSON Schema dans `packages/contracts/tests/snapshots/` : le schéma dérivé de chaque route est figé en fichier de référence ; tout changement de forme fait échouer la porte (`contracts/README.md` § 8).
 - [ ] T038 Implémenter le squelette Fastify dans `apps/api/src/server.ts` avec le greffon de corrélation (`requestId` en réponse et en journal) et le greffon de mapping d'erreurs de `apps/api/src/plugins/errors.ts`.
 - [ ] T039 Écrire le test de la liste noire de journalisation dans `apps/api/tests/logging-redaction.test.ts` : aucun jeton, aucune adresse de courriel, aucune clé de service dans les journaux, quelle que soit la requête. Observer l'échec.
 - [ ] T040 Implémenter le journal structuré dans `apps/api/src/plugins/logging.ts` : pino, identifiant de corrélation par requête, **liste noire explicite** — jetons, adresses de courriel, clé de service ne sont jamais journalisés.
