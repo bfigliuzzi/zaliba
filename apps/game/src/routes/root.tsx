@@ -1,5 +1,6 @@
 import { type QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { createRootRouteWithContext, Link, Outlet } from '@tanstack/react-router'
+import type { PlanetGateway } from '../features/auth/gateway.js'
 import type { Session } from '../lib/session.js'
 
 /**
@@ -26,6 +27,11 @@ export interface RouterContext {
    * singleton, et à un test de rendre la même route avec la sienne.
    */
   readonly session: Session
+  /**
+   * L'accès au serveur, déclaré comme un port. C'est ce qui permet à un test de
+   * rendre l'écran de planète avec une passerelle en dur, sans monter d'API.
+   */
+  readonly gateway: PlanetGateway
 }
 
 export const rootRoute = createRootRouteWithContext<RouterContext>()({

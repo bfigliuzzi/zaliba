@@ -61,7 +61,7 @@ describe('les deux champs portent un nom accessible', () => {
 })
 
 describe('tout se fait au clavier (FR-058)', () => {
-  it('atteint les deux champs et le submitButton par tabulation', async () => {
+  it('atteint les deux champs et le bouton par tabulation', async () => {
     const user = userEvent.setup()
     render(<AuthScreen session={fakeSession()} />)
 
@@ -73,7 +73,7 @@ describe('tout se fait au clavier (FR-058)', () => {
     expect(document.activeElement).toBe(screen.getByRole('button', { name: /se connecter/i }))
   })
 
-  it('soumet par la touche Entrée, sans atteindre le submitButton', async () => {
+  it('soumet par la touche Entrée, sans atteindre le bouton', async () => {
     const user = userEvent.setup()
     const signIn = vi.fn(async (): Promise<AuthAttempt> => ({ session: null, error: null }))
     render(<AuthScreen session={fakeSession({ signIn })} />)
@@ -146,7 +146,7 @@ describe('une erreur est annoncée, et jamais par la couleur seule (FR-060)', ()
 })
 
 describe('la soumission est annoncée pendant qu’elle dure', () => {
-  it('désactive le submitButton et dit qu’elle est en cours', async () => {
+  it('désactive le bouton et dit qu’elle est en cours', async () => {
     const user = userEvent.setup()
     const signIn = vi.fn(
       async (): Promise<AuthAttempt> =>

@@ -65,12 +65,34 @@ export default defineConfig({
           hookTimeout: 120_000,
         },
       },
+      /**
+       * Le client est **deux** projets, séparés par leur environnement.
+       *
+       * Monter un DOM coûte cher — plusieurs secondes par fichier, et bien
+       * davantage sur une machine chargée. Un test de session, d'horloge ou
+       * d'extrapolation n'en a aucun besoin : ce sont des fonctions pures, et
+       * leur faire payer un jsdom est la même faute que de faire dépendre une
+       * règle de jeu d'un navigateur.
+       *
+       * La frontière est l'extension : `.tsx` désigne un composant, donc un
+       * document ; `.ts` désigne de la logique. Elle n'a pas besoin d'être
+       * maintenue à la main, ce qui est sa qualité principale.
+       */
       {
         test: {
           name: 'game',
           root: './apps/game',
+          environment: 'node',
+          include: ['tests/**/*.test.ts'],
+          exclude: ['tests/e2e/**'],
+        },
+      },
+      {
+        test: {
+          name: 'game-dom',
+          root: './apps/game',
           environment: 'jsdom',
-          include: ['tests/**/*.test.{ts,tsx}'],
+          include: ['tests/**/*.test.tsx'],
           exclude: ['tests/e2e/**'],
         },
       },

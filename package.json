@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "Zany Alien Battles — jeu web de stratégie spatiale, sans pay2win",
+  "description": "Zany Alien Battles \u2014 jeu web de strat\u00e9gie spatiale, sans pay2win",
   "license": "SEE LICENSE IN LICENSE",
   "packageManager": "pnpm@11.22.0",
   "engines": {
@@ -15,7 +15,7 @@
     "lint": "biome check .",
     "format": "biome format --write .",
     "build": "turbo run build",
-    "test": "vitest run --project catalogs --project domain --project contracts --project db --project api --project game",
+    "test": "vitest run --project catalogs --project domain --project contracts --project db --project api --project game --project game-dom",
     "test:integration": "vitest run --project api-integration",
     "test:coverage": "vitest run --project domain --coverage",
     "dev": "turbo run dev",

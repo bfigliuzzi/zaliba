@@ -1,9 +1,12 @@
 import { QueryClient } from '@tanstack/react-query'
 import { createMemoryHistory, RouterProvider } from '@tanstack/react-router'
 import { cleanup, render, screen, within } from '@testing-library/react'
+import { PlanetSnapshotV1 } from '@zaliba/contracts'
 import { afterEach, describe, expect, it } from 'vitest'
+import type { PlanetGateway } from '../src/features/auth/gateway.js'
 import type { Session, SessionInfo } from '../src/lib/session.js'
 import { createAppRouter } from '../src/router.js'
+import rawFresh from './fixtures/planet-fresh.json' with { type: 'json' }
 
 /**
  * Le squelette de navigation.
@@ -33,6 +36,14 @@ function fakeSession(info: SessionInfo | null): Session {
   }
 }
 
+const payload = PlanetSnapshotV1.parse(rawFresh)
+
+/** Une passerelle en dur : la navigation s'éprouve sans serveur. */
+const fakeGateway: PlanetGateway = {
+  read: async () => payload,
+  provision: async () => payload,
+}
+
 function renderAt(path: string, info: SessionInfo | null = INFO) {
   const router = createAppRouter({
     history: createMemoryHistory({ initialEntries: [path] }),
@@ -40,6 +51,7 @@ function renderAt(path: string, info: SessionInfo | null = INFO) {
       defaultOptions: { queries: { retry: false } },
     }),
     session: fakeSession(info),
+    gateway: fakeGateway,
   })
   return render(<RouterProvider router={router} />)
 }

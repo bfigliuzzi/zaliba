@@ -2,6 +2,7 @@ import { QueryClient } from '@tanstack/react-query'
 import { RouterProvider } from '@tanstack/react-router'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+import { createPlanetGateway } from './lib/planetGateway.js'
 import { createGameSession } from './lib/supabase.js'
 import { createAppRouter } from './router.js'
 
@@ -27,7 +28,18 @@ const queryClient = new QueryClient({
   },
 })
 
-const router = createAppRouter({ queryClient, session: createGameSession() })
+const session = createGameSession()
+
+const apiUrl = import.meta.env['VITE_API_URL']
+if (typeof apiUrl !== 'string') {
+  throw new Error('VITE_API_URL est requis — voir .env.example.')
+}
+
+const router = createAppRouter({
+  queryClient,
+  session,
+  gateway: createPlanetGateway({ baseUrl: apiUrl, session }),
+})
 
 const container = document.getElementById('root')
 if (container === null) {

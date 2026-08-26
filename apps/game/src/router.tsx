@@ -1,5 +1,6 @@
 import type { QueryClient } from '@tanstack/react-query'
 import { createRouter, type RouterHistory } from '@tanstack/react-router'
+import type { PlanetGateway } from './features/auth/gateway.js'
 import type { Session } from './lib/session.js'
 import { indexRoute } from './routes/index.js'
 import { planetRoute } from './routes/planet.js'
@@ -21,6 +22,7 @@ const routeTree = rootRoute.addChildren([indexRoute, planetRoute, rulesRoute])
 export interface AppRouterOptions {
   readonly queryClient: QueryClient
   readonly session: Session
+  readonly gateway: PlanetGateway
   /** Absent en production : le routeur emploie alors l'historique du navigateur. */
   readonly history?: RouterHistory
 }
@@ -28,7 +30,11 @@ export interface AppRouterOptions {
 export function createAppRouter(options: AppRouterOptions) {
   return createRouter({
     routeTree,
-    context: { queryClient: options.queryClient, session: options.session },
+    context: {
+      queryClient: options.queryClient,
+      session: options.session,
+      gateway: options.gateway,
+    },
     ...(options.history === undefined ? {} : { history: options.history }),
   })
 }
