@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { describeEffect, EFFECT_KINDS, type Effect } from '../../src/kernel/effects.js'
+import {
+  describeEffect,
+  EFFECT_KINDS,
+  type Effect,
+  type WorkTarget,
+} from '../../src/kernel/effects.js'
 
 /**
  * Le vocabulaire fermé d'effets (R16).
@@ -77,6 +82,13 @@ describe('le traitement est exhaustif, vérifié à la compilation', () => {
       kind: 'schedule-work',
       workId: 'w1',
       nature: 'build',
+      target: {
+        kind: 'build',
+        typeId: 'mine',
+        variantId: 'square-4',
+        orientation: 0,
+        anchor: { x: 0, y: 4 },
+      },
       startedAt: 1000,
       dueAt: 1600,
     },
@@ -118,5 +130,45 @@ describe('la partition lancement / échéance (R16)', () => {
       'clear-cell',
     ]
     expect([...atLaunch, ...atDue].sort()).toEqual([...EFFECT_KINDS].sort())
+  })
+})
+
+describe('un chantier planifié dit toujours sur quoi il porte', () => {
+  /**
+   * Sans cible, `schedule-work` annoncerait qu'un chantier commence sans dire
+   * de quoi — et le noyau serait incapable de l'appliquer à un instantané. Un
+   * effet qui ne se suffit pas à lui-même oblige son destinataire à retrouver
+   * l'information ailleurs, c'est-à-dire à reprendre une décision que le module
+   * avait déjà prise.
+   */
+  it('porte une cible dont la forme suit la nature', () => {
+    const targets: WorkTarget[] = [
+      {
+        kind: 'build',
+        typeId: 'mine',
+        variantId: 'square-4',
+        orientation: 0,
+        anchor: { x: 0, y: 4 },
+      },
+      { kind: 'building', buildingId: 'b1' },
+      { kind: 'cell', cell: { x: 3, y: 2 } },
+    ]
+
+    for (const target of targets) {
+      const effect: Effect = {
+        kind: 'schedule-work',
+        workId: 'w1',
+        nature: 'build',
+        target,
+        startedAt: 1000,
+        dueAt: 1600,
+      }
+      expect(effect.target.kind).toBe(target.kind)
+    }
+  })
+
+  it('nomme trois formes de cible, une par famille de chantier', () => {
+    const kinds: WorkTarget['kind'][] = ['build', 'building', 'cell']
+    expect(new Set(kinds).size).toBe(3)
   })
 })

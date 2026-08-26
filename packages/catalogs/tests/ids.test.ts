@@ -148,7 +148,11 @@ describe('aucune référence ne pointe dans le vide', () => {
   })
 
   it('la production, la capacité et le stock couvrent exactement les ressources', () => {
-    for (const table of [BERCEAU.baseProduction, BERCEAU.baseCapacity, BERCEAU.startingStock]) {
+    for (const table of [
+      BERCEAU.baseProductionPerHour,
+      BERCEAU.baseCapacityGrains,
+      BERCEAU.startingStockGrains,
+    ]) {
       expect(Object.keys(table).sort()).toEqual([...RESOURCE_IDS].sort())
     }
   })

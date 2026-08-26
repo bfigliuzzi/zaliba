@@ -47,14 +47,22 @@ export interface Layout {
   readonly width: number
   readonly height: number
   readonly cells: readonly LayoutCell[]
-  /** Production de base, en grains par heure. Non nulle partout (FR-018). */
-  readonly baseProduction: Readonly<Record<ResourceId, number>>
-  /** Plafond de base, en grains. Non nul partout (FR-025). */
-  readonly baseCapacity: Readonly<Record<ResourceId, number>>
+  /**
+   * Production de base, en **unités par heure** — pas en grains.
+   *
+   * L'unité est dans le nom parce que la confusion est facile et silencieuse :
+   * un taux se multiplie par des secondes pour donner des grains (une unité par
+   * heure vaut exactement un grain par seconde), tandis qu'un stock est déjà en
+   * grains. Les deux sont des nombres entiers, et rien dans le type ne les
+   * distingue. Non nulle partout (FR-018).
+   */
+  readonly baseProductionPerHour: Readonly<Record<ResourceId, number>>
+  /** Plafond de base, en **grains**. Non nul partout (FR-025). */
+  readonly baseCapacityGrains: Readonly<Record<ResourceId, number>>
   /** Énergie de base, non nulle (FR-022). Sans elle, la première pose punirait. */
   readonly baseEnergy: number
-  /** Stock initial, en grains. Suffit à une centrale et un extracteur (FR-019). */
-  readonly startingStock: Readonly<Record<ResourceId, number>>
+  /** Stock initial, en **grains**. Paie une centrale et un extracteur (FR-019). */
+  readonly startingStockGrains: Readonly<Record<ResourceId, number>>
 }
 
 /** Les dix obstacles, à la case et au type que R7 publie. */
@@ -100,8 +108,13 @@ function buildCells(): readonly LayoutCell[] {
   return Object.freeze(cells.map((cell) => Object.freeze(cell)))
 }
 
-/** En unités par heure, converties en grains. Un grain/seconde par unité/heure. */
-const BASE_PRODUCTION_UNITS = { camelote: 20, jus: 10, 'bave-etoiles': 5 } as const
+/**
+ * En unités par heure, et **non converties** : c'est déjà l'unité d'un taux.
+ * Une unité par heure vaut exactement un grain par seconde (R1).
+ */
+const BASE_PRODUCTION_PER_HOUR = { camelote: 20, jus: 10, 'bave-etoiles': 5 } as const
+
+/** En unités affichées, converties en grains à la construction. */
 const BASE_CAPACITY_UNITS = { camelote: 5_000, jus: 5_000, 'bave-etoiles': 2_000 } as const
 
 /**
@@ -125,10 +138,10 @@ export const BERCEAU: Layout = {
   width: WIDTH,
   height: HEIGHT,
   cells: buildCells(),
-  baseProduction: toGrains(BASE_PRODUCTION_UNITS),
-  baseCapacity: toGrains(BASE_CAPACITY_UNITS),
+  baseProductionPerHour: BASE_PRODUCTION_PER_HOUR,
+  baseCapacityGrains: toGrains(BASE_CAPACITY_UNITS),
   baseEnergy: 20,
-  startingStock: toGrains(STARTING_STOCK_UNITS),
+  startingStockGrains: toGrains(STARTING_STOCK_UNITS),
 }
 
 export const LAYOUTS = { 'berceau-v1': BERCEAU } as const

@@ -41,11 +41,11 @@ function levelOneCost(typeId: (typeof BUILDING_TYPE_IDS)[number]): Record<string
 
 describe('la base du Berceau ne bloque jamais un joueur', () => {
   it.each(RESOURCE_IDS)('produit de la %s sans rien poser (FR-018)', (resourceId) => {
-    expect(BERCEAU.baseProduction[resourceId]).toBeGreaterThan(0)
+    expect(BERCEAU.baseProductionPerHour[resourceId]).toBeGreaterThan(0)
   })
 
   it.each(RESOURCE_IDS)('offre une capacité de départ pour la %s (FR-025)', (resourceId) => {
-    expect(BERCEAU.baseCapacity[resourceId]).toBeGreaterThan(0)
+    expect(BERCEAU.baseCapacityGrains[resourceId]).toBeGreaterThan(0)
   })
 
   /**
@@ -58,8 +58,8 @@ describe('la base du Berceau ne bloque jamais un joueur', () => {
   })
 
   it.each(RESOURCE_IDS)('plafonne la %s au-dessus du stock de départ', (resourceId) => {
-    expect(BERCEAU.baseCapacity[resourceId]).toBeGreaterThanOrEqual(
-      BERCEAU.startingStock[resourceId],
+    expect(BERCEAU.baseCapacityGrains[resourceId]).toBeGreaterThanOrEqual(
+      BERCEAU.startingStockGrains[resourceId],
     )
   })
 })
@@ -72,7 +72,7 @@ describe('le stock de départ suffit à agir tout de suite (FR-019)', () => {
       const extractor = levelOneCost(typeId)
       return RESOURCE_IDS.every(
         (resourceId) =>
-          BERCEAU.startingStock[resourceId] >=
+          BERCEAU.startingStockGrains[resourceId] >=
           (centrale[resourceId] ?? 0) + (extractor[resourceId] ?? 0),
       )
     })
@@ -91,7 +91,7 @@ describe('le stock de départ suffit à agir tout de suite (FR-019)', () => {
     for (const typeId of EXTRACTOR_TYPE_IDS) {
       const extractor = levelOneCost(typeId)
       for (const resourceId of RESOURCE_IDS) {
-        expect(BERCEAU.startingStock[resourceId]).toBeGreaterThanOrEqual(
+        expect(BERCEAU.startingStockGrains[resourceId]).toBeGreaterThanOrEqual(
           (centrale[resourceId] ?? 0) + (extractor[resourceId] ?? 0),
         )
       }
@@ -127,8 +127,8 @@ describe('aucun coût n’est libellé en Jus (FR-062, R22)', () => {
   })
 
   it('produit tout de même du Jus, stocké et plafonné comme le reste', () => {
-    expect(BERCEAU.baseProduction['jus']).toBeGreaterThan(0)
-    expect(BERCEAU.baseCapacity['jus']).toBeGreaterThan(0)
+    expect(BERCEAU.baseProductionPerHour['jus']).toBeGreaterThan(0)
+    expect(BERCEAU.baseCapacityGrains['jus']).toBeGreaterThan(0)
   })
 })
 

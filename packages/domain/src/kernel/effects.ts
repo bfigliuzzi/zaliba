@@ -78,11 +78,37 @@ export interface ClearCell {
   readonly cell: Cell
 }
 
+/**
+ * Ce sur quoi porte un chantier, selon sa nature.
+ *
+ * La cible appartient au **vocabulaire du noyau** et non à la persistance : sans
+ * elle, `schedule-work` dirait qu'un chantier commence sans dire de quoi, et le
+ * noyau serait incapable de l'appliquer à un instantané. Un effet qui ne se
+ * suffit pas à lui-même oblige son destinataire à retrouver l'information
+ * ailleurs — c'est-à-dire à recréer une décision que le module avait déjà prise.
+ *
+ * La contrainte de cohérence entre `nature` et cible est portée en base par
+ * `works_target_matches_nature` : une ligne dont la nature contredit sa cible
+ * est un état que le domaine ne sait pas lire, donc un état qui ne doit pas
+ * exister.
+ */
+export type WorkTarget =
+  | {
+      readonly kind: 'build'
+      readonly typeId: string
+      readonly variantId: FootprintId
+      readonly orientation: number
+      readonly anchor: Cell
+    }
+  | { readonly kind: 'building'; readonly buildingId: BuildingId }
+  | { readonly kind: 'cell'; readonly cell: Cell }
+
 /** Planification de l'événement daté, **au lancement**. */
 export interface ScheduleWork {
   readonly kind: 'schedule-work'
   readonly workId: WorkId
   readonly nature: WorkNature
+  readonly target: WorkTarget
   readonly startedAt: number
   readonly dueAt: number
 }
