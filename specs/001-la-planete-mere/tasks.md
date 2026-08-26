@@ -118,12 +118,12 @@ cette phase.
 
 ### Noyau de domaine — les grandeurs
 
-- [ ] T022 [P] Écrire le test du temps dans `packages/domain/tests/kernel/time.test.ts` : `Instant` entier de secondes UTC, `Duration` entière et strictement positive pour un chantier, troncature vers le bas (R2). Observer l'échec.
-- [ ] T023 [P] Écrire le test des ressources dans `packages/domain/tests/kernel/resources.test.ts` : grains à `1/3600` unité (R1), affichage `⌊grains ÷ 3600⌋`, plafonnement `q = min(brut, P)`, perte `perdu = max(0, brut − P)` cumulée, et instant de saturation `t₀ + ⌈(P − q₀) ÷ r⌉`, infini si `r = 0` (R4). Observer l'échec.
-- [ ] T024 Implémenter `packages/domain/src/kernel/time.ts` : `Instant`, `Duration` et leurs conversions. **Aucune fonction n'appelle l'horloge système** : l'instant est toujours un argument explicite.
-- [ ] T025 Implémenter `packages/domain/src/kernel/resources.ts` : `Grains`, `RatePerHour`, plafonnement, perte cumulée, instant de saturation.
-- [ ] T026 [P] Écrire le test de l'union d'effets dans `packages/domain/tests/kernel/effects.test.ts` : traitement exhaustif vérifié à la compilation, aucun effet hors vocabulaire, `cancel-work` et `notify-player` **inexistants** — c'est ainsi que FR-037 est tenu, par absence et non par garde. Observer l'échec.
-- [ ] T027 Implémenter `packages/domain/src/kernel/effects.ts` : l'union **fermée** des sept effets de R16 — `debit-resources`, `credit-resources`, `place-building`, `set-building-level`, `remove-building`, `clear-cell`, `schedule-work`. Le vocabulaire est détenu par le noyau.
+- [x] T022 [P] Écrire le test du temps dans `packages/domain/tests/kernel/time.test.ts` : `Instant` entier de secondes UTC, `Duration` entière et strictement positive pour un chantier, troncature vers le bas (R2). Observer l'échec.
+- [x] T023 [P] Écrire le test des ressources dans `packages/domain/tests/kernel/resources.test.ts` : grains à `1/3600` unité (R1), affichage `⌊grains ÷ 3600⌋`, plafonnement `q = min(brut, P)`, perte `perdu = max(0, brut − P)` cumulée, et instant de saturation `t₀ + ⌈(P − q₀) ÷ r⌉`, infini si `r = 0` (R4). Observer l'échec.
+- [x] T024 Implémenter `packages/domain/src/kernel/time.ts` : `Instant`, `Duration` et leurs conversions. **Aucune fonction n'appelle l'horloge système** : l'instant est toujours un argument explicite.
+- [x] T025 Implémenter `packages/domain/src/kernel/resources.ts` : `Grains`, `RatePerHour`, plafonnement, perte cumulée, instant de saturation.
+- [x] T026 [P] Écrire le test de l'union d'effets dans `packages/domain/tests/kernel/effects.test.ts` : traitement exhaustif vérifié à la compilation, aucun effet hors vocabulaire, `cancel-work` et `notify-player` **inexistants** — c'est ainsi que FR-037 est tenu, par absence et non par garde. Observer l'échec.
+- [x] T027 Implémenter `packages/domain/src/kernel/effects.ts` : l'union **fermée** des sept effets de R16 — `debit-resources`, `credit-resources`, `place-building`, `set-building-level`, `remove-building`, `clear-cell`, `schedule-work`. Le vocabulaire est détenu par le noyau.
 
 ### Persistance
 

@@ -6,3 +6,6 @@
  * rendu physique, et `dependency-cruiser` le vérifie à chaque poussée.
  */
 export * from './kernel/curves.js'
+export * from './kernel/effects.js'
+export * from './kernel/resources.js'
+export * from './kernel/time.js'
