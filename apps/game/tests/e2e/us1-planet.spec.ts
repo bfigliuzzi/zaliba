@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import { signUp } from './account.js'
 import { expectNoAccessibilityViolations } from './axe.js'
 
 /**
@@ -40,24 +41,6 @@ const DEPOSITS = [
   [1, 1, 'jus'],
   [4, 4, 'bave-etoiles'],
 ] as const
-
-/** Un compte neuf par exécution : le parcours doit valoir pour un inconnu. */
-function freshAccount() {
-  const stamp = `${Date.now()}-${Math.floor(Math.random() * 1_000_000)}`
-  return { email: `joueuse-${stamp}@zaliba.test`, password: `Mot-de-passe-${stamp}` }
-}
-
-async function signUp(page: import('@playwright/test').Page) {
-  const { email, password } = freshAccount()
-
-  await page.goto('/planet')
-  await page.getByRole('button', { name: /créer un compte/i }).click()
-  await page.getByLabel(/courriel/i).fill(email)
-  await page.getByLabel(/mot de passe/i).fill(password)
-  await page.getByRole('button', { name: /^s’inscrire$/i }).click()
-
-  await expect(page.getByRole('heading', { name: /ma planète/i })).toBeVisible()
-}
 
 test.describe('un joueur neuf reçoit son Berceau', () => {
   test('la colonie se fonde sans que le joueur la demande (FR-001)', async ({ page }) => {

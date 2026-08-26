@@ -1,5 +1,16 @@
 import type { GameTransaction } from '../client.js'
 import { grainsFromDb, grainsToDb, instantFromDb, instantToDb } from '../conversions.js'
+import { type BuildingWrite, syncBuildings } from './buildings.js'
+import { syncClearedCells } from './cells.js'
+import type {
+  BuildingRecord,
+  CellRecord,
+  HoldingRecord,
+  PlanetRecord,
+  WorkRecord,
+} from './records.js'
+
+export type { BuildingRecord, CellRecord, HoldingRecord, PlanetRecord, WorkRecord }
 
 /**
  * Le dépôt d'instantanés.
@@ -20,54 +31,6 @@ import { grainsFromDb, grainsToDb, instantFromDb, instantToDb } from '../convers
  * entiers de secondes en mémoire (R2). Convertir ailleurs, ou plusieurs fois,
  * est la façon habituelle de perdre une seconde ou un facteur 3600.
  */
-
-export interface HoldingRecord {
-  readonly resourceId: string
-  readonly amountGrains: number
-  readonly lostGrains: number
-}
-
-export interface BuildingRecord {
-  readonly id: string
-  readonly typeId: string
-  readonly variantId: string
-  readonly orientation: number
-  readonly anchorX: number
-  readonly anchorY: number
-  readonly level: number
-}
-
-export interface CellRecord {
-  readonly x: number
-  readonly y: number
-}
-
-export interface WorkRecord {
-  readonly id: string
-  readonly nature: string
-  readonly startedAt: number
-  readonly dueAt: number
-  readonly targetBuildingId: string | null
-  readonly targetX: number | null
-  readonly targetY: number | null
-  readonly typeId: string | null
-  readonly variantId: string | null
-  readonly orientation: number | null
-}
-
-export interface PlanetRecord {
-  readonly id: string
-  readonly ownerId: string
-  readonly occupantId: string
-  readonly archetypeId: string
-  readonly layoutId: string
-  readonly consolidatedAt: number
-  readonly holdings: readonly HoldingRecord[]
-  readonly buildings: readonly BuildingRecord[]
-  readonly clearedCells: readonly CellRecord[]
-  /** Le chantier **non résolu**, s'il y en a un. Au plus un (FR-033). */
-  readonly work: WorkRecord | null
-}
 
 /**
  * **Pourquoi du SQL explicite ici, alors que le schéma est en Drizzle.**
@@ -278,36 +241,115 @@ export async function insertPlanet(
 }
 
 /**
- * Écrit l'instantané consolidé.
+ * L'instantané tel qu'on l'écrit.
+ *
+ * Distinct de `PlanetRecord`, la forme **lue** : les bâtiments y portent leurs
+ * cases, que la lecture n'a pas à charger puisque le domaine les redérive. Le
+ * propriétaire et l'archétype n'y figurent pas non plus — ils ne changent
+ * jamais, et offrir un champ pour les modifier serait offrir un chemin pour les
+ * corrompre.
+ */
+export interface PlanetWrite {
+  readonly id: string
+  readonly occupantId: string
+  readonly consolidatedAt: number
+  readonly holdings: readonly HoldingRecord[]
+  readonly buildings: readonly BuildingWrite[]
+  readonly clearedCells: readonly CellRecord[]
+  /** Le chantier en cours, ou `null` s'il n'y en a plus. Au plus un (FR-033). */
+  readonly work: WorkRecord | null
+}
+
+/**
+ * Écrit l'instantané consolidé, **en une seule transaction**.
+ *
+ * L'ordre suit les dépendances : la planète et ses ressources, puis les
+ * bâtiments et leurs cases, puis les déblaiements, puis le chantier. Un chantier
+ * écrit avant le bâtiment qu'il vient d'achever violerait la clé étrangère de
+ * `target_building_id` le jour où une amélioration la renseignera.
  *
  * Les possessions sont écrites en `upsert` plutôt qu'en `delete` puis `insert` :
  * la seconde forme laisserait, entre les deux, un instant où la planète n'a
  * aucune ressource. Invisible dans une transaction — jusqu'au jour où un
  * déclencheur ou une réplique lit cet état intermédiaire.
  */
-export async function writePlanet(tx: GameTransaction, record: PlanetRecord): Promise<void> {
+export async function writePlanet(tx: GameTransaction, write: PlanetWrite): Promise<void> {
   await tx`
     update game.planets
-    set consolidated_at = ${instantToDb(record.consolidatedAt)},
-        occupant_id = ${record.occupantId}
-    where id = ${record.id}
+    set consolidated_at = ${instantToDb(write.consolidatedAt)},
+        occupant_id = ${write.occupantId}
+    where id = ${write.id}
   `
 
-  for (const holding of record.holdings) {
+  for (const holding of write.holdings) {
     await tx`
       insert into game.planet_resources (planet_id, resource_id, amount_grains, lost_grains)
       values (
-        ${record.id}, ${holding.resourceId},
+        ${write.id}, ${holding.resourceId},
         ${grainsToDb(holding.amountGrains)}, ${grainsToDb(holding.lostGrains)}
       )
       on conflict (planet_id, resource_id) do update
       set amount_grains = excluded.amount_grains, lost_grains = excluded.lost_grains
     `
   }
+
+  await syncBuildings(tx, write.id, write.buildings)
+  await syncClearedCells(tx, write.id, write.clearedCells, write.consolidatedAt)
+  await syncWork(tx, write.id, write.work, write.consolidatedAt)
 }
 
 /**
- * Marque résolu le chantier en cours d'une planète.
+ * Aligne la ligne de chantier sur l'instantané.
+ *
+ * Deux mouvements, et une absence :
+ *
+ * - le chantier que l'instantané ne porte plus est **marqué résolu**, jamais
+ *   supprimé. Les lignes résolues sont l'histoire de la planète et le support
+ *   d'une enquête ultérieure — c'est ce qui impose que l'index d'unicité soit
+ *   *partiel* ;
+ * - le chantier nouveau est inséré. C'est ici que l'index unique
+ *   `(planet_id) where resolved_at is null` arbitre : de deux transactions
+ *   simultanées, la seconde échoue. Ce n'est **pas** une vérification préalable
+ *   qui tient FR-033, et la différence est celle entre une règle et une fenêtre
+ *   de course.
+ *
+ * L'absence est celle d'une mise à jour : un chantier ne se modifie pas. Il n'est
+ * ni annulable ni remplaçable (FR-037), et aucune instruction de ce fichier ne
+ * saurait le faire.
+ */
+export async function syncWork(
+  tx: GameTransaction,
+  planetId: string,
+  work: WorkRecord | null,
+  at: number,
+): Promise<void> {
+  const unresolved = await tx<{ id: string }[]>`
+    select id from game.works where planet_id = ${planetId} and resolved_at is null
+  `
+
+  for (const row of unresolved) {
+    if (row.id !== work?.id) await resolveWork(tx, row.id, at)
+  }
+
+  if (work === null) return
+  if (unresolved.some((row) => row.id === work.id)) return
+
+  await tx`
+    insert into game.works (
+      id, planet_id, nature, started_at, due_at,
+      target_building_id, target_x, target_y, type_id, variant_id, orientation
+    )
+    values (
+      ${work.id}, ${planetId}, ${work.nature},
+      ${instantToDb(work.startedAt)}, ${instantToDb(work.dueAt)},
+      ${work.targetBuildingId}, ${work.targetX}, ${work.targetY},
+      ${work.typeId}, ${work.variantId}, ${work.orientation}
+    )
+  `
+}
+
+/**
+ * Marque résolu un chantier.
  *
  * Les lignes résolues **restent** : elles sont l'histoire de la planète, et le
  * support d'une enquête ultérieure. C'est ce qui impose que l'index d'unicité

@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import type { PlanetSnapshotV1 } from '@zaliba/contracts'
 import type { ReactNode } from 'react'
 import { isNotProvisioned, type PlanetGateway } from './gateway.js'
@@ -19,12 +19,26 @@ import { isNotProvisioned, type PlanetGateway } from './gateway.js'
 
 export interface PlanetLoaderProps {
   readonly gateway: PlanetGateway
-  readonly children: (snapshot: PlanetSnapshotV1) => ReactNode
+  /**
+   * Reçoit l'instantané et le moyen de le **remplacer**.
+   *
+   * Une commande acceptée rend l'instantané d'après débit et planification : le
+   * client n'a donc aucun `GET` à enchaîner, et l'écrire dans le cache est ce qui
+   * lui évite de le faire. Sans ce second argument, l'écran devrait invalider la
+   * requête et attendre un aller-retour pour afficher un état qu'il détient déjà.
+   */
+  readonly children: (
+    snapshot: PlanetSnapshotV1,
+    replace: (next: PlanetSnapshotV1) => void,
+  ) => ReactNode
 }
 
+const PLANET_QUERY_KEY = ['planet'] as const
+
 export function PlanetLoader({ gateway, children }: PlanetLoaderProps) {
+  const client = useQueryClient()
   const query = useQuery({
-    queryKey: ['planet'],
+    queryKey: PLANET_QUERY_KEY,
     queryFn: async () => {
       try {
         return await gateway.read()
@@ -51,5 +65,11 @@ export function PlanetLoader({ gateway, children }: PlanetLoaderProps) {
     return <p role="alert">Votre planète n’a pas pu être chargée. Réessayez dans un instant.</p>
   }
 
-  return <>{children(query.data)}</>
+  return (
+    <>
+      {children(query.data, (next) => {
+        client.setQueryData(PLANET_QUERY_KEY, next)
+      })}
+    </>
+  )
 }

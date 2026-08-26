@@ -1,4 +1,4 @@
-import type { GeometricCurve } from './curves.js'
+import type { GeometricCurve, LinearCurve } from './curves.js'
 import type { FootprintId } from './footprints.js'
 import type { ResourceId } from './resources.js'
 import { GRAINS_PER_UNIT } from './units.js'
@@ -16,10 +16,9 @@ import { GRAINS_PER_UNIT } from './units.js'
  * **Aucun coût n'est libellé en Jus** (FR-062, R22) : il n'a aucun débouché en
  * 001, et l'exiger serait un blocage définitif déguisé en contenu.
  *
- * Les courbes de production, de consommation d'énergie et de capacité arrivent
- * avec les tranches qui les emploient — US2, US3 et US7. Ce fichier porte ce
- * dont US1 a besoin : l'identité des types, leurs variantes, leurs bornes et
- * leurs coûts, sans lesquels FR-019 n'est pas vérifiable.
+ * La courbe de **capacité** de l'entrepôt arrive avec US7, la tranche qui la
+ * consomme : aucun test de cette itération ne la contraint, et une donnée
+ * d'équilibrage qu'aucun test ne tient est une valeur qui dérive en silence.
  */
 
 /** Une fraction en entiers — jamais un flottant (R19). */
@@ -46,6 +45,31 @@ export interface Building {
   readonly cost: Readonly<Partial<Record<ResourceId, GeometricCurve>>>
   /** Durée de construction par niveau, en secondes. */
   readonly buildDuration: GeometricCurve
+  /**
+   * Production **par gisement recouvert**, en unités par heure, ou `null` pour
+   * un type qui n'extrait rien.
+   *
+   * « Par gisement recouvert » est la moitié de la règle de R5 :
+   * `taux nominal = courbeProduction(niveau) × gisements`. La formuler ainsi
+   * dans la donnée plutôt que comme un total évite la seule confusion possible —
+   * un extracteur qui ne recouvre rien produit **zéro**, et non la valeur de
+   * base de son type (I-12, FR-017).
+   */
+  readonly production: GeometricCurve | null
+  /**
+   * Consommation d'énergie par niveau, ou `null` pour la **centrale**, seul type
+   * qui n'en consomme pas (FR-022, R20).
+   *
+   * Linéaire, et non géométrique : le déficit doit rester lisible. Une
+   * consommation qui croîtrait comme les coûts rendrait le rapport d'énergie
+   * imprévisible d'un niveau à l'autre, alors que SC-002 promet au joueur de
+   * pouvoir refaire le calcul à la main.
+   *
+   * L'énergie **produite** par la centrale arrive avec US3, la tranche qui la
+   * consomme. Ce qui est ici est ce que la cohérence du catalogue exige dès
+   * maintenant : tout type sauf la centrale consomme, l'entrepôt compris.
+   */
+  readonly energyConsumption: LinearCurve | null
 }
 
 /** Le facteur de croissance commun : chaque niveau coûte une fois et demie. */
@@ -56,6 +80,30 @@ function growing(baseUnits: number): GeometricCurve {
 /** Les durées ne sont pas des grains : leur base est en secondes. */
 function lengthening(baseSeconds: number): GeometricCurve {
   return { kind: 'geometric', base: baseSeconds, num: 7, den: 5 }
+}
+
+/**
+ * La production, en **unités par heure** — pas en grains.
+ *
+ * L'unité est dans le commentaire parce que la confusion est facile et
+ * silencieuse : un taux se multiplie par des secondes pour donner des grains
+ * (une unité par heure vaut exactement un grain par seconde), tandis qu'un coût
+ * est déjà en grains. Les deux sont des entiers, et rien dans le type ne les
+ * distingue.
+ *
+ * Le facteur `11/10` est plus doux que le `3/2` des coûts, et c'est le cœur de
+ * l'équilibrage : améliorer coûte une fois et demie pour rendre un dixième de
+ * plus. Le joueur qui veut produire davantage a donc deux voies — monter un
+ * niveau, ou trouver un second gisement — et la seconde est de la géométrie, pas
+ * de la dépense. C'est ce qui fait de la grille une décision.
+ */
+function yielding(baseUnitsPerHour: number): GeometricCurve {
+  return { kind: 'geometric', base: baseUnitsPerHour, num: 11, den: 10 }
+}
+
+/** La consommation d'énergie : une base, et un pas par niveau. */
+function drawing(base: number, step: number): LinearCurve {
+  return { kind: 'linear', base, step }
 }
 
 /** La moitié, remboursée à la démolition. Énonçable en une phrase (SC-002). */
@@ -71,6 +119,8 @@ const TYPES = {
     refund: HALF,
     cost: { camelote: growing(100), 'bave-etoiles': growing(20) },
     buildDuration: lengthening(120),
+    production: yielding(15),
+    energyConsumption: drawing(8, 4),
   },
   puits: {
     id: 'puits',
@@ -81,6 +131,8 @@ const TYPES = {
     refund: HALF,
     cost: { camelote: growing(120), 'bave-etoiles': growing(30) },
     buildDuration: lengthening(150),
+    production: yielding(8),
+    energyConsumption: drawing(10, 5),
   },
   /** L'extracteur de Bave d'étoiles. Nommé le 2026-08-23 (T014). */
   racloir: {
@@ -92,6 +144,8 @@ const TYPES = {
     refund: HALF,
     cost: { camelote: growing(150), 'bave-etoiles': growing(45) },
     buildDuration: lengthening(200),
+    production: yielding(4),
+    energyConsumption: drawing(14, 7),
   },
   /** Le **seul** type qui ne consomme pas d'énergie (R20). */
   centrale: {
@@ -103,6 +157,9 @@ const TYPES = {
     refund: HALF,
     cost: { camelote: growing(60), 'bave-etoiles': growing(15) },
     buildDuration: lengthening(90),
+    production: null,
+    // Le seul `null` de cette colonne, et c'est une exigence (FR-022, R20).
+    energyConsumption: null,
   },
   /**
    * Relève le plafond des trois ressources. Il consomme de l'énergie sans que
@@ -119,6 +176,10 @@ const TYPES = {
     refund: HALF,
     cost: { camelote: growing(80), 'bave-etoiles': growing(25) },
     buildDuration: lengthening(100),
+    production: null,
+    // L'entrepôt consomme, lui aussi : c'est ce qui fait que le poser sans
+    // centrale se paie — le prix étant payé par les extracteurs (R21).
+    energyConsumption: drawing(2, 1),
   },
 } as const satisfies Record<string, Omit<Building, 'id'> & { id: string }>
 

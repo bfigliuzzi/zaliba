@@ -171,7 +171,8 @@ export type WorkTargetV1 = z.infer<typeof WorkTargetV1>
 export type CellV1 = z.infer<typeof CellV1>
 
 /**
- * L'intention de chantier — union discriminée **fermée**, quatre variantes.
+ * L'intention de chantier — union discriminée **fermée**, qui s'élargit tranche
+ * par tranche.
  *
  * **Ce que ce corps ne peut pas contenir**, faute de champ pour le contenir :
  * `cost`, `duration`, `dueAt`, `production`, `refund`, `result`, `clientNow`, ni
@@ -179,8 +180,35 @@ export type CellV1 = z.infer<typeof CellV1>
  * champ à ne pas créer — la forme mécanique de FR-055 à FR-057. Un champ qu'on
  * ne peut pas envoyer est un champ qu'on ne peut pas exploiter, et une
  * vérification qu'on ne peut pas oublier dans six mois.
+ *
+ * **Pourquoi une seule nature ici, alors que `WorkTargetV1` en porte quatre.**
+ * La cible décrit un chantier *déjà planifié*, et un instantané peut en porter
+ * de n'importe quelle nature. L'intention, elle, décrit ce que le joueur a le
+ * droit de demander **maintenant**, et une nature que le serveur ne sait pas
+ * honorer serait une promesse rompue à l'exécution : le schéma accepterait, le
+ * code n'aurait rien à répondre, et le joueur recevrait un défaut serveur là où
+ * le jeu voulait dire « pas encore ».
+ *
+ * Le sens de l'élargissement est celui que le versionnement autorise : élargir
+ * une entrée est **compatible** (README § 2), la resserrer ne l'est pas. Déclarer
+ * les quatre natures d'avance nous interdirait d'en retirer une ; les déclarer au
+ * fur et à mesure ne coûte rien. `upgrade` arrive avec US4, `clear` avec US5,
+ * `demolish` avec US6.
  */
-export const WorkIntentV1 = WorkTargetV1
+export const WORK_INTENT_NATURES_V1 = ['build'] as const
+
+export const WorkIntentV1 = z.discriminatedUnion('nature', [
+  z
+    .object({
+      nature: z.literal('build'),
+      typeId: buildingTypeId,
+      variantId: footprintId,
+      orientation: z.number().int().min(0).max(3),
+      anchorX: coordinate,
+      anchorY: coordinate,
+    })
+    .strict(),
+])
 
 export type WorkIntentV1 = z.infer<typeof WorkIntentV1>
 

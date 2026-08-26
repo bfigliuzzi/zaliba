@@ -4,6 +4,7 @@ import { type Catalogs, DEFAULT_CATALOGS } from '@zaliba/domain'
 import type { FastifyInstance } from 'fastify'
 import type { Authenticator } from './plugins/auth.js'
 import { registerPlanetRoutes } from './routes/v1/planet.js'
+import { registerWorksRoutes } from './routes/v1/works.js'
 import { buildServer, type ServerOptions } from './server.js'
 
 /**
@@ -30,13 +31,16 @@ export type ApiOptions = ServerOptions & ApiDependencies
 export function buildApi(options: ApiOptions): FastifyInstance {
   const app = buildServer(options)
 
-  registerPlanetRoutes(app, {
+  const dependencies = {
     sql: options.sql,
     authenticator: options.authenticator,
     catalogs: options.catalogs ?? DEFAULT_CATALOGS,
     catalogVersion: options.catalogVersion ?? CATALOG_VERSION,
     ...(options.newId === undefined ? {} : { newId: options.newId }),
-  })
+  }
+
+  registerPlanetRoutes(app, dependencies)
+  registerWorksRoutes(app, dependencies)
 
   return app
 }

@@ -3,6 +3,7 @@ import { PlanetSnapshotV1 } from '@zaliba/contracts'
 import { DEFAULT_CATALOGS, instant, projectPlanet } from '@zaliba/domain'
 import { afterEach, describe, expect, it } from 'vitest'
 import { GridView } from '../../../src/features/grid/GridView.js'
+import { useGridCursor } from '../../../src/features/grid/useGridCursor.js'
 import { snapshotFromContract } from '../../../src/features/resources/extrapolation.js'
 import rawFresh from '../../fixtures/planet-fresh.json' with { type: 'json' }
 
@@ -25,10 +26,31 @@ afterEach(cleanup)
 const CATALOGS = DEFAULT_CATALOGS
 const payload = PlanetSnapshotV1.parse(rawFresh)
 
-function renderGrid() {
+/**
+ * La grille est **contrôlée** : son curseur vit au-dessus d'elle, dans l'écran
+ * de planète, parce que le fantôme, l'aperçu, l'annonce et le lancement en
+ * dépendent tous. Ce harnais tient donc le curseur à sa place, avec le vrai
+ * réducteur — un simulacre de curseur éprouverait le simulacre.
+ */
+function ControlledGrid() {
   const snapshot = snapshotFromContract(payload, CATALOGS)
   const state = projectPlanet(snapshot, CATALOGS, instant(payload.planet.consolidatedAt))
-  return render(<GridView cells={state.grid} width={6} height={6} />)
+  const cursor = useGridCursor({ width: 6, height: 6 })
+
+  return (
+    <GridView
+      cells={state.grid}
+      width={6}
+      height={6}
+      cursorIndex={cursor.index}
+      onKey={cursor.handleKey}
+      onPoint={cursor.point}
+    />
+  )
+}
+
+function renderGrid() {
+  return render(<ControlledGrid />)
 }
 
 describe('la grille est une grille, au sens du document', () => {

@@ -42,6 +42,7 @@ const payload = PlanetSnapshotV1.parse(rawFresh)
 const fakeGateway: PlanetGateway = {
   read: async () => payload,
   provision: async () => payload,
+  startWork: async () => payload,
 }
 
 function renderAt(path: string, info: SessionInfo | null = INFO) {

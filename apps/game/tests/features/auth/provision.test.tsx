@@ -36,6 +36,7 @@ function gateway(overrides: Partial<PlanetGateway> = {}): PlanetGateway {
   return {
     read: async () => payload,
     provision: async () => payload,
+    startWork: async () => payload,
     ...overrides,
   }
 }

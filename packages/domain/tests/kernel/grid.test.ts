@@ -1,6 +1,14 @@
+import type { FootprintId } from '@zaliba/catalogs'
 import { describe, expect, it } from 'vitest'
 import { DEFAULT_CATALOGS } from '../../src/kernel/catalogs.js'
-import { cellsOf, coveredDeposits, gridView } from '../../src/kernel/grid.js'
+import {
+  cellsOf,
+  coveredDeposits,
+  gridView,
+  orientedCells,
+  placementCells,
+  validatePlacement,
+} from '../../src/kernel/grid.js'
 import {
   emptySnapshot,
   type PlacedBuilding,
@@ -197,5 +205,147 @@ describe('l’ordre des cases est celui de la lecture', () => {
       [2, 0],
     ])
     expect(grid[6]).toMatchObject({ x: 0, y: 1 })
+  })
+})
+
+describe('l’empreinte orientée, puis translatée (R6)', () => {
+  it('rend les offsets de l’orientation demandée', () => {
+    expect(orientedCells('square-4', 0, CATALOGS)).toEqual([
+      { x: 0, y: 0 },
+      { x: 1, y: 0 },
+      { x: 0, y: 1 },
+      { x: 1, y: 1 },
+    ])
+  })
+
+  /**
+   * L'orientation du curseur est un compteur cyclique modulo **quatre** (R14),
+   * alors qu'une empreinte n'a que le nombre d'orientations *distinctes* que sa
+   * géométrie autorise. Le repli est donc la règle, pas le cas limite : c'est
+   * lui qui permet à la commande de rotation d'être toujours acceptée et de ne
+   * rien annoncer quand il n'y a rien à annoncer.
+   */
+  it('ramène l’orientation au nombre d’orientations distinctes', () => {
+    for (const orientation of [0, 1, 2, 3]) {
+      expect(orientedCells('square-4', orientation, CATALOGS)).toEqual(
+        orientedCells('square-4', 0, CATALOGS),
+      )
+    }
+    expect(orientedCells('rect-6', 2, CATALOGS)).toEqual(orientedCells('rect-6', 0, CATALOGS))
+    expect(orientedCells('l-4', 3, CATALOGS)).not.toEqual(orientedCells('l-4', 0, CATALOGS))
+  })
+
+  it('translate l’empreinte de son ancre', () => {
+    expect(placementCells('square-4', 0, { x: 3, y: 3 }, CATALOGS)).toEqual([
+      { x: 3, y: 3 },
+      { x: 4, y: 3 },
+      { x: 3, y: 4 },
+      { x: 4, y: 4 },
+    ])
+  })
+
+  /**
+   * La contiguïté n'est **jamais** vérifiée, et ce test dit pourquoi : les sept
+   * empreintes sont contiguës par définition, et une translation la conserve.
+   * Une vérification serait du code mort qui aurait l'air prudent.
+   */
+  it('conserve la surface en tournant et en translatant', () => {
+    for (const orientation of [0, 1, 2, 3]) {
+      expect(placementCells('l-4', orientation, { x: 1, y: 1 }, CATALOGS)).toHaveLength(4)
+    }
+  })
+})
+
+describe('la validité d’un placement, motif par motif (FR-012, FR-013)', () => {
+  function check(variantId: FootprintId, orientation: number, anchor: { x: number; y: number }) {
+    const snapshot = fresh()
+    return validatePlacement(
+      gridView(snapshot, CATALOGS),
+      placementCells(variantId, orientation, anchor, CATALOGS),
+    )
+  }
+
+  it('accepte un placement entièrement libre', () => {
+    expect(check('square-4', 0, { x: 0, y: 4 })).toEqual({ kind: 'ok' })
+  })
+
+  /**
+   * FR-013 exige le **motif exact**, et non un booléen. La différence n'est pas
+   * de confort : « refusé » n'apprend rien, « la case (5,2) est obstruée par une
+   * croûte calcifiée » dit au joueur quoi faire ensuite — et c'est la même
+   * information qui remonte jusqu'à l'annonce du lecteur d'écran (FR-059).
+   */
+  it('refuse hors de la grille, et énumère les cases fautives', () => {
+    const refusal = check('square-4', 0, { x: 5, y: 5 })
+    expect(refusal.kind).toBe('out-of-grid')
+    expect(refusal.kind === 'ok' ? [] : refusal.cells).toEqual([
+      { x: 6, y: 5 },
+      { x: 5, y: 6 },
+      { x: 6, y: 6 },
+    ])
+  })
+
+  it('refuse sur une case obstruée, et énumère les cases fautives', () => {
+    const refusal = check('square-4', 0, { x: 0, y: 2 })
+    expect(refusal.kind).toBe('obstructed')
+    // (0,2) filon enfoui, (1,2) éboulis, (1,3) rocher — (0,3) est libre.
+    expect(refusal.kind === 'ok' ? [] : refusal.cells).toEqual([
+      { x: 0, y: 2 },
+      { x: 1, y: 2 },
+      { x: 1, y: 3 },
+    ])
+  })
+
+  it('refuse sur une case occupée, et énumère les cases fautives', () => {
+    const snapshot = { ...fresh(), buildings: [mineAt(0, 4)] }
+    const refusal = validatePlacement(
+      gridView(snapshot, CATALOGS),
+      placementCells('single', 0, { x: 1, y: 5 }, CATALOGS),
+    )
+    expect(refusal.kind).toBe('occupied')
+    expect(refusal.kind === 'ok' ? [] : refusal.cells).toEqual([{ x: 1, y: 5 }])
+  })
+
+  /**
+   * L'ordre des motifs n'est pas arbitraire. « Hors de la grille » vient
+   * d'abord parce qu'une case absente de la grille n'a **aucun** état à
+   * examiner : dire d'elle qu'elle est obstruée serait inventer une réponse. Le
+   * reste suit la même logique — on nomme la cause la plus fondamentale.
+   */
+  it('nomme « hors de la grille » avant tout autre motif', () => {
+    // Le carré de neuf ancré en (4,1) déborde **et** couvre des cases obstruées.
+    const refusal = check('square-9', 0, { x: 4, y: 1 })
+    expect(refusal.kind).toBe('out-of-grid')
+  })
+
+  it('nomme « obstruée » avant « occupée »', () => {
+    const snapshot = { ...fresh(), buildings: [{ ...mineAt(0, 3), variantId: 'single' as const }] }
+    const refusal = validatePlacement(
+      gridView(snapshot, CATALOGS),
+      placementCells('square-4', 0, { x: 0, y: 2 }, CATALOGS),
+    )
+    expect(refusal.kind).toBe('obstructed')
+  })
+
+  /**
+   * Une case déblayée est plaçable : c'est tout l'objet du déblaiement, et le
+   * seul chemin par lequel les vingt-six cases libres deviennent trente-six.
+   */
+  it('accepte un placement sur une case déblayée', () => {
+    const snapshot = { ...fresh(), clearedCells: [{ x: 3, y: 0 }] }
+    const refusal = validatePlacement(
+      gridView(snapshot, CATALOGS),
+      placementCells('single', 0, { x: 3, y: 0 }, CATALOGS),
+    )
+    expect(refusal).toEqual({ kind: 'ok' })
+  })
+
+  /** Un gisement n'obstrue rien : il se recouvre, c'est même le but (FR-020). */
+  it('accepte un placement sur un gisement affleurant', () => {
+    const refusal = validatePlacement(
+      gridView(fresh(), CATALOGS),
+      placementCells('single', 0, { x: 0, y: 4 }, CATALOGS),
+    )
+    expect(refusal).toEqual({ kind: 'ok' })
   })
 })

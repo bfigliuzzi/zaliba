@@ -60,13 +60,19 @@ export interface CommandShape<Snapshot, State, Command, Effect, Refusal, Respons
   occupantOf(snapshot: Snapshot): string
 
   /**
-   * Les effets d'achèvement du chantier échu, **redérivés** et non lus.
-   * Vide s'il n'y a rien à résoudre.
+   * L'instantané **consolidé** à `at` : les quantités accumulées segment par
+   * segment, et le chantier échu appliqué **à son échéance** (R3, FR-032).
+   *
+   * Un seul point d'entrée, et c'est un enseignement de l'intégration. La forme
+   * prévoyait d'abord deux temps — « les effets d'achèvement » puis « marquer
+   * résolu » — comme si l'achèvement était une liste d'effets à appliquer à
+   * l'instant de la commande. Il ne l'est pas : il s'applique à `dueAt`, et la
+   * production qui suit court aux **nouveaux** taux depuis cette échéance. Les
+   * séparer obligeait à appliquer les effets au mauvais instant, ou à
+   * reconstruire la segmentation hors du domaine — c'est-à-dire à en écrire une
+   * seconde version.
    */
-  completionEffects(snapshot: Snapshot, at: Instant): readonly Effect[]
-
-  /** Note dans l'instantané que le chantier échu a été résolu. */
-  markWorkResolved(snapshot: Snapshot, at: Instant): Snapshot
+  consolidate(snapshot: Snapshot, at: Instant): Snapshot
 
   /** Fonction **pure** : `at` est un argument, jamais un appel d'horloge. */
   project(snapshot: Snapshot, at: Instant): State
@@ -161,10 +167,9 @@ export async function executeCommand<Snapshot, State, Command, Effect, Refusal, 
 
     const at = await transactionInstant(tx)
 
-    const completion = shape.completionEffects(locked, at)
-    const resolved = completion.length === 0 ? locked : shape.markWorkResolved(locked, at)
+    const consolidated = shape.consolidate(locked, at)
 
-    const state = shape.project(resolved, at)
+    const state = shape.project(consolidated, at)
 
     const decision = await shape.decide(state, request.command)
     if (decision.outcome === 'refused') {
@@ -173,7 +178,7 @@ export async function executeCommand<Snapshot, State, Command, Effect, Refusal, 
       throw shape.refusalToError(decision.refusal)
     }
 
-    const next = shape.apply(resolved, [...completion, ...decision.effects], at)
+    const next = shape.apply(consolidated, decision.effects, at)
 
     await shape.writeSnapshot(tx, next)
 

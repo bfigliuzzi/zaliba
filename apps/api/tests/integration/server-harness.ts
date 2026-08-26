@@ -33,12 +33,28 @@ export const passthroughAuthenticator: Authenticator = {
   },
 }
 
+/**
+ * L'intention de chantier, telle que le contrat l'accepte.
+ *
+ * Volontairement typée `object` et non `WorkIntentV1` : plusieurs cas envoient
+ * des charges que le contrat doit **refuser** — un champ dérivable, une borne
+ * dépassée. Les typer au contrat rendrait ces cas inécrivables, c'est-à-dire
+ * qu'on ne pourrait pas éprouver ce qui compte le plus.
+ */
+export type WorkPayload = Record<string, unknown>
+
 export interface TestServer {
   readonly app: FastifyInstance
   provision(playerId: string, options?: { idempotencyKey?: string | null }): Promise<Response>
   provisionAnonymous(): Promise<Response>
   read(playerId: string): Promise<Response>
   readAnonymous(): Promise<Response>
+  startWork(
+    playerId: string,
+    payload: WorkPayload,
+    options?: { idempotencyKey?: string | null },
+  ): Promise<Response>
+  startWorkAnonymous(payload: WorkPayload): Promise<Response>
   close(): Promise<void>
 }
 
@@ -90,6 +106,20 @@ export async function buildTestServer(harness: Harness): Promise<TestServer> {
         headers: { authorization: `Bearer ${playerId}` },
       }),
     readAnonymous: () => app.inject({ method: 'GET', url: '/v1/me/planet' }),
+    startWork: (playerId, payload, options = {}) =>
+      app.inject({
+        method: 'POST',
+        url: '/v1/me/planet/works',
+        headers: headers(playerId, options.idempotencyKey),
+        payload,
+      }),
+    startWorkAnonymous: (payload) =>
+      app.inject({
+        method: 'POST',
+        url: '/v1/me/planet/works',
+        headers: { 'idempotency-key': nextKey() },
+        payload,
+      }),
     close: () => app.close(),
   }
 }

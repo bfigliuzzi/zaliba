@@ -6,9 +6,9 @@ import type {
   ResourceId,
 } from '@zaliba/catalogs'
 import type { PlanetSnapshotV1, WorkTargetV1 } from '@zaliba/contracts'
-import type { PlanetRecord, WorkRecord } from '@zaliba/db'
+import type { PlanetRecord, PlanetWrite, WorkRecord } from '@zaliba/db'
 import type { Catalogs, PlanetSnapshot, WorkTarget } from '@zaliba/domain'
-import { grains, instant } from '@zaliba/domain'
+import { cellsOf, grains, instant } from '@zaliba/domain'
 
 /**
  * Les trois formes d'une planète, et pourquoi elles sont trois.
@@ -92,10 +92,70 @@ export function toSnapshot(record: PlanetRecord, catalogs: Catalogs): PlanetSnap
   }
 }
 
-/** Le domaine vers la persistance — pour l'écriture de l'instantané consolidé. */
-export function toRecord(snapshot: PlanetSnapshot, previous: PlanetRecord): PlanetRecord {
+/**
+ * La cible d'un chantier, de l'union du domaine vers les colonnes plates.
+ *
+ * Le `null` explicite de chaque colonne non concernée n'est pas du remplissage :
+ * la contrainte `works_target_matches_nature` exige qu'un `build` porte type,
+ * variante, orientation et coordonnées, **et rien d'autre**. Une colonne laissée
+ * renseignée par mégarde ferait échouer l'insertion — ce qui est exactement ce
+ * qu'on veut, plutôt qu'une ligne que le domaine ne saurait pas relire.
+ */
+function targetToRecord(work: NonNullable<PlanetSnapshot['work']>): WorkRecord {
+  const base = {
+    id: work.id,
+    nature: work.nature,
+    startedAt: work.startedAt,
+    dueAt: work.dueAt,
+  }
+
+  switch (work.target.kind) {
+    case 'build':
+      return {
+        ...base,
+        targetBuildingId: null,
+        targetX: work.target.anchor.x,
+        targetY: work.target.anchor.y,
+        typeId: work.target.typeId,
+        variantId: work.target.variantId,
+        orientation: work.target.orientation,
+      }
+    case 'building':
+      return {
+        ...base,
+        targetBuildingId: work.target.buildingId,
+        targetX: null,
+        targetY: null,
+        typeId: null,
+        variantId: null,
+        orientation: null,
+      }
+    case 'cell':
+      return {
+        ...base,
+        targetBuildingId: null,
+        targetX: work.target.cell.x,
+        targetY: work.target.cell.y,
+        typeId: null,
+        variantId: null,
+        orientation: null,
+      }
+  }
+}
+
+/**
+ * Le domaine vers la persistance — pour l'écriture de l'instantané consolidé.
+ *
+ * **Les cases de chaque bâtiment sont dérivées ici**, par le domaine, et
+ * transmises à `db`. Le paquet de persistance ne saurait pas les calculer : le
+ * repli d'orientation de R6 est une règle de jeu, et la recopier dans le dépôt
+ * en ferait une seconde implémentation d'une géométrie — deux implémentations
+ * qui finissent par diverger sur un cas de rotation, avec pour arbitre une clé
+ * primaire qui refuserait alors des poses parfaitement valides.
+ */
+export function toWrite(snapshot: PlanetSnapshot, catalogs: Catalogs): PlanetWrite {
   return {
-    ...previous,
+    id: snapshot.planetId,
     occupantId: snapshot.occupantId,
     consolidatedAt: snapshot.consolidatedAt,
     holdings: Object.entries(snapshot.holdings).map(([resourceId, holding]) => ({
@@ -103,6 +163,18 @@ export function toRecord(snapshot: PlanetSnapshot, previous: PlanetRecord): Plan
       amountGrains: holding.amount,
       lostGrains: holding.lost,
     })),
+    buildings: snapshot.buildings.map((building) => ({
+      id: building.id,
+      typeId: building.typeId,
+      variantId: building.variantId,
+      orientation: building.orientation,
+      anchorX: building.anchor.x,
+      anchorY: building.anchor.y,
+      level: building.level,
+      cells: cellsOf(building, catalogs).map((cell) => ({ x: cell.x, y: cell.y })),
+    })),
+    clearedCells: snapshot.clearedCells.map((cell) => ({ x: cell.x, y: cell.y })),
+    work: snapshot.work === null ? null : targetToRecord(snapshot.work),
   }
 }
 

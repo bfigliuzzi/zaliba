@@ -2,8 +2,14 @@ import type { ResourceId } from '@zaliba/catalogs'
 import type { Catalogs } from './catalogs.js'
 import { layoutOf } from './catalogs.js'
 import type { Effect } from './effects.js'
-import { type CellView, cellsOf, coveredDeposits, gridView } from './grid.js'
-import { type EnergyRatio, NO_DEFICIT, productionRates, storageCaps } from './rates.js'
+import { type CellView, cellsOf, gridView } from './grid.js'
+import {
+  buildingRates,
+  type EnergyRatio,
+  NO_DEFICIT,
+  productionRates,
+  storageCaps,
+} from './rates.js'
 import { advanceSegment, type Grains, grains, type RatePerHour, saturationAt } from './resources.js'
 import {
   applyEffects,
@@ -294,15 +300,24 @@ function render(
     }),
   ) as unknown as Record<ResourceId, HoldingView>
 
-  const buildings: readonly BuildingView[] = snapshot.buildings.map((building) => ({
-    ...building,
-    cells: cellsOf(building, catalogs),
-    coveredDeposits: coveredDeposits(building, grid, catalogs),
-    // Les taux par bâtiment arrivent avec US2, en même temps que les courbes
-    // de production des extracteurs.
-    nominalRate: 0 as RatePerHour,
-    effectiveRate: 0 as RatePerHour,
-  }))
+  // Les taux par bâtiment viennent du **même** calcul que le taux de la
+  // planète (FR-024, FR-053). Les recalculer ici donnerait deux chiffres justes
+  // séparément et incohérents ensemble — et le joueur voit les deux sur le même
+  // écran, donc il ne pourrait pas savoir lequel croire.
+  const perBuilding = new Map(
+    buildingRates(snapshot, catalogs, energy.ratio).map((rate) => [rate.buildingId, rate]),
+  )
+
+  const buildings: readonly BuildingView[] = snapshot.buildings.map((building) => {
+    const rate = perBuilding.get(building.id)
+    return {
+      ...building,
+      cells: cellsOf(building, catalogs),
+      coveredDeposits: rate?.coveredDeposits ?? 0,
+      nominalRate: rate?.nominal ?? (0 as RatePerHour),
+      effectiveRate: rate?.effective ?? (0 as RatePerHour),
+    }
+  })
 
   const work: WorkView | null =
     snapshot.work === null

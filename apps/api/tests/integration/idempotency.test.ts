@@ -95,8 +95,7 @@ function shapeUnderTest(): CommandShape<
       }
     },
     occupantOf: (snapshot) => snapshot.occupantId,
-    completionEffects: () => [],
-    markWorkResolved: (snapshot) => snapshot,
+    consolidate: (snapshot) => snapshot,
     project: (_snapshot, at) => ({ at }),
     decide(_state, command) {
       if (command.kind === 'refuse') return { outcome: 'refused', refusal: 'work-in-progress' }

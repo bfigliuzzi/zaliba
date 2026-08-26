@@ -23,26 +23,37 @@ import type { Session } from './session.js'
 export class PlanetRefusal extends Error {
   readonly code: string
   readonly status: number
+  /**
+   * Le détail typé du refus — cases fautives, échéance du chantier en cours,
+   * manque par ressource. C'est lui, et non le message, qui permet à l'écran de
+   * marquer les cases et d'annoncer *quand* revenir (FR-013, SC-006, SC-007).
+   */
+  readonly details: Record<string, unknown> | undefined
 
-  constructor(status: number, code: string, message: string) {
+  constructor(status: number, code: string, message: string, details?: Record<string, unknown>) {
     super(message)
     this.name = 'PlanetRefusal'
     this.status = status
     this.code = code
+    this.details = details
   }
 }
 
 interface ErrorLikeBody {
   readonly code?: unknown
   readonly message?: unknown
+  readonly details?: unknown
 }
 
 function refuse(status: number, body: unknown): never {
-  const { code, message } = (body ?? {}) as ErrorLikeBody
+  const { code, message, details } = (body ?? {}) as ErrorLikeBody
   throw new PlanetRefusal(
     status,
     typeof code === 'string' ? code : 'server-fault',
     typeof message === 'string' ? message : 'La requête a échoué.',
+    typeof details === 'object' && details !== null
+      ? (details as Record<string, unknown>)
+      : undefined,
   )
 }
 
@@ -68,6 +79,15 @@ export function createPlanetGateway(options: PlanetGatewayOptions): PlanetGatewa
       if (response.status !== 201 && response.status !== 200) {
         refuse(response.status, response.body)
       }
+      return PlanetSnapshotSchema.parse(response.body) satisfies PlanetSnapshotV1
+    },
+
+    async startWork(intent) {
+      const response = await client.startWork({ body: intent })
+      // Un `409` n'est pas une panne : c'est le jeu qui répond non. Le code est
+      // repris tel quel et remonte à l'écran, qui en dérive son affichage —
+      // jamais du message, qui n'est qu'un libellé (contrats § 5).
+      if (response.status !== 201) refuse(response.status, response.body)
       return PlanetSnapshotSchema.parse(response.body) satisfies PlanetSnapshotV1
     },
   }

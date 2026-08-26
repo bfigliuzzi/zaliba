@@ -312,38 +312,108 @@ production augmente **exactement** du montant annoncé avant la pose.
 
 ### Tests d'abord ⚠️
 
-- [ ] T080 [US2] Écrire le parcours Playwright dans `apps/game/tests/e2e/us2-build.spec.ts` : `Tab` jusqu'à la grille, sélectionner `mine`, choisir `square-4`, flèches jusqu'en (0,4), `R`, `Entrée` — **sans aucun dispositif de pointage** (SC-004) ; vérifier que ce parcours tient dans le **nombre d'interactions publié par SC-001** ; vérifier les annonces `aria-live` ; provoquer les trois refus de placement et vérifier trois `code` distincts avec les cases fautives ; lancer deux chantiers depuis **deux onglets simultanés** et vérifier que la seconde demande échoue ; passer `axe-core` sans écart. Observer l'échec.
-- [ ] T081 [P] [US2] Écrire les tests de cohérence des types de bâtiment dans `packages/catalogs/tests/buildings.test.ts` : les cinq types de R20 et leurs variantes (`mine` → `square-4`, `l-4`, `t-4` ; `puits` → `rect-6` ; `racloir` → `square-9` ; `centrale` → `line-2` ; `entrepot` → `single`) ; **les variantes d'un même type ont la même surface et des courbes identiques** (FR-009) ; les coûts sont strictement croissants avec le niveau ; **tout type sauf la `centrale` porte une courbe de consommation d'énergie**, l'`entrepot` compris (FR-022) ; **chaque type porte un niveau maximal, une durée de démolition et une fraction de remboursement** (FR-046, R20). Observer l'échec.
-- [ ] T082 [P] [US2] Écrire le test de FR-005 dans `packages/catalogs/tests/layout-placements.test.ts` — **la seule autorité sur cette exigence**, la vérification manuelle de R7 n'en étant qu'un brouillon : chacune des sept empreintes admet au moins un placement valide sur le Berceau, et chacun des trois extracteurs admet un placement recouvrant le gisement de sa ressource. Observer l'échec.
-- [ ] T083 [P] [US2] Écrire les tests de placement dans `packages/domain/tests/kernel/grid.test.ts` : un cas par motif de l'union fermée `PlacementRefusal` — `out-of-grid`, `obstructed`, `occupied` — avec **énumération des cases fautives** (FR-012, FR-013). Observer l'échec.
-- [ ] T084 [P] [US2] Écrire les invariants de grille dans `packages/domain/tests/kernel/grid-invariants.test.ts` : **I-5** les cases de deux bâtiments d'une même planète sont disjointes ; **I-6** aucune suite de rotations ne produit le miroir d'une empreinte chirale — **`l-4` est la seule** : le T a un axe de symétrie vertical, donc son miroir *est* son orientation 0 (corrigé le 2026-08-26, cf. R6). Observer l'échec.
-- [ ] T085 [P] [US2] Écrire les invariants de production dans `packages/domain/tests/kernel/rates-invariants.test.ts` : **I-12** un extracteur ne recouvrant aucun gisement produit **zéro** ; **I-13** la production est proportionnelle au nombre de gisements recouverts — deux veines donnent exactement le double d'une (US2-3, US2-4). Observer l'échec.
-- [ ] T086 [P] [US2] Écrire les tests du module de construction dans `packages/domain/tests/modules/construction/build.test.ts` : `decide()` retourne des **effets** et ne mute rien ; `preview()` annonce coût, durée, `dueAt`, gisements recouverts et taux résultant ; **poser un second bâtiment du même type est accepté — seule la surface disponible contraint leur nombre** (FR-014) ; refus `work-in-progress` avec l'échéance du chantier en cours (FR-034) ; refus `variant-not-available-for-type`. Observer l'échec.
-- [ ] T087 [P] [US2] Écrire les **tests d'absence** de champ dans `packages/contracts/tests/v1/works-absence.test.ts` : une charge portant `cost`, `duration`, `dueAt`, `production`, `refund`, `result`, `clientNow` ou tout horodatage est rejetée en **400** pour clé inconnue ; **aucune route ni aucune nature ne permet d'annuler ou de remplacer un chantier** (FR-037). C'est la forme mécanique de FR-055 à FR-057 — ces exigences ne sont pas des validations à écrire, ce sont des champs à ne pas créer. Observer l'échec.
-- [ ] T088 [P] [US2] Écrire les **tests de bornes** dans `packages/contracts/tests/v1/works-bounds.test.ts` : `orientation` à 7 ou à −1, `anchorX` hors `0..15`, valeurs non entières, `NaN`, quantités négatives — toutes rejetées en **400** par le schéma, pas par le métier. Observer l'échec.
-- [ ] T089 [P] [US2] Écrire le test du curseur de grille dans `apps/game/tests/features/grid/cursor.test.ts` : machine à états du modèle R14 — flèches, `R`, `Entrée` —, bornes de la grille, orientation cyclique modulo 4, et l'appui pointeur menant au **même** état que le clavier. Observer l'échec.
-- [ ] T090 [P] [US2] Écrire le test des annonces dans `apps/game/tests/features/grid/live-region.test.ts` : chaque déplacement restitue position, contenu de case, empreinte, orientation, validité et nombre de gisements recouverts (FR-059) ; une rotation d'empreinte à orientation unique — le carré de quatre — n'annonce **rien** comme changé (R6). Observer l'échec.
+- [x] T080 [US2] Écrire le parcours Playwright dans `apps/game/tests/e2e/us2-build.spec.ts` : `Tab` jusqu'à la grille, sélectionner `mine`, choisir `square-4`, flèches jusqu'en (0,4), `R`, `Entrée` — **sans aucun dispositif de pointage** (SC-004) ; vérifier que ce parcours tient dans le **nombre d'interactions publié par SC-001** ; vérifier les annonces `aria-live` ; provoquer les trois refus de placement et vérifier trois `code` distincts avec les cases fautives ; lancer deux chantiers depuis **deux onglets simultanés** et vérifier que la seconde demande échoue ; passer `axe-core` sans écart. Observer l'échec.
+- [x] T081 [P] [US2] Écrire les tests de cohérence des types de bâtiment dans `packages/catalogs/tests/buildings.test.ts` : les cinq types de R20 et leurs variantes (`mine` → `square-4`, `l-4`, `t-4` ; `puits` → `rect-6` ; `racloir` → `square-9` ; `centrale` → `line-2` ; `entrepot` → `single`) ; **les variantes d'un même type ont la même surface et des courbes identiques** (FR-009) ; les coûts sont strictement croissants avec le niveau ; **tout type sauf la `centrale` porte une courbe de consommation d'énergie**, l'`entrepot` compris (FR-022) ; **chaque type porte un niveau maximal, une durée de démolition et une fraction de remboursement** (FR-046, R20). Observer l'échec.
+- [x] T082 [P] [US2] Écrire le test de FR-005 dans `packages/catalogs/tests/layout-placements.test.ts` — **la seule autorité sur cette exigence**, la vérification manuelle de R7 n'en étant qu'un brouillon : chacune des sept empreintes admet au moins un placement valide sur le Berceau, et chacun des trois extracteurs admet un placement recouvrant le gisement de sa ressource. Observer l'échec.
+- [x] T083 [P] [US2] Écrire les tests de placement dans `packages/domain/tests/kernel/grid.test.ts` : un cas par motif de l'union fermée `PlacementRefusal` — `out-of-grid`, `obstructed`, `occupied` — avec **énumération des cases fautives** (FR-012, FR-013). Observer l'échec.
+- [x] T084 [P] [US2] Écrire les invariants de grille dans `packages/domain/tests/kernel/grid-invariants.test.ts` : **I-5** les cases de deux bâtiments d'une même planète sont disjointes ; **I-6** aucune suite de rotations ne produit le miroir d'une empreinte chirale — **`l-4` est la seule** : le T a un axe de symétrie vertical, donc son miroir *est* son orientation 0 (corrigé le 2026-08-26, cf. R6). Observer l'échec.
+- [x] T085 [P] [US2] Écrire les invariants de production dans `packages/domain/tests/kernel/rates-invariants.test.ts` : **I-12** un extracteur ne recouvrant aucun gisement produit **zéro** ; **I-13** la production est proportionnelle au nombre de gisements recouverts — deux veines donnent exactement le double d'une (US2-3, US2-4). Observer l'échec.
+- [x] T086 [P] [US2] Écrire les tests du module de construction dans `packages/domain/tests/modules/construction/build.test.ts` : `decide()` retourne des **effets** et ne mute rien ; `preview()` annonce coût, durée, `dueAt`, gisements recouverts et taux résultant ; **poser un second bâtiment du même type est accepté — seule la surface disponible contraint leur nombre** (FR-014) ; refus `work-in-progress` avec l'échéance du chantier en cours (FR-034) ; refus `variant-not-available-for-type`. Observer l'échec.
+- [x] T087 [P] [US2] Écrire les **tests d'absence** de champ dans `packages/contracts/tests/v1/works-absence.test.ts` : une charge portant `cost`, `duration`, `dueAt`, `production`, `refund`, `result`, `clientNow` ou tout horodatage est rejetée en **400** pour clé inconnue ; **aucune route ni aucune nature ne permet d'annuler ou de remplacer un chantier** (FR-037). C'est la forme mécanique de FR-055 à FR-057 — ces exigences ne sont pas des validations à écrire, ce sont des champs à ne pas créer. Observer l'échec.
+- [x] T088 [P] [US2] Écrire les **tests de bornes** dans `packages/contracts/tests/v1/works-bounds.test.ts` : `orientation` à 7 ou à −1, `anchorX` hors `0..15`, valeurs non entières, `NaN`, quantités négatives — toutes rejetées en **400** par le schéma, pas par le métier. Observer l'échec.
+- [x] T089 [P] [US2] Écrire le test du curseur de grille dans `apps/game/tests/features/grid/cursor.test.ts` : machine à états du modèle R14 — flèches, `R`, `Entrée` —, bornes de la grille, orientation cyclique modulo 4, et l'appui pointeur menant au **même** état que le clavier. Observer l'échec.
+- [x] T090 [P] [US2] Écrire le test des annonces dans `apps/game/tests/features/grid/live-region.test.ts` : chaque déplacement restitue position, contenu de case, empreinte, orientation, validité et nombre de gisements recouverts (FR-059) ; une rotation d'empreinte à orientation unique — le carré de quatre — n'annonce **rien** comme changé (R6). Observer l'échec.
 
 ### Implémentation
 
-- [ ] T091 [US2] Implémenter `packages/catalogs/src/buildings.ts` : les cinq types de R20, leurs variantes d'empreinte, leur niveau maximal, leur durée de démolition, leur fraction de remboursement, et leurs courbes de coût, de durée, de production, de consommation et de capacité. Le choix entre variantes est **purement géométrique** et ne porte jamais d'avantage chiffré (FR-009).
-- [ ] T092 [US2] Implémenter `packages/domain/src/kernel/grid.ts` (seconde moitié) : `orientedCells(variantId, orientation)`, `placementCells(variantId, orientation, anchor)` et `validatePlacement(grid, cells)` retournant `Ok | PlacementRefusal`. La contiguïté n'est jamais à vérifier : les sept empreintes sont contiguës par définition et une translation la conserve.
-- [ ] T093 [US2] Implémenter `packages/domain/src/kernel/rates.ts` (seconde moitié) : le taux nominal d'un extracteur = `courbeProduction(niveau) × gisements recouverts de sa ressource` (R5, FR-016, FR-017).
-- [ ] T094 [US2] Implémenter `packages/domain/src/modules/construction/build.ts` : validation, calcul du coût et de la durée, effets `debit-resources` et `schedule-work` au lancement, `place-building` à l'échéance. **Le module ne mute rien** : il retourne des effets que le noyau applique.
-- [ ] T095 [US2] Implémenter `packages/domain/src/modules/construction/preview.ts` : `preview(state, command, catalogs) -> Result<Preview, Refusal>` avec `cost`, `duration`, `dueAt`, `shortfall`, `secondsUntilAffordable` et l'effet discriminé — la variante `build` d'abord (data-model § 1.6). Le même code sert le client et le serveur (R8).
-- [ ] T096 [US2] Étendre `packages/contracts/src/v1/planet.ts` avec `POST /v1/me/planet/works` : union discriminée **fermée** sur `nature`, variante `build` (`typeId`, `variantId`, `orientation` `0..3`, `anchorX` `0..15`, `anchorY` `0..15`) et **rien d'autre**.
-- [ ] T097 [US2] Étendre `packages/contracts/src/v1/errors.ts` avec les codes `work-in-progress` (`{ workId, nature, dueAt }`), `placement-out-of-grid`, `placement-on-obstructed-cell`, `placement-on-occupied-cell` (`{ cells }`), `variant-not-available-for-type` et `not-occupant` (**403**), plus leurs `details` typés.
-- [ ] T098 [US2] Implémenter l'écriture de `game.building_cells` dans la **même transaction** que `game.buildings`, dans `packages/db/src/repository/buildings.ts` (R10).
-- [ ] T099 [US2] Écrire le test d'intégration d'unicité du chantier dans `apps/api/tests/integration/work-uniqueness.test.ts` : deux commandes simultanées depuis deux sessions — exactement **une** réussit, la seconde est refusée en `409 work-in-progress` avec `dueAt`. C'est l'index unique `(planet_id) where resolved_at is null` qui le garantit, **pas** une vérification préalable. C'est **I-9** éprouvé de bout en bout, là où T030 ne l'éprouvait qu'au niveau du schéma. Observer l'échec.
-- [ ] T100 [US2] Écrire le test d'intégration d'autorisation dans `apps/api/tests/integration/authorization.test.ts` — **le moins intuitif et le plus important** : l'`occupant_id` de la planète change entre la lecture et l'écriture ; la commande est **rejetée** en `403 not-occupant`. L'autorisation se vérifie dans la transaction, sur la ligne verrouillée, jamais avant (FR-007). Observer l'échec.
-- [ ] T101 [US2] Implémenter `apps/api/src/routes/v1/works.ts` : `POST /v1/me/planet/works` retournant `201` avec l'instantané **après** débit et planification, pour que le client n'ait aucun `GET` à enchaîner.
-- [ ] T102 [US2] Implémenter `apps/game/src/features/grid/useGridCursor.ts` : le modèle d'interaction curseur de R14 — flèches au clavier, appui sur une case au pointeur, `R` pour pivoter, `Entrée` pour confirmer. **Aucun glisser-déposer** : le même parcours sert le clavier et le pointeur.
-- [ ] T103 [US2] Implémenter `apps/game/src/features/grid/FootprintGhost.tsx` : le fantôme de l'empreinte orientée sous le curseur, avec la validité et les cases fautives rendues sans dépendre de la couleur seule.
-- [ ] T104 [US2] Implémenter `apps/game/src/features/grid/GridLiveRegion.tsx` : la région `aria-live` annonçant à chaque déplacement la position, le contenu de la case, l'empreinte courante, son orientation, la validité du placement et **le nombre de gisements recouverts** (FR-059). Une rotation d'empreinte à orientation unique — le carré de quatre — ne doit **rien** annoncer comme changé (R6).
-- [ ] T105 [US2] Implémenter `apps/game/src/features/work/BuildPanel.tsx` : sélecteur de type, sélecteur de variante, aperçu local par `preview()` — coût, durée, gisements recouverts, production annoncée — et **confirmation explicite** postérieure à cet affichage (FR-035).
-- [ ] T106 [US2] Implémenter `apps/game/src/features/work/CurrentWork.tsx` : la nature du chantier en cours, sa cible et le temps restant, extrapolé localement (FR-038).
+- [x] T091 [US2] Implémenter `packages/catalogs/src/buildings.ts` : les cinq types de R20, leurs variantes d'empreinte, leur niveau maximal, leur durée de démolition, leur fraction de remboursement, et leurs courbes de coût, de durée, de production, de consommation et de capacité. Le choix entre variantes est **purement géométrique** et ne porte jamais d'avantage chiffré (FR-009).
+- [x] T092 [US2] Implémenter `packages/domain/src/kernel/grid.ts` (seconde moitié) : `orientedCells(variantId, orientation)`, `placementCells(variantId, orientation, anchor)` et `validatePlacement(grid, cells)` retournant `Ok | PlacementRefusal`. La contiguïté n'est jamais à vérifier : les sept empreintes sont contiguës par définition et une translation la conserve.
+- [x] T093 [US2] Implémenter `packages/domain/src/kernel/rates.ts` (seconde moitié) : le taux nominal d'un extracteur = `courbeProduction(niveau) × gisements recouverts de sa ressource` (R5, FR-016, FR-017).
+- [x] T094 [US2] Implémenter `packages/domain/src/modules/construction/build.ts` : validation, calcul du coût et de la durée, effets `debit-resources` et `schedule-work` au lancement, `place-building` à l'échéance. **Le module ne mute rien** : il retourne des effets que le noyau applique.
+- [x] T095 [US2] Implémenter `packages/domain/src/modules/construction/preview.ts` : `preview(state, command, catalogs) -> Result<Preview, Refusal>` avec `cost`, `duration`, `dueAt`, `shortfall`, `secondsUntilAffordable` et l'effet discriminé — la variante `build` d'abord (data-model § 1.6). Le même code sert le client et le serveur (R8).
+- [x] T096 [US2] Étendre `packages/contracts/src/v1/planet.ts` avec `POST /v1/me/planet/works` : union discriminée **fermée** sur `nature`, variante `build` (`typeId`, `variantId`, `orientation` `0..3`, `anchorX` `0..15`, `anchorY` `0..15`) et **rien d'autre**.
+- [x] T097 [US2] Étendre `packages/contracts/src/v1/errors.ts` avec les codes `work-in-progress` (`{ workId, nature, dueAt }`), `placement-out-of-grid`, `placement-on-obstructed-cell`, `placement-on-occupied-cell` (`{ cells }`), `variant-not-available-for-type` et `not-occupant` (**403**), plus leurs `details` typés.
+- [x] T098 [US2] Implémenter l'écriture de `game.building_cells` dans la **même transaction** que `game.buildings`, dans `packages/db/src/repository/buildings.ts` (R10).
+- [x] T099 [US2] Écrire le test d'intégration d'unicité du chantier dans `apps/api/tests/integration/work-uniqueness.test.ts` : deux commandes simultanées depuis deux sessions — exactement **une** réussit, la seconde est refusée en `409 work-in-progress` avec `dueAt`. C'est l'index unique `(planet_id) where resolved_at is null` qui le garantit, **pas** une vérification préalable. C'est **I-9** éprouvé de bout en bout, là où T030 ne l'éprouvait qu'au niveau du schéma. Observer l'échec.
+- [x] T100 [US2] Écrire le test d'intégration d'autorisation dans `apps/api/tests/integration/authorization.test.ts` — **le moins intuitif et le plus important** : l'`occupant_id` de la planète change entre la lecture et l'écriture ; la commande est **rejetée** en `403 not-occupant`. L'autorisation se vérifie dans la transaction, sur la ligne verrouillée, jamais avant (FR-007). Observer l'échec.
+- [x] T101 [US2] Implémenter `apps/api/src/routes/v1/works.ts` : `POST /v1/me/planet/works` retournant `201` avec l'instantané **après** débit et planification, pour que le client n'ait aucun `GET` à enchaîner.
+- [x] T102 [US2] Implémenter `apps/game/src/features/grid/useGridCursor.ts` : le modèle d'interaction curseur de R14 — flèches au clavier, appui sur une case au pointeur, `R` pour pivoter, `Entrée` pour confirmer. **Aucun glisser-déposer** : le même parcours sert le clavier et le pointeur.
+- [x] T103 [US2] Implémenter `apps/game/src/features/grid/FootprintGhost.tsx` : le fantôme de l'empreinte orientée sous le curseur, avec la validité et les cases fautives rendues sans dépendre de la couleur seule.
+- [x] T104 [US2] Implémenter `apps/game/src/features/grid/GridLiveRegion.tsx` : la région `aria-live` annonçant à chaque déplacement la position, le contenu de la case, l'empreinte courante, son orientation, la validité du placement et **le nombre de gisements recouverts** (FR-059). Une rotation d'empreinte à orientation unique — le carré de quatre — ne doit **rien** annoncer comme changé (R6).
+- [x] T105 [US2] Implémenter `apps/game/src/features/work/BuildPanel.tsx` : sélecteur de type, sélecteur de variante, aperçu local par `preview()` — coût, durée, gisements recouverts, production annoncée — et **confirmation explicite** postérieure à cet affichage (FR-035).
+- [x] T106 [US2] Implémenter `apps/game/src/features/work/CurrentWork.tsx` : la nature du chantier en cours, sa cible et le temps restant, extrapolé localement (FR-038).
 
-**Point de contrôle** : US1 et US2 fonctionnent indépendamment. La mécanique qui donne son identité au jeu est livrée.
+**Point de contrôle** : US1 et US2 fonctionnent indépendamment. La mécanique qui
+donne son identité au jeu est livrée. ✅ **Franchi le 2026-08-26** — 878 tests
+unitaires, 125 d'intégration, 48 cas Playwright sur deux profils (US1 et US2),
+`axe-core` sans écart, types, lint et frontières (158 modules) au vert. Le
+parcours de pose **tient dans le plafond de quinze frappes** que publie SC-001,
+et le parcours le compte plutôt que de l'affirmer.
+
+### Divergences constatées à l'exécution
+
+1. **`insufficient-resources` avancé de la phase 6.** T097 ne le listait pas et
+   T124 l'apporte en US4 — mais T095 exige `shortfall` et
+   `secondsUntilAffordable` dès maintenant, et sans le **code de refus**
+   correspondant, un chantier trop cher aurait levé une `RangeError` au débit :
+   un 500 là où le jeu voulait dire non. Le motif est donc livré avec la
+   mécanique qui peut le produire.
+2. **Les courbes d'énergie avancées de la phase 5.** T081 éprouve « tout type
+   sauf la `centrale` porte une courbe de consommation, l'`entrepot` compris » :
+   c'est un test d'US2, donc la donnée est écrite en T091. T112 trouvera cette
+   moitié en place ; il lui reste la production de la centrale et le câblage du
+   rapport. La courbe de **capacité** de l'entrepôt, elle, reste à T145 —
+   aucun test de cette tranche ne la contraint, et une donnée d'équilibrage
+   qu'aucun test ne tient est une valeur qui dérive en silence.
+3. **`WorkIntentV1` est restreint à la nature `build`.** Le contrat déclarait
+   les quatre natures depuis T070, alors que le serveur n'en honore qu'une. Le
+   sens du versionnement tranche : élargir une entrée est **compatible**, la
+   resserrer ne l'est pas — donc on ne déclare une nature qu'au moment où elle
+   est servie, sous peine de ne plus pouvoir la retirer. `WorkTargetV1`, qui
+   décrit un chantier *déjà planifié* dans la réponse, garde les quatre.
+   L'instantané de JSON Schema a été relu et assumé : le diff ne porte que ce
+   retrait.
+4. **La forme unique de commande a changé de couture.** Elle prévoyait deux
+   temps — « les effets d'achèvement » puis « marquer résolu » —, comme si
+   l'achèvement était une liste d'effets à appliquer à l'instant de la commande.
+   Il ne l'est pas : il s'applique à `dueAt`, et la production qui suit court aux
+   **nouveaux** taux depuis cette échéance. Les séparer obligeait à appliquer les
+   effets au mauvais instant, ou à reconstruire la segmentation hors du domaine.
+   Les deux crochets sont remplacés par un seul, `consolidate`.
+5. **Un cycle de dépendances dans `packages/db`**, refusé par
+   `dependency-cruiser` : `snapshot.ts` → `buildings.ts` → `snapshot.ts`, par les
+   types de forme. Les formes de persistance vivent désormais dans
+   `repository/records.ts`, qui n'importe rien. La porte a fait son travail — et
+   le compte de modules parcourus (154) confirme qu'elle n'est pas inerte.
+6. **`building_cells` n'insère que les cases des bâtiments *nouveaux*.** Un
+   `on conflict … do nothing` paraissait plus robuste et détruisait la garantie
+   de R10 : il aurait transformé une superposition en écrasement silencieux.
+   Comme les cases d'un bâtiment déjà en base sont déjà justes — variante,
+   orientation et ancre sont figées à la pose —, il suffit de ne pas les
+   réinsérer, et le conflit redevient une erreur.
+7. **`GridView` devient contrôlée** : le curseur remonte dans l'écran de planète.
+   Quatre choses en dépendent — le fantôme, l'aperçu, l'annonce et le lancement —
+   et aucune n'appartient à la grille. Une grille qui détiendrait son curseur
+   obligerait chacune des quatre à en tenir une copie, c'est-à-dire à afficher un
+   fantôme à un endroit et à poser à un autre.
+8. **`WorkInProgress.tsx` est remplacé par `CurrentWork.tsx`** (T106). Il
+   manquait la **cible** : « construction en cours, deux minutes » ne dit pas
+   *quoi*, et FR-038 l'exige — d'autant qu'un chantier n'est pas annulable.
+9. **Le parcours de bout en bout a trouvé un défaut d'accessibilité réel** :
+   deux groupes aux noms confusables, « Aperçu du chantier » et « Chantier ».
+   Aucun test de composant ne pouvait l'attraper, chacun ne voyant qu'un groupe.
+   Renommé en « Aperçu de la construction ».
+10. **Quatre composants n'avaient pas de tâche de test** (T103 à T106). Les
+    tests ont été écrits après leur implémentation — dette au titre du principe
+    III, signalée et rattrapée avant fusion. Leur valeur a été vérifiée par
+    **mutation** : deux mutations ciblées font tomber quatre cas.
+11. **`cleared_cells` est écrite dès maintenant**, dans `repository/cells.ts` —
+    le fichier que T132 nomme. Un instantané portant une case déblayée que le
+    dépôt n'aurait pas persistée était un trou silencieux ; US5 trouvera
+    l'écriture en place.
+12. **Le curseur persiste entre deux poses**, et c'est une décision de jeu que le
+    test a révélée : un joueur qui pose deux bâtiments voisins apprécie de
+    repartir d'où il était. C'est le test qui doit dire d'où il part.
 
 ---
 

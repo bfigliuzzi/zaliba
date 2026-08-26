@@ -7,5 +7,8 @@
  */
 export * from './client.js'
 export * from './conversions.js'
+export * from './repository/buildings.js'
+export * from './repository/cells.js'
+export * from './repository/records.js'
 export * from './repository/snapshot.js'
 export * from './schema.js'

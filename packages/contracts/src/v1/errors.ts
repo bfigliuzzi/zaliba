@@ -79,15 +79,115 @@ export function categoryOfStatus(status: number): ErrorCategory | null {
 /**
  * L'union **fermée** des motifs de refus de règle de jeu.
  *
- * Elle est vide à ce stade et s'enrichit tranche par tranche : US2 y ajoute
- * `work-in-progress` et les trois refus de placement, US4 `insufficient-resources`
- * et `max-level-reached`, US5 `cell-not-obstructed`, US6 `building-is-work-target`.
+ * Elle s'enrichit tranche par tranche : US2 apporte les six ci-dessous, US4
+ * `max-level-reached` et `building-not-found`, US5 `cell-not-obstructed`, US6
+ * `building-is-work-target`.
  *
  * Le caractère **fermé** est ce qui satisfait FR-013, FR-034 et SC-007 : ces
  * exigences demandent le *motif exact*, qu'un booléen ou un message libre ne
  * donnent pas. Un client peut donc traiter chaque motif, et la compilation lui
  * dira le jour où un motif nouveau apparaît.
+ *
+ * **`message` n'est jamais la source de vérité.** Le client dérive son affichage
+ * de `code` et de `details`. Le reconnaître au texte casserait à la première
+ * reformulation, et casserait en silence.
  */
-export const REFUSAL_CODES_V1 = [] as const satisfies readonly string[]
+export const REFUSAL_CODES_V1 = [
+  /** Au plus un chantier par planète (FR-033, FR-034). */
+  'work-in-progress',
+  /** Le manque **par ressource**, et le temps pour le combler (SC-007). */
+  'insufficient-resources',
+  'placement-out-of-grid',
+  'placement-on-obstructed-cell',
+  'placement-on-occupied-cell',
+  /** Le choix entre variantes est géométrique, et le catalogue le borne (FR-009). */
+  'variant-not-available-for-type',
+] as const satisfies readonly string[]
 
 export type RefusalCodeV1 = (typeof REFUSAL_CODES_V1)[number]
+
+/**
+ * La forme de `details`, code par code.
+ *
+ * Elle est **typée**, et c'est ce qui distingue un refus exploitable d'un
+ * message d'erreur : un client qui reçoit `placement-on-obstructed-cell` sait
+ * qu'il trouvera dans `details.cells` la liste des cases à marquer sur la
+ * grille, et il peut le faire sans lire une phrase.
+ *
+ * Les codes qui ne relèvent pas d'une règle de jeu — `not-occupant` en 403,
+ * `planet-not-provisioned` en 404 — n'ont **pas** de détail : dire au demandeur
+ * qui occupe la planète, ou qu'elle existe ailleurs, serait répondre à une
+ * question qu'il n'a pas le droit de poser.
+ */
+export const RefusalDetailsV1 = {
+  'work-in-progress': z
+    .object({
+      workId: z.string().uuid(),
+      nature: z.enum(['build', 'upgrade', 'demolish', 'clear']),
+      /** L'échéance, en secondes UTC. SC-006 exige de dire **quand**. */
+      dueAt: z.number().int().min(0),
+    })
+    .strict(),
+
+  'insufficient-resources': z
+    .object({
+      shortfall: z
+        .array(
+          z
+            .object({
+              resourceId: z.enum(['camelote', 'jus', 'bave-etoiles']),
+              grains: z.number().int().min(0),
+            })
+            .strict(),
+        )
+        .min(1),
+      /**
+       * `null` quand le rythme courant ne permettra **jamais** d'atteindre le
+       * montant, parce que la ressource sature avant. C'est une information
+       * utile et non un cas d'erreur : elle dit au joueur qu'attendre ne servira
+       * à rien, et qu'il lui faut d'abord un entrepôt.
+       */
+      secondsUntilAffordable: z.number().int().min(0).nullable(),
+    })
+    .strict(),
+
+  'placement-out-of-grid': cellsDetail(),
+  'placement-on-obstructed-cell': cellsDetail(),
+  'placement-on-occupied-cell': cellsDetail(),
+
+  'variant-not-available-for-type': z
+    .object({
+      typeId: z.enum(['mine', 'puits', 'racloir', 'centrale', 'entrepot']),
+      variantId: z.enum(['single', 'line-2', 'square-4', 'l-4', 't-4', 'rect-6', 'square-9']),
+    })
+    .strict(),
+} as const satisfies Record<RefusalCodeV1, z.ZodTypeAny>
+
+/**
+ * Les cases fautives, **énumérées** et non résumées.
+ *
+ * Toutes, et non seulement la première : un fantôme d'empreinte doit pouvoir
+ * marquer chacune d'elles, sans quoi le joueur corrige une case pour en
+ * découvrir une autre (FR-013).
+ */
+function cellsDetail() {
+  return z
+    .object({
+      cells: z
+        .array(
+          z
+            .object({
+              x: z.number().int().min(0).max(15),
+              y: z.number().int().min(0).max(15),
+            })
+            .strict(),
+        )
+        .min(1),
+    })
+    .strict()
+}
+
+/** Vrai si `code` appartient à l'union fermée des refus de règle de jeu. */
+export function isRefusalCodeV1(code: string): code is RefusalCodeV1 {
+  return (REFUSAL_CODES_V1 as readonly string[]).includes(code)
+}

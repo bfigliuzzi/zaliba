@@ -138,18 +138,20 @@ function shapeUnderTest(
       return snapshot.occupantId
     },
 
-    completionEffects(snapshot, at) {
+    consolidate(snapshot, at) {
       log.steps.push('resolve')
       // Pas d'ordonnanceur, pas de tâche de fond (R3) : le temps se rattrape à
       // la lecture. Les effets d'achèvement sont **redérivés** ici, jamais lus
       // d'une charge sérialisée — une charge stockée deviendrait une surface de
       // confiance, et fausse le jour où l'équilibrage change.
       void at
-      return snapshot.dueWorkId === null ? [] : [{ credit: WORK_COMPLETION_CREDIT }]
-    },
-
-    markWorkResolved(snapshot) {
-      return snapshot.dueWorkId === null ? snapshot : { ...snapshot, workResolved: true }
+      return snapshot.dueWorkId === null
+        ? snapshot
+        : {
+            ...snapshot,
+            camelote: snapshot.camelote + WORK_COMPLETION_CREDIT,
+            workResolved: true,
+          }
     },
 
     project(snapshot, at) {

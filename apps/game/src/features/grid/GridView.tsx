@@ -1,5 +1,7 @@
 import type { CellView } from '@zaliba/domain'
-import { type KeyboardEvent, useRef, useState } from 'react'
+import { type KeyboardEvent, useEffect, useRef } from 'react'
+import { describeCell } from '../../lib/labels.js'
+import { FootprintGhost, type GhostState, ghostMarkOf, ghostSuffix } from './FootprintGhost.js'
 
 /**
  * La grille de la planète.
@@ -15,91 +17,79 @@ import { type KeyboardEvent, useRef, useState } from 'react'
  * qui est la façon habituelle de rendre une interface « accessible » et
  * impraticable.
  *
- * **FR-060 : jamais la couleur seule.** L'état d'une case et son gisement sont
- * dans son **nom accessible**. Une teinte n'existe pas pour qui ne la distingue
- * pas, ni pour qui écoute la page.
+ * **Le curseur n'est pas ici.** Il vit au-dessus, dans l'écran de planète, parce
+ * que l'aperçu, le fantôme, l'annonce et le lancement en dépendent tous. Une
+ * grille qui détiendrait son curseur obligerait chacun de ces quatre à le lui
+ * redemander, ou à en tenir une copie — et une copie de curseur est une seconde
+ * position, donc un fantôme affiché à un endroit et une pose faite à un autre.
+ *
+ * **FR-060 : jamais la couleur seule.** L'état d'une case, son gisement et sa
+ * place sous le fantôme sont dans son **nom accessible**. Une teinte n'existe pas
+ * pour qui ne la distingue pas, ni pour qui écoute la page.
  */
-
-/** Les noms des ressources, tels que le joueur les lit. */
-const RESOURCE_LABELS: Readonly<Record<string, string>> = {
-  camelote: 'Camelote',
-  jus: 'Jus',
-  'bave-etoiles': 'Bave d’étoiles',
-}
-
-/** Les noms des obstacles, tels que le joueur les lit. */
-const OBSTACLE_LABELS: Readonly<Record<string, string>> = {
-  eboulis: 'éboulis',
-  rocher: 'rocher',
-  'filon-enfoui': 'filon enfoui',
-  'poche-scellee': 'poche scellée',
-  'croute-calcifiee': 'croûte calcifiée',
-}
 
 export interface GridViewProps {
   readonly cells: readonly CellView[]
   readonly width: number
   readonly height: number
-  readonly onSelect?: (cell: CellView) => void
+  /** L'index de la case du curseur : la seule tabulable. */
+  readonly cursorIndex: number
+  /** L'empreinte armée, ou `null` avant tout choix de bâtiment. */
+  readonly ghost?: GhostState | null
+  /** Traite une touche ; rend `true` si la grille l'a consommée. */
+  readonly onKey?: (key: string) => boolean
+  /** Un appui sur une case — le **même** parcours que le clavier (R14). */
+  readonly onPoint?: (x: number, y: number) => void
+  readonly onConfirm?: (cell: CellView) => void
 }
 
-/**
- * Le nom accessible d'une case — la seule description que tout le monde reçoit.
- *
- * Les coordonnées y sont en base 1 : « colonne 4, rangée 1 » se dit, « (3,0) »
- * se déchiffre.
- */
-export function describeCell(cell: CellView): string {
-  const position = `Colonne ${cell.x + 1}, rangée ${cell.y + 1}`
+/** Les touches qui confirment. Alignées sur celles du curseur. */
+const CONFIRM = new Set(['Enter', ' '])
 
-  const state =
-    cell.state === 'obstructed'
-      ? `obstruée par un ${OBSTACLE_LABELS[cell.obstacleId ?? ''] ?? 'obstacle'}`
-      : cell.state === 'occupied'
-        ? 'occupée par un bâtiment'
-        : 'libre'
-
-  const deposit =
-    cell.depositOf === null
-      ? ''
-      : `, gisement de ${RESOURCE_LABELS[cell.depositOf] ?? cell.depositOf}`
-
-  return `${position} : ${state}${deposit}`
-}
-
-export function GridView({ cells, width, height, onSelect }: GridViewProps) {
-  /** Le curseur : l'index de la seule case tabulable. */
-  const [cursor, setCursor] = useState(0)
+export function GridView({
+  cells,
+  width,
+  height,
+  cursorIndex,
+  ghost = null,
+  onKey,
+  onPoint,
+  onConfirm,
+}: GridViewProps) {
   const container = useRef<HTMLDivElement>(null)
 
   /**
-   * Déplacer le curseur **et** le focus, dans cet ordre.
+   * Déplacer le curseur **et** le focus.
    *
    * Les deux sont distincts, et les confondre est le défaut que le parcours de
    * bout en bout a trouvé : changer quel élément porte `tabIndex={0}` ne
    * focalise rien. Le navigateur garde le focus là où il était, et un joueur au
-   * clavier reste bloqué sur la première case en croyant que la grille ne
-   * répond pas. Compter les `tabIndex` ne pouvait pas l'attraper — le compte
-   * était juste.
+   * clavier reste bloqué sur la première case en croyant que la grille ne répond
+   * pas. Compter les `tabIndex` ne pouvait pas l'attraper — le compte était juste.
+   *
+   * La garde `contains` est ce qui empêche la grille de **voler** le focus : elle
+   * ne le déplace que si elle l'avait déjà. Sans elle, chaque changement de
+   * curseur — y compris celui qu'un appui de pointeur provoque ailleurs sur la
+   * page — arracherait le focus au champ que le joueur était en train de lire.
    */
-  function moveTo(index: number) {
-    setCursor(index)
-    container.current?.querySelector<HTMLElement>(`[data-index="${index}"]`)?.focus()
-  }
+  useEffect(() => {
+    const root = container.current
+    if (root === null) return
+    if (!root.contains(document.activeElement)) return
+    root.querySelector<HTMLElement>(`[data-index="${cursorIndex}"]`)?.focus()
+  }, [cursorIndex])
 
   const rows = Array.from({ length: height }, (_, y) => cells.slice(y * width, (y + 1) * width))
 
-  function handleKey(event: KeyboardEvent<HTMLDivElement>, index: number, cell: CellView) {
-    if (event.key === 'Enter' || event.key === ' ') {
+  function handleKey(event: KeyboardEvent<HTMLDivElement>, cell: CellView) {
+    if (CONFIRM.has(event.key)) {
       event.preventDefault()
-      onSelect?.(cell)
+      onConfirm?.(cell)
       return
     }
-
-    const next = neighbourOf(event.key, index, width, cells.length)
-    if (next === null) return
-    event.preventDefault()
-    moveTo(next)
+    // Les flèches font défiler la page par défaut : ne pas les retenir ferait
+    // bouger l'écran sous le joueur à chaque déplacement de curseur.
+    if (onKey?.(event.key) === true) event.preventDefault()
   }
 
   return (
@@ -125,25 +115,27 @@ export function GridView({ cells, width, height, onSelect }: GridViewProps) {
         <div role="row" tabIndex={-1} key={`row-${row[0]?.y ?? y}`}>
           {row.map((cell, x) => {
             const index = y * width + x
+            const mark = ghostMarkOf(ghost, cell)
             return (
               // biome-ignore lint/a11y/useSemanticElements: idem pour `<td>`.
               <div
                 role="gridcell"
                 key={`cell-${cell.x}-${cell.y}`}
                 data-index={index}
-                tabIndex={index === cursor ? 0 : -1}
-                aria-label={describeCell(cell)}
+                tabIndex={index === cursorIndex ? 0 : -1}
+                aria-label={`${describeCell(cell)}${ghostSuffix(mark)}`}
                 data-state={cell.state}
                 data-deposit={cell.depositOf ?? undefined}
-                onFocus={() => setCursor(index)}
-                onKeyDown={(event) => handleKey(event, index, cell)}
-                onClick={() => onSelect?.(cell)}
+                onFocus={() => onPoint?.(cell.x, cell.y)}
+                onKeyDown={(event) => handleKey(event, cell)}
+                onClick={() => onPoint?.(cell.x, cell.y)}
               >
                 {/*
                   Un repère visuel **en plus** du nom accessible, jamais à sa
                   place : un caractère se voit en noir et blanc, et se lit.
                 */}
                 <span aria-hidden="true">{glyphOf(cell)}</span>
+                <FootprintGhost mark={mark} />
               </div>
             )
           })}
@@ -151,34 +143,6 @@ export function GridView({ cells, width, height, onSelect }: GridViewProps) {
       ))}
     </div>
   )
-}
-
-/**
- * La case voisine dans la direction demandée, ou `null`.
- *
- * Le curseur **ne sort pas** de la grille et ne change pas de rangée sur un
- * déplacement horizontal. Rebondir vers le bord opposé ferait sauter d'une
- * rangée à l'autre sans que rien ne l'annonce — et un joueur qui navigue au
- * clavier perdrait sa place à chaque bout de ligne.
- */
-export function neighbourOf(
-  key: string,
-  index: number,
-  width: number,
-  total: number,
-): number | null {
-  const horizontal = key === 'ArrowRight' ? 1 : key === 'ArrowLeft' ? -1 : 0
-  if (horizontal !== 0) {
-    const next = index + horizontal
-    const sameRow = Math.floor(next / width) === Math.floor(index / width)
-    return next >= 0 && next < total && sameRow ? next : null
-  }
-
-  const vertical = key === 'ArrowDown' ? width : key === 'ArrowUp' ? -width : 0
-  if (vertical === 0) return null
-
-  const next = index + vertical
-  return next >= 0 && next < total ? next : null
 }
 
 function glyphOf(cell: CellView): string {

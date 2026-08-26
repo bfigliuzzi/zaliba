@@ -1,9 +1,12 @@
-import type { ResourceId } from '@zaliba/catalogs'
+import type { BuildingTypeId, ResourceId } from '@zaliba/catalogs'
 import type { Catalogs } from './catalogs.js'
 import { layoutOf } from './catalogs.js'
+import { evaluateCurve } from './curves.js'
+import type { BuildingId } from './effects.js'
+import { cellsOf, depositsUnder, gridView } from './grid.js'
 import type { RatePerHour } from './resources.js'
 import { ratePerHour } from './resources.js'
-import type { PlanetSnapshot } from './snapshot.js'
+import type { PlacedBuilding, PlanetSnapshot } from './snapshot.js'
 
 /**
  * Les taux de production, dérivés de l'instantané.
@@ -22,16 +25,15 @@ import type { PlanetSnapshot } from './snapshot.js'
  * jamais touchée (FR-018, R5). C'est ce qui garantit qu'aucun état de jeu n'est
  * définitivement bloquant : même à zéro énergie, la planète produit.
  *
- * Les taux d'extracteur arrivent avec US2. Ce qui est écrit ici est la moitié
- * dont US1 a besoin — et la place où l'autre viendra se brancher.
+ * La règle de production tient en une ligne, et c'est une exigence : SC-002
+ * promet au joueur de pouvoir refaire n'importe quel chiffre affiché.
+ *
+ * ```
+ * taux nominal d'un extracteur = courbeProduction(niveau) × gisements recouverts
+ * taux effectif                = ⌊ nominal × E₊ ÷ E₋ ⌋ en déficit, nominal sinon
+ * taux de la planète           = Σ extracteurs (effectifs) + production de base
+ * ```
  */
-
-export interface ResourceRate {
-  /** Avant rapport d'énergie (FR-024). */
-  readonly nominal: RatePerHour
-  /** Après rapport. Égal au nominal hors déficit. */
-  readonly effective: RatePerHour
-}
 
 /** Le rapport d'énergie, en fraction entière — jamais un flottant (R5). */
 export interface EnergyRatio {
@@ -54,26 +56,98 @@ export function applyEnergyRatio(nominal: number, ratio: EnergyRatio): number {
   return Math.floor((nominal * ratio.numerator) / ratio.denominator)
 }
 
+export interface ResourceRate {
+  /** Avant rapport d'énergie (FR-024). */
+  readonly nominal: RatePerHour
+  /** Après rapport. Égal au nominal hors déficit. */
+  readonly effective: RatePerHour
+}
+
+/**
+ * Le taux nominal d'un extracteur : `courbeProduction(niveau) × gisements` (R5).
+ *
+ * Zéro pour un type qui n'extrait rien, et zéro pour un extracteur qui ne
+ * recouvre aucun gisement de sa ressource (I-12, FR-017). Ce second zéro est le
+ * cœur de la mécanique : il fait de la géométrie une décision, là où une
+ * production forfaitaire aurait rendu le placement indifférent.
+ */
+export function extractorRate(
+  typeId: BuildingTypeId,
+  level: number,
+  coveredDeposits: number,
+  catalogs: Catalogs,
+): number {
+  const curve = catalogs.buildings[typeId]?.production ?? null
+  if (curve === null) return 0
+  return evaluateCurve(curve, level) * coveredDeposits
+}
+
+/** Ce que produit un bâtiment posé, avant et après le rapport d'énergie. */
+export interface BuildingRate {
+  readonly buildingId: BuildingId
+  /** La ressource extraite, ou `null` pour un bâtiment qui n'extrait rien. */
+  readonly resourceId: ResourceId | null
+  readonly coveredDeposits: number
+  /** Avant rapport d'énergie (FR-024). */
+  readonly nominal: RatePerHour
+  /** Après rapport. Égal au nominal hors déficit. */
+  readonly effective: RatePerHour
+}
+
+/**
+ * Les taux de chaque bâtiment posé.
+ *
+ * Calculés **une fois** et partagés entre le taux de la planète et la vue par
+ * bâtiment. Deux parcours séparés donneraient deux chiffres justes séparément et
+ * incohérents ensemble — le pire des deux, parce que le joueur voit les deux sur
+ * le même écran et ne peut pas savoir lequel croire.
+ */
+export function buildingRates(
+  snapshot: PlanetSnapshot,
+  catalogs: Catalogs,
+  ratio: EnergyRatio,
+): readonly BuildingRate[] {
+  const grid = gridView(snapshot, catalogs)
+
+  return snapshot.buildings.map((building: PlacedBuilding) => {
+    const resourceId = catalogs.buildings[building.typeId]?.extracts ?? null
+    const covered = depositsUnder(grid, cellsOf(building, catalogs), resourceId)
+    const nominal = extractorRate(building.typeId, building.level, covered, catalogs)
+
+    return {
+      buildingId: building.id,
+      resourceId,
+      coveredDeposits: covered,
+      nominal: ratePerHour(nominal),
+      effective: ratePerHour(applyEnergyRatio(nominal, ratio)),
+    }
+  })
+}
+
 export function productionRates(
   snapshot: PlanetSnapshot,
   catalogs: Catalogs,
   ratio: EnergyRatio,
 ): Readonly<Record<ResourceId, ResourceRate>> {
   const layout = layoutOf(catalogs, snapshot.layoutId)
+  const rates = buildingRates(snapshot, catalogs, ratio)
 
   return Object.fromEntries(
     catalogs.resourceIds.map((resourceId) => {
-      // Les extracteurs contribuent au nominal à partir d'US2 ; ici, personne.
-      const fromBuildings = 0
+      const own = rates.filter((rate) => rate.resourceId === resourceId)
+      const nominal = own.reduce((total, rate) => total + rate.nominal, 0)
+      const effective = own.reduce((total, rate) => total + rate.effective, 0)
       const base = layout.baseProductionPerHour[resourceId] ?? 0
 
       return [
         resourceId,
         {
-          nominal: ratePerHour(fromBuildings + base),
+          nominal: ratePerHour(nominal + base),
           // Le rapport ne mord que sur la part des bâtiments ; la base du
-          // Berceau s'ajoute après, intacte.
-          effective: ratePerHour(applyEnergyRatio(fromBuildings, ratio) + base),
+          // Berceau s'ajoute après, intacte (FR-018, R5). C'est ce qui garantit
+          // qu'aucun état de jeu n'est définitivement bloquant : même à zéro
+          // énergie, la planète produit.
+          effective: ratePerHour(effective + base),
         },
       ]
     }),
