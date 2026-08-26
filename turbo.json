@@ -1,0 +1,39 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "ui": "stream",
+  "globalEnv": ["CI", "E2E_BASE_URL", "NODE_ENV"],
+  "globalPassThroughEnv": [
+    "DATABASE_URL",
+    "SUPABASE_JWKS_URL",
+    "SUPABASE_SERVICE_ROLE_KEY",
+    "VITE_API_URL",
+    "VITE_SUPABASE_URL",
+    "VITE_SUPABASE_ANON_KEY"
+  ],
+  "globalDependencies": ["tsconfig.base.json", "biome.json", ".env.example"],
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "inputs": ["src/**", "tsconfig.json", "package.json"],
+      "outputs": ["dist/**"]
+    },
+    "typecheck": {
+      "dependsOn": ["^build"],
+      "inputs": ["src/**", "tests/**", "tsconfig.json"],
+      "outputs": []
+    },
+    "test": {
+      "dependsOn": ["^build"],
+      "inputs": ["src/**", "tests/**", "vitest.config.ts"],
+      "outputs": []
+    },
+    "lint": {
+      "inputs": ["src/**", "tests/**", "biome.json"],
+      "outputs": []
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    }
+  }
+}

@@ -1,5 +1,52 @@
 <!--
 Sync Impact Report
+Version change: 2.0.0 → 2.1.0
+Type de bump: MINOR — extension matérielle d'une règle existante. La section
+« Stack technique » exige un amendement MINOR pour toute montée de version
+majeure d'un élément de sa liste; « schémas Zod » y figure, et zod descend de la
+ligne 4.x à la ligne 3.x.
+Motif: verdict d'exécution R17, consigné dans
+specs/001-la-planete-mere/research.md § « Verdicts d'exécution — relevés le
+2026-08-26 ». zod 4.4.3 est incompatible AU TYPAGE avec @ts-rest/* 3.52.1: les
+`responses` du contrat s'effondrent en `{ [x: string]: any }` et `tsc --noEmit`
+échoue (TS2322). Reproduit à l'identique sous TypeScript 5.9.3 et 7.0.2 — la
+cause est zod, pas le compilateur. `generateOpenApi` produit en outre un schéma
+vide. Sous zod 3.25.76, les mêmes briques typecheck proprement et l'OpenAPI est
+complet. Le repli était nommé d'avance par R17; il s'applique.
+Principes: aucun ajout, aucune suppression, aucun renommage.
+Second motif, même amendement: dependency-cruiser 18.2.0 parcourt ZÉRO module
+sous TypeScript 7.0.2 et rapporte « no dependency violations found (0 modules) ».
+La porte qui rend le principe II mécanique est inerte, et son inertie prend
+l'apparence d'un succès. Sous TypeScript 6.0.3, la même configuration parcourt
+le graphe et évalue les règles. TypeScript descend donc à 6.0.3 — dernière
+version de la ligne précédente, repli nommé d'avance par R17.
+Ce second constat corrige un verdict antérieur du même jour, qui avait conclu à
+la compatibilité sur la foi du code de sortie de l'outil. Exécuter ne suffit
+pas: il faut vérifier que l'outil a produit un résultat non vide.
+Sections modifiées:
+  - Stack technique → puce « Contrats »: la ligne de version de Zod est
+    contrainte, avec son motif et sa condition de sortie.
+  - Stack technique → puce « Langage »: la ligne de version de TypeScript est
+    contrainte tant que dependency-cruiser ne sait pas lire TypeScript 7.
+Ce que l'amendement ne fait pas: il ne change aucune brique. Zod reste le
+langage de schéma, ts-rest l'exposition des contrats, TypeScript le langage,
+dependency-cruiser le gardien des frontières. Seules deux lignes de version
+bougent, et elles bougent sur constat d'exécution.
+Arbitrage assumé: entre un compilateur plus rapide et une frontière réellement
+vérifiée, le principe II tranche. La vitesse de compilation n'est pas un
+principe.
+Condition de retour en arrière: pour zod, dès que @ts-rest/* supporte zod 4 au
+typage; pour TypeScript, dès que dependency-cruiser publie son support de la
+ligne 7. Dans les deux cas par un nouvel amendement MINOR, avec le même
+protocole de vérification par exécution.
+Artefacts impactés: docs/architecture/2026-08-23-choix-de-stack.md § 8 (tableau
+des versions épinglées: zod 4.4.3 → 3.25.76, typescript 7.0.2 → 6.0.3).
+CLAUDE.md ne nomme aucune version et n'est pas touché.
+TODO différés: aucun.
+-->
+
+<!--
+Sync Impact Report — 2.0.0 (historique)
 Version change: 1.1.0 → 2.0.0
 Type de bump: MAJOR — suppression d'une exigence normative. La relecture par un
 tiers cesse d'être la règle, et le dispositif de substitution qui l'imitait en
@@ -128,7 +175,14 @@ Les technologies ci-dessous sont arrêtées. Le raisonnement, les alternatives
 d'un amendement.
 
 - **Langage**: TypeScript, front comme back, sans exception. Environnement
-  d'exécution serveur Node.js en version LTS.
+  d'exécution serveur Node.js en version LTS. TypeScript MUST rester sur la
+  **ligne 6.x** tant que `dependency-cruiser` ne sait pas lire TypeScript 7:
+  sous la ligne 7, il parcourt zéro module et rapporte un succès, ce qui rend la
+  porte du principe II inerte sans qu'aucun signal ne l'annonce. Entre un
+  compilateur plus rapide et une frontière réellement vérifiée, le principe II
+  prévaut. La montée en 7.x MUST faire l'objet d'un amendement MINOR, sur
+  vérification que le nombre de modules parcourus est non nul — le code de
+  sortie de l'outil ne vaut pas preuve.
 - **Client**: application monopage React compilée par Vite, servie comme PWA,
   emballée par Capacitor pour les cibles natives. Aucun méta-framework à rendu
   serveur — le jeu est derrière authentification et ses données sont propres à
@@ -138,7 +192,16 @@ d'un amendement.
 - **Persistance**: PostgreSQL, accédé par Drizzle. Les requêtes MUST rester
   lisibles et leurs index explicites.
 - **Contrats**: schémas Zod dans un paquet partagé client/serveur, exposés par
-  `ts-rest` sur des routes explicitement versionnées.
+  `ts-rest` sur des routes explicitement versionnées. Zod MUST rester sur la
+  **ligne 3.x** tant que `@ts-rest/*` ne supporte pas Zod 4 au typage: sous Zod
+  4, les réponses déclarées au contrat s'effondrent en `any` et la sûreté de
+  type de bout en bout — le motif même du choix de `ts-rest` — disparaît sans
+  bruit. Le constat MUST se faire par exécution, jamais par lecture de
+  `peerDependencies`; celui qui fonde cette contrainte est consigné en
+  `specs/001-la-planete-mere/research.md` § R17. La version exacte est épinglée
+  au tableau § 8 de `docs/architecture/2026-08-23-choix-de-stack.md`. La montée
+  en 4.x MUST faire l'objet d'un amendement MINOR, sur nouveau verdict
+  d'exécution.
 - **Infrastructure louée**: Supabase pour l'authentification, PostgreSQL et le
   stockage. Supabase MUST être traité comme fournisseur d'infrastructure et
   jamais comme backend: les tables de jeu MUST résider dans un schéma non exposé
@@ -221,4 +284,4 @@ préexiste, enregistré comme tâche de mise en conformité.
 sont maintenues dans `CLAUDE.md` à la racine du projet. Ce guide MUST rester
 cohérent avec la présente constitution, qui prévaut en cas de divergence.
 
-**Version**: 2.0.0 | **Ratified**: 2026-08-23 | **Last Amended**: 2026-08-24
+**Version**: 2.1.0 | **Ratified**: 2026-08-23 | **Last Amended**: 2026-08-26

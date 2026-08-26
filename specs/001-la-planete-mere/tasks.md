@@ -51,22 +51,49 @@ Aucun code applicatif ici.
 exécution, jamais par raisonnement, et **avant** toute écriture de code
 applicatif. Chacune a son repli, énoncé en [research.md R17](./research.md).
 
-- [ ] T001 [P] Vérifier par exécution la compatibilité de `zod` 4.4.3 avec `@ts-rest/core`, `@ts-rest/fastify` et `@ts-rest/open-api` 3.52.1 dans un bac à sable jetable ; consigner le verdict et la version retenue dans `specs/001-la-planete-mere/research.md` § R17. Repli : épingler la version de zod acceptée par ts-rest. Un changement de version majeure impose un amendement MINOR de `.specify/memory/constitution.md`.
-- [ ] T002 [P] Vérifier par exécution la compatibilité de `typescript` 7.0.2 avec Biome 2.5.10, drizzle-kit 0.31.10, ts-rest 3.52.1 et Vitest 4.1.11 ; consigner le verdict dans `specs/001-la-planete-mere/research.md` § R17. Repli : épingler la dernière version de la ligne précédente et consigner l'écart par amendement — jamais par une échappatoire de typage.
-- [ ] T003 Aligner la chaîne d'outils locale sur les versions épinglées : créer `.nvmrc` (Node 24.19.0) et le champ `packageManager` (pnpm 11.22.0) dans `package.json` à la racine. Si une version épinglée n'existe pas, corriger `docs/architecture/2026-08-23-choix-de-stack.md` § 8, qui consigne un relevé faillible.
-- [ ] T004 Créer `pnpm-workspace.yaml` (`apps/*`, `packages/*`) et le `package.json` racine avec les scripts `typecheck`, `boundaries`, `test`, `test:integration`, `dev`, `e2e` attendus par `specs/001-la-planete-mere/quickstart.md` § 2.
-- [ ] T005 Créer `turbo.json` : graphe de tâches `build`, `typecheck`, `test`, `lint`, avec les dépendances inter-paquets et le cache.
-- [ ] T006 Créer `tsconfig.base.json` à la racine (mode strict, `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`) et un `tsconfig.json` par paquet qui l'étend.
-- [ ] T007 [P] Créer `biome.json` : format et lint pour tout le dépôt, aucune règle désactivée sans commentaire justificatif.
-- [ ] T008 Créer les six squelettes de paquet avec leur `package.json` aux versions **exactes** (aucune plage) : `packages/catalogs/`, `packages/domain/`, `packages/contracts/`, `packages/db/`, `apps/api/`, `apps/game/`.
-- [ ] T009 Créer `.dependency-cruiser.cjs` avec les règles de la table § 3 du document de stack, **en porte bloquante** : `catalogs` n'importe rien ; `domain` n'importe que `catalogs` ; `contracts` n'importe **pas** `domain` ; `db` n'importe ni `domain` ni `contracts` ; `game` n'importe **pas** `db` ; `kernel` n'importe **jamais** un module ; le graphe entre modules est acyclique.
-- [ ] T010 [P] Créer `vitest.workspace.ts` à la racine et la configuration de couverture avec seuil sur `packages/domain` uniquement (quickstart § 6).
-- [ ] T011 [P] Créer `playwright.config.ts` à la racine avec `@axe-core/playwright` câblé.
-- [ ] T012 Créer `.github/workflows/ci.yml` avec les onze portes de la table § 7.8 du document de stack, **toutes bloquantes** : types, format et lint, frontières de paquets, domaine et propriétés, cohérence des catalogues, contrats, intégration (Docker requis), parcours et accessibilité, vulnérabilités, `gitleaks`, seuil de couverture domaine.
-- [ ] T013 [P] Créer `.env.example` à la racine listant `DATABASE_URL`, `SUPABASE_JWKS_URL`, `SUPABASE_SERVICE_ROLE_KEY` pour `apps/api`, et l'URL d'API plus la clé `anon` pour `apps/game`, avec la mention explicite que la clé `anon` n'est pas un secret.
+- [x] T001 [P] Vérifier par exécution la compatibilité de `zod` 4.4.3 avec `@ts-rest/core`, `@ts-rest/fastify` et `@ts-rest/open-api` 3.52.1 dans un bac à sable jetable ; consigner le verdict et la version retenue dans `specs/001-la-planete-mere/research.md` § R17. Repli : épingler la version de zod acceptée par ts-rest. Un changement de version majeure impose un amendement MINOR de `.specify/memory/constitution.md`.
+- [x] T002 [P] Vérifier par exécution la compatibilité de `typescript` 7.0.2 avec Biome 2.5.10, drizzle-kit 0.31.10, ts-rest 3.52.1 et Vitest 4.1.11 ; consigner le verdict dans `specs/001-la-planete-mere/research.md` § R17. Repli : épingler la dernière version de la ligne précédente et consigner l'écart par amendement — jamais par une échappatoire de typage.
+- [x] T003 Aligner la chaîne d'outils locale sur les versions épinglées : créer `.nvmrc` (Node 24.19.0) et le champ `packageManager` (pnpm 11.22.0) dans `package.json` à la racine. Si une version épinglée n'existe pas, corriger `docs/architecture/2026-08-23-choix-de-stack.md` § 8, qui consigne un relevé faillible.
+- [x] T004 Créer `pnpm-workspace.yaml` (`apps/*`, `packages/*`) et le `package.json` racine avec les scripts `typecheck`, `boundaries`, `test`, `test:integration`, `dev`, `e2e` attendus par `specs/001-la-planete-mere/quickstart.md` § 2.
+- [x] T005 Créer `turbo.json` : graphe de tâches `build`, `typecheck`, `test`, `lint`, avec les dépendances inter-paquets et le cache.
+- [x] T006 Créer `tsconfig.base.json` à la racine (mode strict, `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`) et un `tsconfig.json` par paquet qui l'étend.
+- [x] T007 [P] Créer `biome.json` : format et lint pour tout le dépôt, aucune règle désactivée sans commentaire justificatif.
+- [x] T008 Créer les six squelettes de paquet avec leur `package.json` aux versions **exactes** (aucune plage) : `packages/catalogs/`, `packages/domain/`, `packages/contracts/`, `packages/db/`, `apps/api/`, `apps/game/`.
+- [x] T009 Créer `.dependency-cruiser.cjs` avec les règles de la table § 3 du document de stack, **en porte bloquante** : `catalogs` n'importe rien ; `domain` n'importe que `catalogs` ; `contracts` n'importe **pas** `domain` ; `db` n'importe ni `domain` ni `contracts` ; `game` n'importe **pas** `db` ; `kernel` n'importe **jamais** un module ; le graphe entre modules est acyclique.
+- [x] T010 [P] Créer `vitest.workspace.ts` à la racine et la configuration de couverture avec seuil sur `packages/domain` uniquement (quickstart § 6).
+- [x] T011 [P] Créer `playwright.config.ts` à la racine avec `@axe-core/playwright` câblé.
+- [x] T012 Créer `.github/workflows/ci.yml` avec les onze portes de la table § 7.8 du document de stack, **toutes bloquantes** : types, format et lint, frontières de paquets, domaine et propriétés, cohérence des catalogues, contrats, intégration (Docker requis), parcours et accessibilité, vulnérabilités, `gitleaks`, seuil de couverture domaine.
+- [x] T013 [P] Créer `.env.example` à la racine listant `DATABASE_URL`, `SUPABASE_JWKS_URL`, `SUPABASE_SERVICE_ROLE_KEY` pour `apps/api`, et l'URL d'API plus la clé `anon` pour `apps/game`, avec la mention explicite que la clé `anon` n'est pas un secret.
 - [x] T014 **Fait le 2026-08-23.** Consigner dans `docs/design/conception-du-jeu.md` que l'extracteur de Bave d'étoiles s'appelle **racloir** : retirer la question ouverte du § 11 et porter la décision au journal des modifications. **Avant toute écriture du catalogue de bâtiments** — un changement de nom serait une modification de catalogue **et** un diff d'instantané d'équilibrage.
 
-**Point de contrôle** : `pnpm install`, `pnpm -w typecheck` et `pnpm -w boundaries` passent sur un dépôt vide de logique.
+**Point de contrôle** : `pnpm install`, `pnpm -w typecheck`, `pnpm -w boundaries`
+et `pnpm -w lint` passent sur un dépôt vide de logique. ✅ **Franchi le 2026-08-26.**
+
+### Divergences constatées à l'exécution
+
+Trois écarts entre ce que ces tâches décrivaient et ce que l'exécution a imposé.
+Aucun n'est un contournement : chacun est un repli nommé d'avance par R17, ou une
+correction d'un relevé faillible.
+
+1. **T001 — zod épinglé à 3.25.76**, et non 4.4.3. zod 4 est incompatible au
+   typage avec `@ts-rest/*` 3.52.1. Amendement MINOR 2.1.0 de la constitution.
+2. **T002 — TypeScript épinglé à 6.0.3**, et non 7.0.2. `dependency-cruiser`
+   18.2.0 parcourt **zéro module** sous la ligne 7 et rapporte un succès : la
+   porte du principe II était inerte. Porté par le même amendement 2.1.0.
+   Ce verdict **corrige** une première conclusion du même jour, tirée du code de
+   sortie de l'outil. La leçon est consignée en R17 : exécuter ne suffit pas, il
+   faut vérifier que l'outil a produit un résultat **non vide**.
+3. **T010 — `vitest.config.ts` et non `vitest.workspace.ts`.** Vitest 4 a
+   supprimé le fichier d'espace de travail ; il est **ignoré en silence**. Les
+   projets se déclarent en `test.projects`. Aucune perte de portée.
+
+La porte de T009 a par ailleurs été **éprouvée par violation délibérée** — un
+`contracts → domain`, un `kernel → module` et un `game → db` : les trois sont
+attrapées. Une porte jamais vue échouer ne prouve rien.
+
+**Reste à la main de la personne qui développe** : la machine locale exécute
+Node 24.18.0 contre 24.19.0 porté par `.nvmrc`. `corepack` a aligné pnpm ; il ne
+peut pas aligner l'environnement d'exécution.
 
 ---
 

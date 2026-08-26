@@ -1,0 +1,185 @@
+name: CI
+
+# Les onze portes de la table § 7.8 du document de stack. Toutes bloquantes,
+# aucune consultative. Une porte consultative est une porte qu'on finit par
+# ignorer, et le jour où on l'ignore est celui où elle aurait servi.
+#
+# L'ordre des travaux n'est pas cosmétique : `frontieres` échoue avant les
+# tests si une frontière de paquet a été franchie. C'est une erreur
+# d'architecture, pas une erreur de logique, et la lire dans un échec de test
+# coûte une heure (quickstart § 2).
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  NODE_VERSION: '24.19.0'
+  PNPM_VERSION: '11.22.0'
+  TURBO_TELEMETRY_DISABLED: '1'
+
+jobs:
+  # ───────────────────────────────────────────────────────────────────────────
+  # Porte 10 — Fuite de secrets. En tête, et sur l'historique complet :
+  # c'est la seule porte dont l'échec est irréversible. Un secret poussé est
+  # un secret publié, même après réécriture.
+  # ───────────────────────────────────────────────────────────────────────────
+  secrets:
+    name: Porte — fuite de secrets (gitleaks)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # Portes 1 à 3 — types, format et lint, frontières de paquets.
+  # ───────────────────────────────────────────────────────────────────────────
+  statique:
+    name: Portes — types, lint, frontières
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      - uses: actions/setup-node@v5
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      # Porte 3 en premier : une frontière franchie invalide tout le reste.
+      - name: Porte — frontières de paquets (le principe II, mécaniquement)
+        run: pnpm -w boundaries
+
+      - name: Porte — types
+        run: pnpm -w typecheck
+
+      - name: Porte — format et lint
+        run: pnpm -w lint
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # Portes 4 à 6 et 11 — domaine et propriétés, cohérence des catalogues,
+  # contrats, seuil de couverture domaine.
+  # ───────────────────────────────────────────────────────────────────────────
+  unitaires:
+    name: Portes — domaine, catalogues, contrats, couverture
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      - uses: actions/setup-node@v5
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm -w build
+
+      - name: Porte — cohérence des catalogues
+        run: pnpm vitest run --project catalogs
+
+      - name: Porte — domaine et propriétés (fast-check)
+        run: pnpm vitest run --project domain
+
+      - name: Porte — contrats et compatibilité (instantanés de JSON Schema)
+        run: pnpm vitest run --project contracts --project db
+
+      - name: Porte — client (chemin clavier)
+        run: pnpm vitest run --project game --project api
+
+      # Porte 11. Mesurée sur `packages/domain` **uniquement** : un chiffre
+      # mêlant interface et domaine ne veut rien dire (quickstart § 6).
+      - name: Porte — seuil de couverture domaine
+        run: pnpm -w test:coverage
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # Porte 7 — Intégration. Un vrai PostgreSQL, jamais un simulacre : un
+  # simulacre testerait le simulacre, pas le SQL. Or verrous, transactions et
+  # contraintes sont précisément ce qui doit être vérifié.
+  # ───────────────────────────────────────────────────────────────────────────
+  integration:
+    name: Porte — intégration (Testcontainers, PostgreSQL réel)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      - uses: actions/setup-node@v5
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm -w build
+
+      - name: Démon Docker disponible
+        run: docker info
+
+      - name: Porte — concurrence, idempotence, autorisation dans la transaction
+        run: pnpm -w test:integration
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # Porte 8 — Parcours et accessibilité. Les priorités 1 et 3.
+  # FR-058 à FR-061 sont des tests, pas des intentions.
+  # ───────────────────────────────────────────────────────────────────────────
+  parcours:
+    name: Porte — parcours et accessibilité (Playwright, axe-core)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      - uses: actions/setup-node@v5
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm -w build
+      - run: pnpm exec playwright install --with-deps chromium
+
+      - name: Porte — parcours clavier et WCAG 2.1 AA
+        run: pnpm -w e2e
+
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: rapport-playwright
+          path: playwright-report/
+          retention-days: 7
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # Porte 9 — Vulnérabilités. La chaîne d'approvisionnement.
+  # ───────────────────────────────────────────────────────────────────────────
+  vulnerabilites:
+    name: Porte — vulnérabilités
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      - uses: actions/setup-node@v5
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      - name: Porte — audit de dépendances
+        run: pnpm audit --audit-level moderate

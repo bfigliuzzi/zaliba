@@ -505,6 +505,70 @@ repli.
 démon Docker en fonctionnement (Testcontainers). Ce n'est pas une décision, c'est
 une condition d'exécution de la porte de CI correspondante.
 
+### Verdicts d'exécution — relevés le 2026-08-26 (T001, T002)
+
+Bac à sable jetable, installation réelle, exécution réelle. Aucun verdict n'est
+tiré d'une lecture de `peerDependencies` : ces déclarations se sont révélées
+fausses **dans les deux sens**.
+
+| Vérification | Verdict | Ce qui a été exécuté |
+| --- | --- | --- |
+| `zod` 4.4.3 avec `@ts-rest/*` 3.52.1 | ❌ **Incompatible au typage** | Un contrat `initContract().router` dont les `responses` portent un schéma zod 4 s'effondre en `{ [x: string]: any }` : l'implémentation du routeur n'est plus assignable, `tsc --noEmit` échoue (TS2322). Reproduit à l'identique sous **TypeScript 5.9.3 et 7.0.2** — la cause est zod, pas le compilateur. `generateOpenApi` produit en outre un schéma **vide** (`{}`), `@anatine/zod-openapi` 1.x ne lisant que les internes de zod 3. Le **runtime**, lui, est correct : `.strict()`, bornes et entiers rejettent bien en 400. |
+| `zod` 3.25.76 avec `@ts-rest/*` 3.52.1 et `typescript` 7.0.2 | ✅ **Compatible** | Même contrat : `tsc --noEmit` propre, `generateOpenApi` produit le schéma complet (`type`, `minimum`, `maximum`, `required`). |
+| `typescript` 7.0.2 avec Biome 2.5.10, drizzle-kit 0.31.10, drizzle-orm 0.45.2, ts-rest 3.52.1, Vitest 4.1.11, fast-check 4.9.0 | ✅ **Compatible** | `tsc --noEmit` propre sur un contrat ts-rest, un schéma `pgTable` à clé primaire composite et un générateur fast-check, en mode `strict` + `noUncheckedIndexedAccess` + `exactOptionalPropertyTypes`. Les cinq exécutables se lancent et font leur travail. |
+| `typescript` 7.0.2 avec **dependency-cruiser 18.2.0** | ❌ **Incompatible** | dependency-cruiser parcourt **zéro module** TypeScript et rapporte `no dependency violations found (0 modules, 0 dependencies cruised)`. La porte du principe II est **inerte**, et son inertie prend l'apparence d'un succès. L'outil dit lui-même pourquoi : « Support for typescript@>=7 will follow when its API is published and stable. » Sous `typescript` 6.0.3, le même dépôt donne 2 modules et la dépendance est trouvée. |
+| `typescript` 6.0.3 avec l'ensemble de la chaîne | ✅ **Compatible** | zod 3.25.76 + ts-rest 3.52.1 + fastify 5.12.1, drizzle-orm 0.45.2, fast-check 4.9.0, Vitest 4.1.11, Biome 2.5.10, drizzle-kit 0.31.10 **et** dependency-cruiser 18.2.0. C'est la seule ligne qui passe la totalité. |
+| `@ts-rest/fastify` 3.52.1 avec `fastify` 5.12.1 | ✅ **Compatible à l'exécution** | Le peer déclaré est `fastify@^4.0.0`, et `npm install` refuse la résolution. Mais le greffon s'enregistre et sert la route : `app.inject` retourne 200, et la validation de corps rejette en 400. L'incompatibilité est **déclarée, pas réelle** ; elle se contourne par `pnpm.peerDependencyRules`, jamais par un contournement de code. |
+
+**Décision retenue** — le repli nommé ci-dessus s'applique : **zod est épinglé à
+`3.25.76`** dans tout le dépôt. Conséquences, toutes portées :
+
+1. **Amendement MINOR de la constitution** (2.0.0 → 2.1.0), exigé par sa section
+   « Stack technique » : zod change de version majeure.
+2. Le tableau § 8 de
+   [`docs/architecture/2026-08-23-choix-de-stack.md`](../../docs/architecture/2026-08-23-choix-de-stack.md)
+   est corrigé : `zod` passe de 4.4.3 à 3.25.76.
+3. Les schémas s'écrivent en API zod 3 : `z.number().int().min(0).max(3)` et non
+   `z.int()`. Le sous-chemin `zod/v4` de zod 3.25.x est **écarté** : il ferait
+   coexister deux vocabulaires de schéma pour un seul consommateur.
+4. T037 et T158 restent réalisables : `generateOpenApi` fonctionne sous zod 3.
+
+**Décision retenue pour TypeScript** — le repli nommé s'applique également :
+**TypeScript est épinglé à `6.0.3`**, la dernière version de la ligne précédente.
+
+Le motif mérite d'être dit franchement, parce qu'il est contre-intuitif : ce
+n'est pas le compilateur qui échoue. TypeScript 7.0.2 compile parfaitement tout
+ce que 001 lui demande. Ce qui échoue, c'est **le gardien** — et il échoue en
+silence, en affichant un succès. Une porte bloquante qui ne parcourt rien ne
+protège rien, et elle est *pire* qu'une porte absente : elle donne l'assurance
+que le principe II est tenu. Entre un compilateur plus rapide et une frontière
+réellement vérifiée, la constitution ne laisse pas le choix — le principe II
+existe, la vitesse de compilation n'est pas un principe.
+
+**Ce verdict corrige un verdict antérieur du même jour.** La première passe de
+T002 avait conclu à la compatibilité de dependency-cruiser avec TypeScript 7 sur
+la foi de son exécution : l'outil se lançait et sortait en succès. Il ne
+travaillait pas. Le protocole de R17 dit « se tranche par exécution » ; la leçon
+est qu'exécuter ne suffit pas — **il faut vérifier que l'outil a produit un
+résultat non vide**. Le compte de modules parcourus est désormais la mesure, pas
+le code de sortie.
+
+Conséquences, toutes portées :
+
+1. **Amendement MINOR de la constitution** : TypeScript change de version
+   majeure. Il est porté par le même amendement que zod.
+2. Le tableau § 8 du document de stack passe `typescript` de 7.0.2 à 6.0.3.
+3. La montée en 7.x se fera quand dependency-cruiser publiera son support,
+   par un nouvel amendement et un nouveau verdict d'exécution.
+
+**Chaîne d'outils locale** : Node 24.18.0 et pnpm 11.9.0 relevés, contre 24.19.0
+et 11.22.0 épinglés. Les deux versions épinglées **existent** au registre : c'est
+donc la machine qui s'aligne (T003), et le document de stack qui a raison. pnpm
+11.22.0 est en place via `packageManager`. **Node reste à 24.18.0 sur la machine
+de développement** : `corepack` ne gère pas l'environnement d'exécution. Un
+`nvm install` de la version portée par `.nvmrc` est à la main de la personne qui
+développe ; la CI, elle, est déjà épinglée à 24.19.0.
+
 ---
 
 ## R18 — Langue des identifiants

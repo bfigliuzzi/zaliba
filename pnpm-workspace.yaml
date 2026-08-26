@@ -1,0 +1,24 @@
+packages:
+  - 'apps/*'
+  - 'packages/*'
+
+# Scripts d'installation autorisés. Le défaut de pnpm est de tous les refuser :
+# un postinstall est du code arbitraire exécuté à l'installation, et c'est
+# exactement la surface d'attaque que `gitleaks` et l'audit ne couvrent pas.
+# Chaque autorisation se justifie ici.
+allowBuilds:
+  # Vite et Vitest ne fonctionnent pas sans son binaire natif.
+  esbuild: true
+  # Accélérations natives facultatives de Testcontainers (via ssh2). Le code
+  # retombe sur une implémentation JavaScript en leur absence.
+  cpu-features: false
+  ssh2: false
+  protobufjs: false
+
+# `@ts-rest/fastify` 3.52.1 déclare un peer `fastify@^4.0.0`. La vérification
+# R17 du 2026-08-26 montre que le greffon fonctionne avec Fastify 5.12.1 :
+# route servie, validation de corps effective. L'écart est déclaratif, pas réel.
+# On le lève ici, jamais par un contournement dans le code.
+peerDependencyRules:
+  allowedVersions:
+    '@ts-rest/fastify>fastify': '5'

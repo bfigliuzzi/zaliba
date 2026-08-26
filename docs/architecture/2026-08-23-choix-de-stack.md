@@ -757,7 +757,7 @@ constitution et devront être épinglées exactement dans les manifestes.
 | Environnement d'exécution | Node.js (LTS « Krypton ») | 24.19.0 |
 | Gestionnaire de paquets | pnpm | 11.22.0 |
 | Orchestrateur monorepo | turbo | 2.10.11 |
-| Langage | typescript | 7.0.2 |
+| Langage | typescript | 6.0.3 |
 | Interface | react / react-dom | 19.2.8 |
 | Compilation client | vite | 8.2.2 |
 | PWA | vite-plugin-pwa | 1.3.0 |
@@ -766,7 +766,7 @@ constitution et devront être épinglées exactement dans les manifestes.
 | Glisser-déposer accessible | @dnd-kit/core | 6.3.1 |
 | Rendu canvas 2D | pixi.js | 8.20.0 |
 | Serveur HTTP | fastify | 5.12.1 |
-| Schémas | zod | 4.4.3 |
+| Schémas | zod | 3.25.76 |
 | Contrats | @ts-rest/core, @ts-rest/fastify, @ts-rest/open-api | 3.52.1 |
 | Accès aux données | drizzle-orm | 0.45.2 |
 | Migrations | drizzle-kit | 0.31.10 |
@@ -781,6 +781,26 @@ constitution et devront être épinglées exactement dans les manifestes.
 | Accessibilité | @axe-core/playwright | 4.13.0 |
 | Lint et format | @biomejs/biome | 2.5.10 |
 | Frontières de paquets | dependency-cruiser | 18.2.0 |
+
+**typescript** : relevé à 7.0.2 le 2026-08-23, **corrigé à 6.0.3 le 2026-08-26**
+sur verdict d'exécution. `dependency-cruiser` 18.2.0 parcourt **zéro module**
+sous la ligne 7 et rapporte un succès : la porte du principe II devient inerte
+sans qu'aucun signal ne l'annonce. Sous 6.0.3, elle parcourt le graphe. Le reste
+de la chaîne — zod, ts-rest, Fastify, Drizzle, Vitest, fast-check, Biome — passe
+indifféremment sous les deux lignes ; c'est donc le gardien qui décide.
+
+**zod** : relevé à 4.4.3 le 2026-08-23, **corrigé à 3.25.76 le 2026-08-26** sur
+verdict d'exécution. zod 4 est incompatible au typage avec `@ts-rest/*` 3.52.1 —
+les réponses déclarées au contrat s'effondrent en `any`. Le relevé et son
+protocole sont en
+[`specs/001-la-planete-mere/research.md` § R17](../../specs/001-la-planete-mere/research.md) ;
+la contrainte est portée par l'amendement 2.1.0 de la constitution.
+
+**fastify** : `@ts-rest/fastify` 3.52.1 déclare un peer `fastify@^4.0.0`. La
+vérification du 2026-08-26 montre que le greffon **fonctionne** avec Fastify
+5.12.1 : route servie, validation de corps effective. La version épinglée reste
+5.12.1 ; l'écart de peer se traite par `pnpm.peerDependencyRules`, jamais par un
+contournement de code.
 
 **PostgreSQL** : la version majeure est imposée par le provisionnement Supabase
 et doit être relevée puis consignée à la création du projet.
