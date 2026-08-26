@@ -1,3 +1,4 @@
+import { GRAINS_PER_UNIT } from '@zaliba/catalogs'
 import { type Instant, instant } from './time.js'
 
 /**
@@ -30,8 +31,15 @@ export type RatePerHour = number & { readonly [rateBrand]: true }
  * Sa valeur est aussi le nombre de secondes dans une heure, et ce n'est pas une
  * coïncidence : c'est précisément ce qui fait qu'un taux d'une unité par heure
  * produit exactement un grain par seconde.
+ *
+ * La constante est **détenue par `catalogs`** et réexportée ici. C'est le sens
+ * de la dépendance qui l'impose : `catalogs` est la feuille du graphe et ne
+ * peut rien importer, alors que toutes ses quantités sont libellées en grains.
+ * La redéclarer des deux côtés créerait deux vérités à tenir d'accord — et le
+ * jour où elles divergeraient, le catalogue et la projection compteraient dans
+ * des unités différentes sans qu'aucune compilation ne s'en aperçoive.
  */
-export const GRAINS_PER_UNIT = 3600
+export { GRAINS_PER_UNIT }
 
 /** @throws RangeError si la valeur n'est pas un entier ≥ 0. */
 export function grains(value: number): Grains {
