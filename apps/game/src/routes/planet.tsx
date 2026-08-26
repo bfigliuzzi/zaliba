@@ -17,6 +17,7 @@ import type { GhostState } from '../features/grid/FootprintGhost.js'
 import { GridLiveRegion } from '../features/grid/GridLiveRegion.js'
 import { GridView } from '../features/grid/GridView.js'
 import { useGridCursor } from '../features/grid/useGridCursor.js'
+import { EnergyPanel } from '../features/resources/EnergyPanel.js'
 import { ResourcePanel } from '../features/resources/ResourcePanel.js'
 import { useExtrapolatedState } from '../features/resources/useExtrapolatedState.js'
 import { BuildPanel, type BuildSelection } from '../features/work/BuildPanel.js'
@@ -256,6 +257,13 @@ export function PlanetScreen({ snapshot, gateway, onSnapshot }: PlanetScreenProp
       <RefusalNotice refusal={refusal} at={state.at} />
 
       <ResourcePanel holdings={state.holdings} at={state.at} />
+      {/*
+        L'énergie après les ressources, et avant le chantier. L'ordre est celui
+        de la lecture : « ce que j'ai », puis « ce qui le limite », puis « ce qui
+        est en cours ». Placer l'énergie avant les compteurs ferait ouvrir l'écran
+        sur une contrainte plutôt que sur un état.
+      */}
+      <EnergyPanel energy={state.energy} buildings={state.buildings} />
       <CurrentWork work={state.work} />
     </>
   )

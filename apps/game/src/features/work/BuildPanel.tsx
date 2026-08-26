@@ -22,7 +22,8 @@ import { BUILDING_LABELS, FOOTPRINT_LABELS, RESOURCE_LABELS } from '../../lib/la
  * fait à sa place quand le type n'a qu'une empreinte.
  *
  * **FR-035 : la confirmation est postérieure à l'affichage.** Le coût, la durée,
- * les gisements recouverts et la production annoncée sont là, dans le document, avant que le bouton ne soit atteignable — et ils suivent le curseur à la
+ * les gisements recouverts, la production annoncée et l'effet énergétique
+ * (US3-3) sont là, dans le document, avant que le bouton ne soit atteignable — et ils suivent le curseur à la
  * fréquence d'affichage, sans un seul appel réseau (R8). Le bouton n'est pas une
  * cérémonie : il est le seul endroit où le joueur engage sa dépense.
  */
@@ -178,7 +179,28 @@ function BuildPreview({ preview }: { readonly preview: PreviewResult | null }) {
           *avant* la pose, et non après.
         */}
         <dt>Production annoncée</dt>
-        <dd>{formatWhole(effect.effectiveRate)} par heure</dd>
+        {/*
+          Le taux **résultant**, sous le rapport que la pose laissera derrière
+          elle — et non sous le rapport courant. Annoncer sous l'ancien
+          promettrait un chiffre que la pose rendrait faux à l'instant même où
+          elle l'atteint : un extracteur posé sans centrale se dégrade lui-même.
+        */}
+        <dd>{formatWhole(effect.effectiveRateAfter)} par heure</dd>
+
+        {/*
+          US3-3 : l'effet énergétique est annoncé **avant paiement**, et il est
+          exactement calculable — entre le lancement d'un chantier et son
+          échéance, aucune autre transition ne peut survenir (FR-033, R3, R4).
+          La fraction est dans l'attribut, ce qu'elle veut dire est dans le texte.
+        */}
+        <dt>Énergie après la pose</dt>
+        <dd data-energy-after={`${effect.energyAfter.produced}/${effect.energyAfter.consumed}`}>
+          {formatWhole(effect.energyAfter.produced)} produite pour{' '}
+          {formatWhole(effect.energyAfter.consumed)} consommée
+          {effect.energyAfter.deficit
+            ? ` — déficit : la production des extracteurs sera réduite au rapport ${formatWhole(effect.energyAfter.ratio.numerator)} ÷ ${formatWhole(effect.energyAfter.ratio.denominator)}`
+            : ' — aucun rendement réduit'}
+        </dd>
 
         {shortfall !== null && (
           <>

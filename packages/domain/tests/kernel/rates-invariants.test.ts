@@ -4,8 +4,9 @@ import { describe, expect, it } from 'vitest'
 import { projectPlanet } from '../../src/game.js'
 import { DEFAULT_CATALOGS } from '../../src/kernel/catalogs.js'
 import { evaluateCurve } from '../../src/kernel/curves.js'
+import { NO_DEFICIT } from '../../src/kernel/energy.js'
 import { coveredDeposits, gridView } from '../../src/kernel/grid.js'
-import { NO_DEFICIT, productionRates } from '../../src/kernel/rates.js'
+import { productionRates } from '../../src/kernel/rates.js'
 import {
   emptySnapshot,
   type PlacedBuilding,

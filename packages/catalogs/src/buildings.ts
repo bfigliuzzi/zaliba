@@ -19,6 +19,10 @@ import { GRAINS_PER_UNIT } from './units.js'
  * La courbe de **capacité** de l'entrepôt arrive avec US7, la tranche qui la
  * consomme : aucun test de cette itération ne la contraint, et une donnée
  * d'équilibrage qu'aucun test ne tient est une valeur qui dérive en silence.
+ *
+ * **Les deux colonnes d'énergie sont exclusives** : la centrale produit et ne
+ * consomme pas, tout le reste consomme et ne produit pas (FR-022, R20). Aucun
+ * type ne remplit les deux, aucun n'en laisse deux vides.
  */
 
 /** Une fraction en entiers — jamais un flottant (R19). */
@@ -64,12 +68,24 @@ export interface Building {
    * consommation qui croîtrait comme les coûts rendrait le rapport d'énergie
    * imprévisible d'un niveau à l'autre, alors que SC-002 promet au joueur de
    * pouvoir refaire le calcul à la main.
-   *
-   * L'énergie **produite** par la centrale arrive avec US3, la tranche qui la
-   * consomme. Ce qui est ici est ce que la cohérence du catalogue exige dès
-   * maintenant : tout type sauf la centrale consomme, l'entrepôt compris.
    */
   readonly energyConsumption: LinearCurve | null
+  /**
+   * Énergie **produite** par niveau, ou `null` pour tout type qui n'en produit
+   * pas. La centrale est le seul à porter cette courbe (FR-022, R20).
+   *
+   * Linéaire elle aussi, et par la même raison : les deux plateaux du rapport
+   * doivent croître de façon comparable, sans quoi le déficit serait une falaise
+   * qu'aucun niveau n'annonce. Un joueur qui monte sa centrale d'un niveau doit
+   * pouvoir dire, de tête, combien d'extracteurs cela lui achète.
+   *
+   * Les deux courbes sont **exclusives** : un type qui produit ne consomme pas,
+   * et réciproquement. La règle est tenue par un test de cohérence du catalogue
+   * plutôt que par la forme du type — l'exprimer en TypeScript demanderait une
+   * union discriminée qui compliquerait tous les autres champs pour une seule
+   * ligne de garantie.
+   */
+  readonly energyProduction: LinearCurve | null
 }
 
 /** Le facteur de croissance commun : chaque niveau coûte une fois et demie. */
@@ -106,6 +122,20 @@ function drawing(base: number, step: number): LinearCurve {
   return { kind: 'linear', base, step }
 }
 
+/**
+ * La production d'énergie de la centrale, de même forme que la consommation.
+ *
+ * Le choix des valeurs porte l'équilibrage de la tranche : avec les vingt de
+ * base du Berceau, une centrale de niveau 1 alimente **un de chaque type**
+ * d'extracteur et l'entrepôt. La tension revient avec les niveaux — la
+ * consommation d'un racloir croît de sept par niveau, la production d'une
+ * centrale de quinze —, donc monter ses extracteurs finit toujours par exiger de
+ * monter sa centrale. C'est la boucle que US3 doit rendre lisible, pas subie.
+ */
+function producing(base: number, step: number): LinearCurve {
+  return { kind: 'linear', base, step }
+}
+
 /** La moitié, remboursée à la démolition. Énonçable en une phrase (SC-002). */
 const HALF: Fraction = { num: 1, den: 2 }
 
@@ -121,6 +151,7 @@ const TYPES = {
     buildDuration: lengthening(120),
     production: yielding(15),
     energyConsumption: drawing(8, 4),
+    energyProduction: null,
   },
   puits: {
     id: 'puits',
@@ -133,6 +164,7 @@ const TYPES = {
     buildDuration: lengthening(150),
     production: yielding(8),
     energyConsumption: drawing(10, 5),
+    energyProduction: null,
   },
   /** L'extracteur de Bave d'étoiles. Nommé le 2026-08-23 (T014). */
   racloir: {
@@ -146,6 +178,7 @@ const TYPES = {
     buildDuration: lengthening(200),
     production: yielding(4),
     energyConsumption: drawing(14, 7),
+    energyProduction: null,
   },
   /** Le **seul** type qui ne consomme pas d'énergie (R20). */
   centrale: {
@@ -160,6 +193,9 @@ const TYPES = {
     production: null,
     // Le seul `null` de cette colonne, et c'est une exigence (FR-022, R20).
     energyConsumption: null,
+    // Et le seul type qui produise. Les deux `null` se répondent : la colonne
+    // qu'un type ne remplit pas est celle que l'autre remplit.
+    energyProduction: producing(30, 15),
   },
   /**
    * Relève le plafond des trois ressources. Il consomme de l'énergie sans que
@@ -180,6 +216,7 @@ const TYPES = {
     // L'entrepôt consomme, lui aussi : c'est ce qui fait que le poser sans
     // centrale se paie — le prix étant payé par les extracteurs (R21).
     energyConsumption: drawing(2, 1),
+    energyProduction: null,
   },
 } as const satisfies Record<string, Omit<Building, 'id'> & { id: string }>
 

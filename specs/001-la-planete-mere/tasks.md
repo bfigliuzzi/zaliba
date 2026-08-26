@@ -428,17 +428,71 @@ l'effet énergétique de toute action annoncé **avant** paiement.
 effective de chaque extracteur vaut sa nominale multipliée par le rapport, et que
 la capacité des entrepôts reste entière.
 
-- [ ] T107 [US3] Écrire le parcours Playwright dans `apps/game/tests/e2e/us3-energy.spec.ts` : construire jusqu'au déficit, vérifier le rapport affiché et la production effective, demander l'aperçu d'une action qui ferait basculer en déficit et vérifier qu'il l'annonce avant paiement ; vérifier qu'un entrepôt posé en déficit **ne perd pas de capacité** tout en apparaissant dans la consommation ; passer `axe-core` sans écart. Observer l'échec.
-- [ ] T108 [P] [US3] Écrire les tests d'énergie dans `packages/domain/tests/kernel/energy.test.ts` : `E₊` somme **l'énergie de base du Berceau et les centrales** — une mine posée avant toute centrale n'est donc **pas** réduite à zéro (FR-022) ; `E₋` somme la consommation de **tous** les bâtiments sauf la centrale, l'entrepôt compris (FR-022) ; rapport `1` quand `E₋ ≤ E₊` ; sinon `taux effectif = ⌊taux nominal × E₊ ÷ E₋⌋` avec **une seule troncature, sur le taux et non sur le gain** (R5) ; production de 60 pour consommation de 100 → exactement 60 % (US3-2) ; la production de base du Berceau n'est **jamais** touchée (FR-018). Observer l'échec.
-- [ ] T109 [P] [US3] Écrire le test de la capacité non dégradée dans `packages/domain/tests/kernel/energy-capacity.test.ts` : en déficit, les trois plafonds sont **inchangés** — le rapport ne s'applique qu'à la production (FR-023b, R21) — alors même que la consommation de l'entrepôt figure dans `consumed` et dégrade le rapport des extracteurs (US3-4). Observer l'échec.
-- [ ] T110 [P] [US3] Écrire le test d'additivité sous déficit dans `packages/domain/tests/kernel/energy-invariants.test.ts` : le taux effectif étant entier et constant sur un segment, I-2 tient sous déficit comme hors déficit. Observer l'échec.
-- [ ] T111 [US3] Implémenter `packages/domain/src/kernel/energy.ts` : `produced` = énergie de base du Berceau + production des centrales, `consumed`, rapport `{ numerator, denominator }` et application au taux nominal. **L'énergie est une grandeur instantanée, ni stockée ni accumulée** (FR-021).
-- [ ] T112 [US3] Étendre `packages/catalogs/src/buildings.ts` avec les courbes d'énergie : production de la `centrale`, et consommation de **tous les autres types** — `mine`, `puits`, `racloir` et `entrepot` (FR-022). La `centrale` est le seul type qui ne consomme pas.
-- [ ] T113 [US3] Câbler le rapport d'énergie dans `packages/domain/src/kernel/projection.ts` et exposer `energy` et les deux taux — nominal et effectif — dans `ProjectedState` (FR-024).
-- [ ] T114 [US3] Étendre `packages/domain/src/modules/construction/preview.ts` avec `energyAfter` : le rapport résultant et la production effective résultante, annoncés **avant paiement** (US3-3).
-- [ ] T115 [US3] Implémenter `apps/game/src/features/resources/EnergyPanel.tsx` : énergie produite — **base du Berceau et centrales distinguées** —, consommation **détaillée par bâtiment** — l'entrepôt y figure —, rapport, et par extracteur la production nominale **et** effective affichées séparément (FR-024).
+- [x] T107 [US3] Écrire le parcours Playwright dans `apps/game/tests/e2e/us3-energy.spec.ts` : construire jusqu'au déficit, vérifier le rapport affiché et la production effective, demander l'aperçu d'une action qui ferait basculer en déficit et vérifier qu'il l'annonce avant paiement ; vérifier qu'un entrepôt posé en déficit **ne perd pas de capacité** tout en apparaissant dans la consommation ; passer `axe-core` sans écart. Observer l'échec.
+- [x] T108 [P] [US3] Écrire les tests d'énergie dans `packages/domain/tests/kernel/energy.test.ts` : `E₊` somme **l'énergie de base du Berceau et les centrales** — une mine posée avant toute centrale n'est donc **pas** réduite à zéro (FR-022) ; `E₋` somme la consommation de **tous** les bâtiments sauf la centrale, l'entrepôt compris (FR-022) ; rapport `1` quand `E₋ ≤ E₊` ; sinon `taux effectif = ⌊taux nominal × E₊ ÷ E₋⌋` avec **une seule troncature, sur le taux et non sur le gain** (R5) ; production de 60 pour consommation de 100 → exactement 60 % (US3-2) ; la production de base du Berceau n'est **jamais** touchée (FR-018). Observer l'échec.
+- [x] T109 [P] [US3] Écrire le test de la capacité non dégradée dans `packages/domain/tests/kernel/energy-capacity.test.ts` : en déficit, les trois plafonds sont **inchangés** — le rapport ne s'applique qu'à la production (FR-023b, R21) — alors même que la consommation de l'entrepôt figure dans `consumed` et dégrade le rapport des extracteurs (US3-4). Observer l'échec.
+- [x] T110 [P] [US3] Écrire le test d'additivité sous déficit dans `packages/domain/tests/kernel/energy-invariants.test.ts` : le taux effectif étant entier et constant sur un segment, I-2 tient sous déficit comme hors déficit. Observer l'échec.
+- [x] T111 [US3] Implémenter `packages/domain/src/kernel/energy.ts` : `produced` = énergie de base du Berceau + production des centrales, `consumed`, rapport `{ numerator, denominator }` et application au taux nominal. **L'énergie est une grandeur instantanée, ni stockée ni accumulée** (FR-021).
+- [x] T112 [US3] Étendre `packages/catalogs/src/buildings.ts` avec les courbes d'énergie : production de la `centrale`, et consommation de **tous les autres types** — `mine`, `puits`, `racloir` et `entrepot` (FR-022). La `centrale` est le seul type qui ne consomme pas.
+- [x] T113 [US3] Câbler le rapport d'énergie dans `packages/domain/src/kernel/projection.ts` et exposer `energy` et les deux taux — nominal et effectif — dans `ProjectedState` (FR-024).
+- [x] T114 [US3] Étendre `packages/domain/src/modules/construction/preview.ts` avec `energyAfter` : le rapport résultant et la production effective résultante, annoncés **avant paiement** (US3-3).
+- [x] T115 [US3] Implémenter `apps/game/src/features/resources/EnergyPanel.tsx` : énergie produite — **base du Berceau et centrales distinguées** —, consommation **détaillée par bâtiment** — l'entrepôt y figure —, rapport, et par extracteur la production nominale **et** effective affichées séparément (FR-024).
 
 **Point de contrôle** : la contrainte d'énergie existe avant que le joueur puisse la déclencher.
+
+### Divergences constatées à l'exécution
+
+1. **Le vocabulaire du rapport a déménagé.** `EnergyRatio`, `NO_DEFICIT` et
+   `applyEnergyRatio` vivaient dans `rates.ts` depuis US1 ; ils vivent désormais
+   dans `energy.ts`, avec la grandeur qu'ils décrivent. `rates.ts` ne fait plus
+   qu'**appliquer** un rapport : il sait multiplier un taux, il ne sait pas d'où
+   vient le déficit. Les deux moitiés s'éprouvent donc séparément, et le graphe
+   reste acyclique — `energy.ts` n'importe pas `rates.ts`.
+2. **`EnergyReport` porte plus que les trois champs annoncés.** T113 nommait
+   `produced`, `consumed` et le rapport ; T115 exige la base du Berceau et les
+   centrales **distinguées**, et la consommation **détaillée par bâtiment**. Un
+   total seul n'a rien à afficher : il laisserait deviner quel bâtiment démolir.
+   D'où `base`, `fromPlants`, `consumers[]` et `deficit`.
+3. **L'aperçu annonce aussi la production sous le rapport résultant**
+   (`effectiveRateAfter`). T114 ne demandait que `energyAfter` — mais annoncer la
+   production sous le rapport *courant* promettrait un chiffre que la pose rendrait
+   faux à l'instant même où elle l'atteint : un extracteur posé sans centrale se
+   dégrade lui-même.
+4. **Le rapport est recalculé par segment**, et non une fois par projection. Un
+   chantier échu à l'intérieur de la fenêtre change la consommation : le calculer
+   une fois appliquerait à la période antérieure une consommation qui n'existait
+   pas encore. C'est ce qui fait de l'énergie une grandeur réellement instantanée
+   (FR-021), et non une valeur figée à l'ouverture.
+5. **Deux attributs distincts dans le document**, et c'est le parcours de bout en
+   bout qui l'a imposé : `data-energy` porte `E₊/E₋`, `data-energy-ratio` porte le
+   rapport. Sur une planète neuve `E₋` vaut **zéro** — les deux membres se lisent,
+   le quotient n'existe pas —, et publier « 20/0 » sous le nom de rapport était
+   faux. Aucun test de domaine ne pouvait l'attraper : le domaine, lui, rendait
+   bien `1/1`.
+6. **La colonne `energyProduction` est arrivée avec son test d'exclusivité.** Un
+   type qui ne remplirait **ni** l'une **ni** l'autre des deux colonnes serait
+   invisible dans le rapport — ni au numérateur, ni au dénominateur —, donc gratuit
+   sans qu'aucune règle publiée ne le dise. La valeur du test a été vérifiée par
+   **mutation** : trois mutations ciblées font tomber sept cas.
+7. **Trois fichiers de tests de composant ont été écrits sans tâche qui les
+   nomme** — `energy-panel.test.tsx`, et les ajouts à `build-panel.test.tsx` et
+   `resource-panel.test.tsx`. Ils l'ont été **avant** leur implémentation, la note
+   10 de la phase 4 ayant consigné la dette inverse : elle ne se répète pas.
+8. **`data-cap` sur le panneau de ressources.** Le parcours d'US3 compare deux
+   plafonds pour établir que le déficit ne les dégrade pas (FR-023b) : il lui faut
+   le chiffre, pas son formatage. Relire à l'envers un nombre à séparateurs de
+   milliers aurait été fragile autant qu'inutile.
+9. **L'équilibrage de la centrale est `30 + 15 × (n − 1)`**, et il est *tenu par un
+   test* : avec les vingt de base du Berceau, une centrale de niveau 1 alimente un
+   de chaque autre type au niveau 1. Sans cette borne, le premier écran du jeu
+   serait un déficit, et le joueur apprendrait la mécanique en étant puni par elle.
+   La tension revient avec les niveaux — sept par niveau pour un racloir, quinze
+   pour une centrale —, donc monter ses extracteurs finit toujours par exiger de
+   monter sa centrale.
+10. **La consommation de tous les types était déjà là** (divergence 2 de la
+    phase 4). T112 n'a donc apporté que la production de la centrale ; la courbe de
+    **capacité** de l'entrepôt reste à T145, aucun test de cette tranche ne la
+    contraignant.
 
 ---
 

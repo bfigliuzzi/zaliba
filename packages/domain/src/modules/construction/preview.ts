@@ -1,8 +1,9 @@
 import type { Catalogs } from '../../kernel/catalogs.js'
 import type { ResourceAmount } from '../../kernel/effects.js'
+import { applyEnergyRatio, type EnergyReport, energyAfterBuilding } from '../../kernel/energy.js'
 import { depositsUnder, placementCells, validatePlacement } from '../../kernel/grid.js'
-import type { EnergyReport, ProjectedState } from '../../kernel/projection.js'
-import { applyEnergyRatio, extractorRate } from '../../kernel/rates.js'
+import type { ProjectedState } from '../../kernel/projection.js'
+import { extractorRate } from '../../kernel/rates.js'
 import type { RatePerHour } from '../../kernel/resources.js'
 import { addDuration, type Duration, type Instant } from '../../kernel/time.js'
 import {
@@ -51,17 +52,27 @@ export interface BuildPreviewEffect {
   /** Après rapport. */
   readonly effectiveRate: RatePerHour
   /**
-   * Le rapport d'énergie de la planète **après** la pose.
+   * Le rapport d'énergie de la planète **après** la pose (US3-3).
    *
-   * En 001, seule la base du Berceau produit et rien ne consomme : le rapport
-   * annoncé est donc celui de la planète, inchangé. US3 lui donne son contenu —
-   * production des centrales, consommation de tous les autres types — et c'est
-   * cette tranche qui éprouvera l'annonce « cette action fera basculer en
-   * déficit » (US3-3). Exposer le champ dès maintenant plutôt que de l'ajouter
-   * plus tard évite de faire changer la forme de l'aperçu, donc de faire changer
-   * l'écran qui l'affiche.
+   * C'est ce champ qui tient la promesse « le joueur voit l'effet énergétique de
+   * toute construction avant de la lancer ». Il est calculable exactement, et
+   * pour une raison structurelle : entre le lancement d'un chantier et son
+   * échéance, **aucune autre transition ne peut survenir** (FR-033, R3, R4), donc
+   * l'état énergétique à l'échéance est connu dès le lancement.
+   *
+   * Le bâtiment envisagé y figure avec un identifiant `null` : il n'en a pas
+   * encore, et lui en inventer un ferait croire que le client peut en proposer.
    */
   readonly energyAfter: EnergyReport
+  /**
+   * Le taux effectif **une fois la pose achevée**, sous le rapport résultant.
+   *
+   * Distinct de `effectiveRate`, qui applique le rapport *courant*. La
+   * différence n'est pas une subtilité : un extracteur posé sans centrale se
+   * dégrade lui-même, et annoncer sa production sous l'ancien rapport promettrait
+   * un chiffre que la pose rendrait faux à l'instant même où elle l'atteint.
+   */
+  readonly effectiveRateAfter: RatePerHour
 }
 
 export interface Preview {
@@ -136,6 +147,11 @@ export function previewBuild(
   const coveredDeposits = depositsUnder(state.grid, cells, type.extracts)
   const nominal = extractorRate(command.typeId, INITIAL_LEVEL, coveredDeposits, catalogs)
 
+  // Le rapport que la pose laissera derrière elle. Il est calculé sur le rapport
+  // **courant** de l'état projeté, ce qui est exact parce que rien d'autre ne
+  // peut survenir d'ici l'échéance (FR-033, R3).
+  const energyAfter = energyAfterBuilding(state.energy, command.typeId, INITIAL_LEVEL, catalogs)
+
   return {
     outcome: 'accepted',
     preview: {
@@ -151,7 +167,8 @@ export function previewBuild(
         coveredDeposits,
         nominalRate: nominal as RatePerHour,
         effectiveRate: applyEnergyRatio(nominal, state.energy.ratio) as RatePerHour,
-        energyAfter: state.energy,
+        energyAfter,
+        effectiveRateAfter: applyEnergyRatio(nominal, energyAfter.ratio) as RatePerHour,
       },
     },
   }

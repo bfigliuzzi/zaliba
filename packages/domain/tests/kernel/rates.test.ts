@@ -1,12 +1,8 @@
 import { BERCEAU } from '@zaliba/catalogs'
 import { describe, expect, it } from 'vitest'
 import { DEFAULT_CATALOGS } from '../../src/kernel/catalogs.js'
-import {
-  applyEnergyRatio,
-  NO_DEFICIT,
-  productionRates,
-  storageCaps,
-} from '../../src/kernel/rates.js'
+import { applyEnergyRatio, NO_DEFICIT } from '../../src/kernel/energy.js'
+import { productionRates, storageCaps } from '../../src/kernel/rates.js'
 import { emptySnapshot, type PlanetSnapshot } from '../../src/kernel/snapshot.js'
 import { instant } from '../../src/kernel/time.js'
 

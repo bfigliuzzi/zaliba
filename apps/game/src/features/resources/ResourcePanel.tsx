@@ -99,7 +99,17 @@ export function ResourcePanel({ holdings, at }: ResourcePanelProps) {
               <dd>{formatHeld(holding.amount)}</dd>
 
               <dt>Plafond</dt>
-              <dd>{formatUnits(holding.cap)}</dd>
+              {/*
+                Le chiffre **en grains** dans l'attribut, sa forme lisible dans
+                le texte. Le second est formaté pour être lu — séparateurs de
+                milliers compris — et le relire à l'envers pour retrouver un
+                nombre serait fragile autant qu'inutile. Le parcours d'US3
+                compare deux plafonds pour établir que le déficit d'énergie ne
+                les dégrade pas (FR-023b) : il lui faut le chiffre.
+              */}
+              <dd data-cap={holding.cap} data-resource={resourceId}>
+                {formatUnits(holding.cap)}
+              </dd>
 
               <dt>Saturation</dt>
               <dd>

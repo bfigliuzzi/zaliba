@@ -271,3 +271,114 @@ describe('le manque de ressources est affiché, non refusé', () => {
     expect(shown).toMatch(/payable dans/i)
   })
 })
+
+/**
+ * US3-3 : l'effet énergétique est annoncé **avant paiement**.
+ *
+ * Le calcul appartient à `preview.ts` et y est éprouvé. Ce qui se vérifie ici
+ * est qu'il *arrive dans le document*, et au bon endroit : dans le groupe
+ * d'aperçu, donc avant le bouton de confirmation. Un aperçu qui calculerait
+ * juste et n'afficherait rien satisferait tous les tests de domaine.
+ */
+describe('l’aperçu annonce l’effet énergétique avant paiement (US3-3)', () => {
+  /** Une planète portant déjà une mine : le racloir la fera basculer. */
+  function stateWithMine() {
+    const snapshot = snapshotFromContract(
+      {
+        ...payload,
+        buildings: [
+          {
+            id: 'b-1',
+            typeId: 'mine',
+            variantId: 'square-4',
+            orientation: 0,
+            anchorX: 0,
+            anchorY: 4,
+            level: 1,
+          },
+        ],
+      } as typeof payload,
+      CATALOGS,
+    )
+    return projectPlanet(snapshot, CATALOGS, instant(payload.planet.consolidatedAt))
+  }
+
+  function previewRacloir() {
+    return previewBuild(
+      stateWithMine(),
+      {
+        kind: 'build',
+        workId: 'apercu-local',
+        typeId: 'racloir',
+        variantId: 'square-9',
+        orientation: 0,
+        anchor: { x: 3, y: 3 },
+      },
+      CATALOGS,
+    )
+  }
+
+  it('bascule bien la planète en déficit — sans quoi le test ne prouverait rien', () => {
+    const preview = previewRacloir()
+    expect(preview.outcome).toBe('accepted')
+    if (preview.outcome !== 'accepted') return
+
+    expect(stateWithMine().energy.deficit).toBe(false)
+    expect(preview.preview.effect.energyAfter.deficit).toBe(true)
+  })
+
+  it('publie le rapport résultant en fraction exacte', () => {
+    const preview = previewRacloir()
+    if (preview.outcome !== 'accepted') throw new Error('Aperçu refusé.')
+    const after = preview.preview.effect.energyAfter
+
+    renderPanel({ typeId: 'racloir', variantId: 'square-9' }, preview)
+    expect(
+      document.querySelector(`[data-energy-after="${after.produced}/${after.consumed}"]`),
+    ).not.toBeNull()
+  })
+
+  it('dit en clair que la planète basculera en déficit', () => {
+    renderPanel({ typeId: 'racloir', variantId: 'square-9' }, previewRacloir())
+    const shown = screen.getByRole('group', { name: /aperçu/i }).textContent ?? ''
+    expect(shown).toMatch(/énergie/i)
+    expect(shown).toMatch(/déficit/i)
+  })
+
+  /**
+   * La production annoncée est celle du rapport **résultant**, et non du rapport
+   * courant. Annoncer sous l'ancien promettrait un chiffre que la pose rendrait
+   * faux à l'instant même où elle l'atteint.
+   */
+  it('annonce la production sous le rapport résultant, pas sous l’actuel', () => {
+    const preview = previewRacloir()
+    if (preview.outcome !== 'accepted') throw new Error('Aperçu refusé.')
+    const { effect } = preview.preview
+
+    expect(effect.effectiveRateAfter).toBeLessThan(effect.effectiveRate)
+
+    renderPanel({ typeId: 'racloir', variantId: 'square-9' }, preview)
+    const shown = screen.getByRole('group', { name: /aperçu/i }).textContent ?? ''
+    expect(shown).toContain(String(effect.effectiveRateAfter))
+  })
+
+  it('n’annonce aucun déficit quand la pose n’en provoque pas', () => {
+    const preview = previewBuild(
+      freshState(),
+      {
+        kind: 'build',
+        workId: 'apercu-local',
+        typeId: 'mine',
+        variantId: 'square-4',
+        orientation: 0,
+        anchor: { x: 0, y: 4 },
+      },
+      CATALOGS,
+    )
+
+    renderPanel(MINE_SQUARE, preview)
+    const shown = screen.getByRole('group', { name: /aperçu/i }).textContent ?? ''
+    expect(shown).toMatch(/énergie/i)
+    expect(shown).not.toMatch(/déficit/i)
+  })
+})

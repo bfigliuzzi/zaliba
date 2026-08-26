@@ -157,3 +157,32 @@ describe('la quantité détenue progresse de façon continue (US1, critère 3)',
     expect(group(/camelote/i).getByText('400,01')).toBeDefined()
   })
 })
+
+/**
+ * Le plafond, lisible **en grains** dans un attribut.
+ *
+ * Le texte affiché est formaté pour être lu — séparateurs de milliers compris —
+ * et le relire à l'envers pour retrouver un nombre serait fragile autant
+ * qu'inutile. Le parcours de bout en bout d'US3 a besoin de comparer deux
+ * plafonds pour établir que le déficit d'énergie ne les dégrade pas (FR-023b) :
+ * il lui faut le chiffre, pas son apparence.
+ */
+describe('le plafond est comparable, pas seulement lisible', () => {
+  it.each([/camelote/i, /jus/i, /bave d’étoiles/i])('porte le plafond de %s en grains', (name) => {
+    renderPanel()
+    const value = group(name).getByText(/^\d[\d   ]*$/, { selector: '[data-cap]' })
+    expect(value.getAttribute('data-cap')).toMatch(/^\d+$/)
+  })
+
+  it('donne exactement le plafond de la projection', () => {
+    const snapshot = snapshotFromContract(payload, CATALOGS)
+    const state = projectPlanet(snapshot, CATALOGS, instant(payload.planet.consolidatedAt))
+    renderPanel()
+
+    for (const [resourceId, holding] of Object.entries(state.holdings)) {
+      const row = document.querySelector(`[data-cap][data-resource="${resourceId}"]`)
+      expect(row, `${resourceId} n’expose pas son plafond`).not.toBeNull()
+      expect(row?.getAttribute('data-cap')).toBe(String(holding.cap))
+    }
+  })
+})

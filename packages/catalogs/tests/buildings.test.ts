@@ -7,6 +7,7 @@ import {
 } from '../src/buildings.js'
 import type { GeometricCurve, LinearCurve } from '../src/curves.js'
 import { FOOTPRINTS } from '../src/footprints.js'
+import { BERCEAU } from '../src/layouts/berceau.js'
 
 /**
  * Les cinq types de bâtiment (R20).
@@ -202,6 +203,61 @@ describe('tout type sauf la centrale consomme de l’énergie (FR-022, R21)', ()
       expect(linear(curve, 1), `${id} au niveau 1`).toBeGreaterThan(0)
       expect(linear(curve, 2), `${id} au niveau 2`).toBeGreaterThan(linear(curve, 1))
     }
+  })
+})
+
+describe('la centrale, et elle seule, produit de l’énergie (FR-022, R20)', () => {
+  it('donne une courbe de production d’énergie à la centrale', () => {
+    expect(BUILDINGS.centrale.energyProduction).not.toBeNull()
+  })
+
+  it('ne l’accorde à aucun autre type', () => {
+    for (const id of BUILDING_TYPE_IDS.filter((typeId) => typeId !== 'centrale')) {
+      expect(BUILDINGS[id].energyProduction, `${id} produit de l’énergie`).toBeNull()
+    }
+  })
+
+  /**
+   * Les deux colonnes se répondent, et c'est la propriété qui compte : un type
+   * qui ne remplirait ni l'une ni l'autre serait invisible dans le rapport
+   * d'énergie — ni au numérateur, ni au dénominateur —, donc gratuit sans
+   * qu'aucune règle publiée ne le dise.
+   */
+  it('fait remplir à chaque type exactement une des deux colonnes', () => {
+    for (const id of BUILDING_TYPE_IDS) {
+      const produces = BUILDINGS[id].energyProduction !== null
+      const consumes = BUILDINGS[id].energyConsumption !== null
+      expect(
+        produces !== consumes,
+        `${id} remplit ${produces && consumes ? 'les deux' : 'aucune'} colonne`,
+      ).toBe(true)
+    }
+  })
+
+  it('donne une production strictement positive et croissante', () => {
+    const curve = BUILDINGS.centrale.energyProduction
+    expect(curve).not.toBeNull()
+    if (curve === null) return
+    expect(linear(curve, 1)).toBeGreaterThan(0)
+    expect(linear(curve, 2)).toBeGreaterThan(linear(curve, 1))
+  })
+
+  /**
+   * L'équilibrage que la tranche promet : les vingt de base du Berceau **plus**
+   * une centrale de niveau 1 suffisent à alimenter un de chaque autre type au
+   * niveau 1. Sans cette borne, le premier écran du jeu serait un déficit, et le
+   * joueur apprendrait la mécanique en étant puni par elle.
+   */
+  it('alimente, avec la base du Berceau, un de chaque type au niveau 1', () => {
+    const curve = BUILDINGS.centrale.energyProduction
+    if (curve === null) throw new Error('La centrale ne produit rien.')
+
+    const consumed = BUILDING_TYPE_IDS.reduce((total, id) => {
+      const consumption = BUILDINGS[id].energyConsumption
+      return consumption === null ? total : total + linear(consumption, 1)
+    }, 0)
+
+    expect(BERCEAU.baseEnergy + linear(curve, 1)).toBeGreaterThanOrEqual(consumed)
   })
 })
 

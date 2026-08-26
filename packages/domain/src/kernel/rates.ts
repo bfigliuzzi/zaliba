@@ -3,6 +3,7 @@ import type { Catalogs } from './catalogs.js'
 import { layoutOf } from './catalogs.js'
 import { evaluateCurve } from './curves.js'
 import type { BuildingId } from './effects.js'
+import { applyEnergyRatio, type EnergyRatio } from './energy.js'
 import { cellsOf, depositsUnder, gridView } from './grid.js'
 import type { RatePerHour } from './resources.js'
 import { ratePerHour } from './resources.js'
@@ -25,6 +26,11 @@ import type { PlacedBuilding, PlanetSnapshot } from './snapshot.js'
  * jamais touchée (FR-018, R5). C'est ce qui garantit qu'aucun état de jeu n'est
  * définitivement bloquant : même à zéro énergie, la planète produit.
  *
+ * **Le rapport lui-même vit dans `energy.ts`**, avec la grandeur qu'il décrit.
+ * Ce fichier ne fait que l'appliquer : il sait multiplier un taux, il ne sait pas
+ * d'où vient le déficit — et c'est ce qui permet d'éprouver les deux moitiés
+ * séparément.
+ *
  * La règle de production tient en une ligne, et c'est une exigence : SC-002
  * promet au joueur de pouvoir refaire n'importe quel chiffre affiché.
  *
@@ -34,27 +40,6 @@ import type { PlacedBuilding, PlanetSnapshot } from './snapshot.js'
  * taux de la planète           = Σ extracteurs (effectifs) + production de base
  * ```
  */
-
-/** Le rapport d'énergie, en fraction entière — jamais un flottant (R5). */
-export interface EnergyRatio {
-  readonly numerator: number
-  readonly denominator: number
-}
-
-export const NO_DEFICIT: EnergyRatio = { numerator: 1, denominator: 1 }
-
-/**
- * Applique le rapport à un taux, avec **une seule troncature** (R5).
- *
- * Elle porte sur le taux, une fois, et non sur le gain. C'est ce qui préserve
- * l'additivité : `⌊a⌋ + ⌊b⌋ ≠ ⌊a+b⌋`, mais un taux entier constant sur un
- * segment se multiplie exactement par la durée. Tronquer le gain serait plus
- * fin — et rendrait la fortune du joueur dépendante de sa fréquence d'action.
- */
-export function applyEnergyRatio(nominal: number, ratio: EnergyRatio): number {
-  if (ratio.numerator >= ratio.denominator) return nominal
-  return Math.floor((nominal * ratio.numerator) / ratio.denominator)
-}
 
 export interface ResourceRate {
   /** Avant rapport d'énergie (FR-024). */
@@ -163,7 +148,9 @@ export function storageCaps(
 
   // La capacité des entrepôts s'ajoute avec US7 — et **n'est pas** dégradée par
   // le déficit d'énergie (R21) : un plafond qui rétrécit pourrait passer sous la
-  // quantité détenue, ce que l'invariant I-1 interdit.
+  // quantité détenue, ce que l'invariant I-1 interdit. Le rapport n'est donc pas
+  // un argument de cette fonction, et c'est la forme qui tient FR-023b : ce
+  // qu'on ne reçoit pas, on ne peut pas l'appliquer par mégarde.
   return Object.fromEntries(
     catalogs.resourceIds.map((resourceId) => [
       resourceId,

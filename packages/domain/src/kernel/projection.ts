@@ -1,15 +1,9 @@
 import type { ResourceId } from '@zaliba/catalogs'
 import type { Catalogs } from './catalogs.js'
-import { layoutOf } from './catalogs.js'
 import type { Effect } from './effects.js'
+import { type EnergyReport, energyReport } from './energy.js'
 import { type CellView, cellsOf, gridView } from './grid.js'
-import {
-  buildingRates,
-  type EnergyRatio,
-  NO_DEFICIT,
-  productionRates,
-  storageCaps,
-} from './rates.js'
+import { buildingRates, productionRates, storageCaps } from './rates.js'
 import { advanceSegment, type Grains, grains, type RatePerHour, saturationAt } from './resources.js'
 import {
   applyEffects,
@@ -74,12 +68,6 @@ export interface HoldingView {
   readonly nominalRate: RatePerHour
   /** `null` si le taux est nul ou la ressource déjà saturée (FR-027). */
   readonly saturationAt: Instant | null
-}
-
-export interface EnergyReport {
-  readonly produced: number
-  readonly consumed: number
-  readonly ratio: EnergyRatio
 }
 
 export interface BuildingView extends PlacedBuilding {
@@ -215,7 +203,12 @@ function accumulate(
   carried: Accumulated,
 ): Accumulated {
   const seconds = to - from
-  const rates = productionRates(snapshot, catalogs, energyOf(snapshot, catalogs).ratio)
+  // Le rapport est **recalculé par segment**, et c'est ce qui rend l'énergie
+  // instantanée (FR-021) : un chantier achevé à l'échéance change la
+  // consommation, donc le second segment court à un rapport différent du
+  // premier. Le calculer une fois pour toute la fenêtre appliquerait à la
+  // période antérieure une consommation qui n'existait pas encore.
+  const rates = productionRates(snapshot, catalogs, energyReport(snapshot, catalogs).ratio)
   const caps = storageCaps(snapshot, catalogs)
 
   return {
@@ -248,33 +241,13 @@ function withAmounts(snapshot: PlanetSnapshot, state: Accumulated, at: Instant):
   }
 }
 
-/**
- * Le rapport d'énergie de la planète (R5).
- *
- * `produced` somme l'énergie de base du Berceau et les centrales ; `consumed`
- * somme tous les bâtiments **sauf** la centrale, entrepôt compris (R21). Les
- * courbes d'énergie du catalogue arrivent avec US3 : d'ici là, seul le Berceau
- * produit, et rien ne consomme.
- */
-function energyOf(snapshot: PlanetSnapshot, catalogs: Catalogs): EnergyReport {
-  const layout = layoutOf(catalogs, snapshot.layoutId)
-  const produced = layout.baseEnergy
-  const consumed = 0
-
-  return {
-    produced,
-    consumed,
-    ratio: consumed <= produced ? NO_DEFICIT : { numerator: produced, denominator: consumed },
-  }
-}
-
 function render(
   snapshot: PlanetSnapshot,
   catalogs: Catalogs,
   at: Instant,
   state: Accumulated,
 ): ProjectedState {
-  const energy = energyOf(snapshot, catalogs)
+  const energy = energyReport(snapshot, catalogs)
   const rates = productionRates(snapshot, catalogs, energy.ratio)
   const caps = storageCaps(snapshot, catalogs)
   const grid = gridView(snapshot, catalogs)
