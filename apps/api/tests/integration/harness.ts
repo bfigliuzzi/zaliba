@@ -1,5 +1,6 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
-import { join } from 'node:path'
+import { dirname, join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { PostgreSqlContainer, type StartedPostgreSqlContainer } from '@testcontainers/postgresql'
 import postgres from 'postgres'
 
@@ -28,6 +29,12 @@ const POSTGRES_IMAGE = 'postgres:17-alpine'
 export interface Harness {
   readonly sql: postgres.Sql
   readonly url: string
+  /**
+   * Le nombre d'instructions de migration réellement exécutées. Zéro veut dire
+   * « base nue » — ce qui est légitime avant que le schéma n'existe, et une
+   * anomalie après.
+   */
+  readonly appliedStatements: number
   /** Vide toutes les tables du schéma `game`, sans toucher au schéma lui-même. */
   reset(): Promise<void>
   stop(): Promise<void>
@@ -55,11 +62,12 @@ export async function startHarness(): Promise<Harness> {
   const url = container.getConnectionUri()
   const sql = postgres(url, { max: 5, prepare: true, onnotice: () => {} })
 
-  await applyMigrations(sql)
+  const appliedStatements = await applyMigrations(sql)
 
   return {
     sql,
     url,
+    appliedStatements,
     async reset() {
       await truncateGameSchema(sql)
     },
@@ -71,19 +79,39 @@ export async function startHarness(): Promise<Harness> {
   }
 }
 
-/** Le répertoire des migrations, relatif à la racine du dépôt. */
+/**
+ * Le répertoire des migrations, résolu **depuis ce fichier**.
+ *
+ * Surtout pas depuis `process.cwd()` : Vitest exécute les projets depuis la
+ * racine du dépôt, quel que soit le `root` déclaré du projet. Un chemin relatif
+ * au répertoire courant pointait donc à côté, `existsSync` répondait « non », et
+ * les migrations étaient sautées **en silence** — la base restait nue et les
+ * quarante-trois cas échouaient en dénonçant un schéma manquant plutôt que le
+ * chemin fautif. Une porte qui ne traite rien et n'en dit rien est pire qu'une
+ * porte absente.
+ */
 function migrationsDir(): string {
-  return join(process.cwd(), '..', '..', 'packages', 'db', 'migrations')
+  const here = dirname(fileURLToPath(import.meta.url))
+  // apps/api/tests/integration → racine du dépôt
+  return join(here, '..', '..', '..', '..', 'packages', 'db', 'migrations')
 }
 
-async function applyMigrations(sql: postgres.Sql): Promise<void> {
+/**
+ * Applique les migrations et **rend compte** de ce qu'elle a fait.
+ *
+ * Le compte retourné n'est pas décoratif : il permet à l'appelant de
+ * distinguer « aucune migration à appliquer » de « les migrations n'ont pas été
+ * trouvées », deux situations que le silence confondait.
+ */
+async function applyMigrations(sql: postgres.Sql): Promise<number> {
   const dir = migrationsDir()
-  if (!existsSync(dir)) return
+  if (!existsSync(dir)) return 0
 
   const files = readdirSync(dir)
     .filter((f) => f.endsWith('.sql'))
     .sort()
 
+  let applied = 0
   for (const file of files) {
     const statements = readFileSync(join(dir, file), 'utf8')
     // Drizzle sépare ses instructions par ce marqueur. Les exécuter une à une
@@ -92,9 +120,11 @@ async function applyMigrations(sql: postgres.Sql): Promise<void> {
       const trimmed = statement.trim()
       if (trimmed.length > 0) {
         await sql.unsafe(trimmed)
+        applied += 1
       }
     }
   }
+  return applied
 }
 
 /**

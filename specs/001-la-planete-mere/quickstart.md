@@ -31,6 +31,38 @@ SUPABASE_SERVICE_ROLE_KEY=…  # compromission totale si elle fuite — jamais a
 `apps/game` ne connaît que l'URL de l'API et la clé `anon` — qui **n'est pas un
 secret**, mais un identifiant de projet. Ne rien construire sur son secret.
 
+Ajouter, pour le socle HTTP :
+
+```
+SUPABASE_JWT_ISSUER=…      # émetteur attendu, vérifié en plus de la signature
+SUPABASE_JWT_AUDIENCE=…    # audience attendue
+CORS_ALLOWED_ORIGINS=…     # liste close ; l'absence n'ouvre rien
+```
+
+### Testcontainers ne trouve pas toujours le démon tout seul
+
+Constaté le 2026-08-26, sur une machine où **Rancher Desktop** est le contexte
+Docker actif alors qu'un socket Docker Desktop périmé subsiste. `docker info`
+répond correctement, et Testcontainers échoue quand même : sa détection
+automatique retient `~/.docker/run/docker.sock`, présent mais mort, et n'essaie
+jamais le socket du contexte actif.
+
+Deux variables suffisent, à poser dans l'environnement local :
+
+```sh
+export DOCKER_HOST="unix://$HOME/.rd/docker.sock"   # le socket du contexte actif
+export TESTCONTAINERS_RYUK_DISABLED=true            # voir ci-dessous
+```
+
+`TESTCONTAINERS_RYUK_DISABLED` n'est pas une commodité : le conteneur de
+nettoyage de Testcontainers monte le socket Docker de l'hôte, ce que la machine
+virtuelle de Rancher Desktop refuse (`operation not supported`). Le harnais
+arrête lui-même son conteneur dans `stop()` ; c'est ce qui rend le nettoyage
+automatique dispensable ici, et seulement ici. En intégration continue, le
+démon est un Docker ordinaire et aucune de ces deux variables n'est nécessaire.
+
+Symptôme si l'on oublie : `Could not find a working container runtime strategy`.
+
 ---
 
 ## 2. Mise en route
