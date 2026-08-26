@@ -1,0 +1,629 @@
+{
+  "id": "7b718265-c54d-484d-8f9c-f455d056b9a1",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "game.building_cells": {
+      "name": "building_cells",
+      "schema": "game",
+      "columns": {
+        "planet_id": {
+          "name": "planet_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "x": {
+          "name": "x",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "y": {
+          "name": "y",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "building_id": {
+          "name": "building_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "building_cells_building_idx": {
+          "name": "building_cells_building_idx",
+          "columns": [
+            {
+              "expression": "building_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "building_cells_planet_id_planets_id_fk": {
+          "name": "building_cells_planet_id_planets_id_fk",
+          "tableFrom": "building_cells",
+          "tableTo": "planets",
+          "schemaTo": "game",
+          "columnsFrom": [
+            "planet_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "building_cells_building_id_buildings_id_fk": {
+          "name": "building_cells_building_id_buildings_id_fk",
+          "tableFrom": "building_cells",
+          "tableTo": "buildings",
+          "schemaTo": "game",
+          "columnsFrom": [
+            "building_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "building_cells_planet_id_x_y_pk": {
+          "name": "building_cells_planet_id_x_y_pk",
+          "columns": [
+            "planet_id",
+            "x",
+            "y"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": true
+    },
+    "game.buildings": {
+      "name": "buildings",
+      "schema": "game",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "planet_id": {
+          "name": "planet_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "type_id": {
+          "name": "type_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "variant_id": {
+          "name": "variant_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "orientation": {
+          "name": "orientation",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "anchor_x": {
+          "name": "anchor_x",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "anchor_y": {
+          "name": "anchor_y",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "level": {
+          "name": "level",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "buildings_planet_idx": {
+          "name": "buildings_planet_idx",
+          "columns": [
+            {
+              "expression": "planet_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "buildings_planet_id_planets_id_fk": {
+          "name": "buildings_planet_id_planets_id_fk",
+          "tableFrom": "buildings",
+          "tableTo": "planets",
+          "schemaTo": "game",
+          "columnsFrom": [
+            "planet_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "buildings_orientation_range": {
+          "name": "buildings_orientation_range",
+          "value": "\"game\".\"buildings\".\"orientation\" between 0 and 3"
+        },
+        "buildings_anchor_non_negative": {
+          "name": "buildings_anchor_non_negative",
+          "value": "\"game\".\"buildings\".\"anchor_x\" >= 0 and \"game\".\"buildings\".\"anchor_y\" >= 0"
+        },
+        "buildings_level_positive": {
+          "name": "buildings_level_positive",
+          "value": "\"game\".\"buildings\".\"level\" >= 1"
+        }
+      },
+      "isRLSEnabled": true
+    },
+    "game.cleared_cells": {
+      "name": "cleared_cells",
+      "schema": "game",
+      "columns": {
+        "planet_id": {
+          "name": "planet_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "x": {
+          "name": "x",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "y": {
+          "name": "y",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "cleared_at": {
+          "name": "cleared_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "cleared_cells_planet_id_planets_id_fk": {
+          "name": "cleared_cells_planet_id_planets_id_fk",
+          "tableFrom": "cleared_cells",
+          "tableTo": "planets",
+          "schemaTo": "game",
+          "columnsFrom": [
+            "planet_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "cleared_cells_planet_id_x_y_pk": {
+          "name": "cleared_cells_planet_id_x_y_pk",
+          "columns": [
+            "planet_id",
+            "x",
+            "y"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": true
+    },
+    "game.command_receipts": {
+      "name": "command_receipts",
+      "schema": "game",
+      "columns": {
+        "player_id": {
+          "name": "player_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "idempotency_key": {
+          "name": "idempotency_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "response": {
+          "name": "response",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "command_receipts_player_id_idempotency_key_pk": {
+          "name": "command_receipts_player_id_idempotency_key_pk",
+          "columns": [
+            "player_id",
+            "idempotency_key"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": true
+    },
+    "game.planet_resources": {
+      "name": "planet_resources",
+      "schema": "game",
+      "columns": {
+        "planet_id": {
+          "name": "planet_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "resource_id": {
+          "name": "resource_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "amount_grains": {
+          "name": "amount_grains",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "lost_grains": {
+          "name": "lost_grains",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "0"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "planet_resources_planet_id_planets_id_fk": {
+          "name": "planet_resources_planet_id_planets_id_fk",
+          "tableFrom": "planet_resources",
+          "tableTo": "planets",
+          "schemaTo": "game",
+          "columnsFrom": [
+            "planet_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "planet_resources_planet_id_resource_id_pk": {
+          "name": "planet_resources_planet_id_resource_id_pk",
+          "columns": [
+            "planet_id",
+            "resource_id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "planet_resources_amount_non_negative": {
+          "name": "planet_resources_amount_non_negative",
+          "value": "\"game\".\"planet_resources\".\"amount_grains\" >= 0"
+        },
+        "planet_resources_lost_non_negative": {
+          "name": "planet_resources_lost_non_negative",
+          "value": "\"game\".\"planet_resources\".\"lost_grains\" >= 0"
+        }
+      },
+      "isRLSEnabled": true
+    },
+    "game.planets": {
+      "name": "planets",
+      "schema": "game",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "owner_id": {
+          "name": "owner_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "occupant_id": {
+          "name": "occupant_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "archetype_id": {
+          "name": "archetype_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "layout_id": {
+          "name": "layout_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "consolidated_at": {
+          "name": "consolidated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "planets_occupant_idx": {
+          "name": "planets_occupant_idx",
+          "columns": [
+            {
+              "expression": "occupant_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "planets_owner_id_unique": {
+          "name": "planets_owner_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "owner_id"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": true
+    },
+    "game.works": {
+      "name": "works",
+      "schema": "game",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "planet_id": {
+          "name": "planet_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "nature": {
+          "name": "nature",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "started_at": {
+          "name": "started_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "due_at": {
+          "name": "due_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "resolved_at": {
+          "name": "resolved_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "target_building_id": {
+          "name": "target_building_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "target_x": {
+          "name": "target_x",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "target_y": {
+          "name": "target_y",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "type_id": {
+          "name": "type_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "variant_id": {
+          "name": "variant_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "orientation": {
+          "name": "orientation",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "works_one_unresolved_per_planet": {
+          "name": "works_one_unresolved_per_planet",
+          "columns": [
+            {
+              "expression": "planet_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"game\".\"works\".\"resolved_at\" is null",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "works_planet_idx": {
+          "name": "works_planet_idx",
+          "columns": [
+            {
+              "expression": "planet_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "works_planet_id_planets_id_fk": {
+          "name": "works_planet_id_planets_id_fk",
+          "tableFrom": "works",
+          "tableTo": "planets",
+          "schemaTo": "game",
+          "columnsFrom": [
+            "planet_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "works_target_building_id_buildings_id_fk": {
+          "name": "works_target_building_id_buildings_id_fk",
+          "tableFrom": "works",
+          "tableTo": "buildings",
+          "schemaTo": "game",
+          "columnsFrom": [
+            "target_building_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "works_nature_vocabulary": {
+          "name": "works_nature_vocabulary",
+          "value": "\"game\".\"works\".\"nature\" in ('build', 'upgrade', 'demolish', 'clear')"
+        },
+        "works_due_after_start": {
+          "name": "works_due_after_start",
+          "value": "\"game\".\"works\".\"due_at\" > \"game\".\"works\".\"started_at\""
+        },
+        "works_orientation_range": {
+          "name": "works_orientation_range",
+          "value": "\"game\".\"works\".\"orientation\" is null or \"game\".\"works\".\"orientation\" between 0 and 3"
+        },
+        "works_target_matches_nature": {
+          "name": "works_target_matches_nature",
+          "value": "(\n          (\"game\".\"works\".\"nature\" = 'build' and \"game\".\"works\".\"type_id\" is not null and \"game\".\"works\".\"variant_id\" is not null\n             and \"game\".\"works\".\"orientation\" is not null and \"game\".\"works\".\"target_x\" is not null\n             and \"game\".\"works\".\"target_y\" is not null and \"game\".\"works\".\"target_building_id\" is null)\n          or (\"game\".\"works\".\"nature\" in ('upgrade', 'demolish') and \"game\".\"works\".\"target_building_id\" is not null\n             and \"game\".\"works\".\"target_x\" is null and \"game\".\"works\".\"target_y\" is null and \"game\".\"works\".\"type_id\" is null\n             and \"game\".\"works\".\"variant_id\" is null and \"game\".\"works\".\"orientation\" is null)\n          or (\"game\".\"works\".\"nature\" = 'clear' and \"game\".\"works\".\"target_x\" is not null and \"game\".\"works\".\"target_y\" is not null\n             and \"game\".\"works\".\"target_building_id\" is null and \"game\".\"works\".\"type_id\" is null\n             and \"game\".\"works\".\"variant_id\" is null and \"game\".\"works\".\"orientation\" is null)\n        )"
+        }
+      },
+      "isRLSEnabled": true
+    }
+  },
+  "enums": {},
+  "schemas": {
+    "game": "game"
+  },
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

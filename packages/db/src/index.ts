@@ -1,7 +1,10 @@
 /**
  * Point d'entrée public de `@zaliba/db`.
  *
- * Vide à dessein : la phase 1 amorce un dépôt qui compile, se vérifie et refuse
- * une fusion fautive. Aucun code applicatif n'y figure encore.
+ * Le schéma de persistance et ses conversions de frontière. Ce paquet
+ * n'importe ni `domain` ni `contracts` : la persistance est une préoccupation
+ * d'infrastructure, elle ne porte aucune règle de jeu.
  */
-export {}
+export * from './client.js'
+export * from './conversions.js'
+export * from './schema.js'

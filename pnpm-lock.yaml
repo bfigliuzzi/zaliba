@@ -78,6 +78,12 @@ importers:
         specifier: 3.25.76
         version: 3.25.76
     devDependencies:
+      '@testcontainers/postgresql':
+        specifier: 12.1.0
+        version: 12.1.0(supports-color@7.2.0)
+      '@types/node':
+        specifier: 24.10.1
+        version: 24.10.1
       testcontainers:
         specifier: 12.1.0
         version: 12.1.0(supports-color@7.2.0)
@@ -167,6 +173,9 @@ importers:
         specifier: 3.4.9
         version: 3.4.9
     devDependencies:
+      '@types/node':
+        specifier: 24.10.1
+        version: 24.10.1
       drizzle-kit:
         specifier: 0.31.10
         version: 0.31.10
@@ -1057,6 +1066,9 @@ packages:
 
   '@tanstack/store@0.9.3':
     resolution: {integrity: sha512-8reSzl/qGWGGVKhBoxXPMWzATSbZLZFWhwBAFO9NAyp0TxzfBP0mIrGb8CP8KrQTmvzXlR/vFPPUrHTLBGyFyw==}
+
+  '@testcontainers/postgresql@12.1.0':
+    resolution: {integrity: sha512-Pjf2VSVNirEPfz36nidyrVAnZvc2YhajOznY4VgyEsvfTd5qiMNOuPq96drREvxAUtXl5SFLX7vXj7sSq4aTcA==}
 
   '@testing-library/dom@10.4.1':
     resolution: {integrity: sha512-o4PXJQidqJl82ckFaXUeoAW+XysPLauYI43Abki5hABd853iMhitooc6znOnczgbTYmEP6U6/y1ZyKAIsvMKGg==}
@@ -3239,6 +3251,15 @@ snapshots:
       seroval-plugins: 1.6.4(seroval@1.6.4)
 
   '@tanstack/store@0.9.3': {}
+
+  '@testcontainers/postgresql@12.1.0(supports-color@7.2.0)':
+    dependencies:
+      testcontainers: 12.1.0(supports-color@7.2.0)
+    transitivePeerDependencies:
+      - bare-abort-controller
+      - bare-buffer
+      - react-native-b4a
+      - supports-color
 
   '@testing-library/dom@10.4.1':
     dependencies:
