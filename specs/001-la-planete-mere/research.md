@@ -210,6 +210,20 @@ Le dédoublonnage des orientations sert directement l'accessibilité : le carré
 quatre n'a qu'une orientation, donc la commande de rotation ne fait rien qui doive
 être annoncé, et un lecteur d'écran n'énonce que des états distincts.
 
+**Une seule empreinte est chirale** — relevé par exécution le 2026-08-26, en
+correction d'une première rédaction qui nommait `l-4` **et** `t-4`. Le T a un axe
+de symétrie vertical : son miroir `(0,0) (1,0) (2,0) (1,1)` **est** son
+orientation 0. Il est donc achiral, comme les cinq autres. Seul `l-4` a un miroir
+qu'aucune rotation n'atteint.
+
+La correction ne change rien à FR-011 ni au code : la symétrie n'est de toute
+façon jamais implémentée. Elle change ce que le test peut affirmer. Un test qui
+aurait exigé « le miroir de `t-4` est inatteignable » aurait échoué contre une
+vérité de géométrie, et la tentation aurait été de l'assouplir — c'est-à-dire
+d'affaiblir aussi la garantie sur `l-4`. Le test de catalogue fixe désormais la
+**partition** du vocabulaire : une chirale, six achirales. Une empreinte future
+qui changerait de catégorie se signalerait d'elle-même.
+
 **Alternative écartée.** Stocker les cases occupées comme unique vérité, sans
 variante ni orientation : l'affichage ne saurait plus dessiner la forme, et FR-059
 exige d'annoncer l'orientation courante.

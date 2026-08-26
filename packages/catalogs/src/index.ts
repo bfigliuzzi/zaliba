@@ -1,7 +1,9 @@
 /**
  * Point d'entrée public de `@zaliba/catalogs`.
  *
- * Vide à dessein : la phase 1 amorce un dépôt qui compile, se vérifie et refuse
- * une fusion fautive. Aucun code applicatif n'y figure encore.
+ * Le contenu de jeu déclaratif et typé. Ce paquet est la feuille du graphe : il
+ * n'importe rien, pas même une dépendance externe.
  */
-export {}
+export * from './curves.js'
+export * from './footprints.js'
+export * from './resources.js'

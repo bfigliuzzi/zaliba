@@ -1,7 +1,8 @@
 /**
  * Point d'entrée public de `@zaliba/domain`.
  *
- * Vide à dessein : la phase 1 amorce un dépôt qui compile, se vérifie et refuse
- * une fusion fautive. Aucun code applicatif n'y figure encore.
+ * Les règles du jeu, en fonctions pures. Ce paquet n'importe que `catalogs` :
+ * il se teste sans serveur, sans navigateur et sans base. C'est le principe II
+ * rendu physique, et `dependency-cruiser` le vérifie à chaque poussée.
  */
-export {}
+export * from './kernel/curves.js'

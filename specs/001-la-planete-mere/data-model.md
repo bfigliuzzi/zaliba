@@ -214,7 +214,7 @@ et ce sont eux qui portent la valeur de la tranche.
 | I-3 | Dépenser puis projeter = projeter puis dépenser, au même instant | doc de stack §7.1 |
 | I-4 | **Aucune suite de commandes légales ne crée de ressource à partir de rien** | garde-fou anti-exploit |
 | I-5 | Les cases de deux bâtiments d'une même planète sont disjointes | FR-012 |
-| I-6 | Aucune suite de rotations ne produit le miroir d'une empreinte chirale | FR-011 |
+| I-6 | Aucune suite de rotations ne produit le miroir d'une empreinte chirale — `l-4` est la seule du vocabulaire | FR-011 |
 | I-7 | Une amélioration laisse l'ensemble des cases occupées identique | FR-039, US4-1 |
 | I-8 | Une case déblayée ne redevient jamais obstruée | FR-045 |
 | I-9 | Au plus un chantier non résolu par planète | FR-033 |
