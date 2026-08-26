@@ -1,12 +1,19 @@
 import { createRoute } from '@tanstack/react-router'
 import type { BuildingTypeId, FootprintId } from '@zaliba/catalogs'
 import type { PlanetSnapshotV1 } from '@zaliba/contracts'
-import type { BuildCommand, CellView, PreviewResult } from '@zaliba/domain'
+import type {
+  BuildCommand,
+  BuildingView,
+  CellView,
+  PreviewResult,
+  UpgradePreviewResult,
+} from '@zaliba/domain'
 import {
   DEFAULT_CATALOGS,
   layoutOf,
   placementCells,
   previewBuild,
+  previewUpgrade,
   validatePlacement,
 } from '@zaliba/domain'
 import { useCallback, useEffect, useMemo, useState } from 'react'
@@ -23,6 +30,7 @@ import { useExtrapolatedState } from '../features/resources/useExtrapolatedState
 import { BuildPanel, type BuildSelection } from '../features/work/BuildPanel.js'
 import { CurrentWork } from '../features/work/CurrentWork.js'
 import { RefusalNotice } from '../features/work/RefusalNotice.js'
+import { UpgradePanel } from '../features/work/UpgradePanel.js'
 import { createClock } from '../lib/clock.js'
 import { PlanetRefusal } from '../lib/planetGateway.js'
 import { rootRoute } from './root.js'
@@ -45,11 +53,15 @@ import { rootRoute } from './root.js'
  * puis déplacer le curseur. Aucun sous-menu, aucune boîte modale — c'est ce que
  * le compte de frappes mesure.
  *
- * **Le curseur et la sélection vivent ici**, et non dans la grille. Quatre
- * choses en dépendent — le fantôme, l'aperçu, l'annonce et le lancement — et
- * aucune n'appartient à la grille. Une grille qui détiendrait son curseur
- * obligerait chacune des quatre à en tenir une copie, c'est-à-dire à afficher un
- * fantôme à un endroit et à poser à un autre.
+ * **Le curseur et la sélection vivent ici**, et non dans la grille. Cinq choses en
+ * dépendent — le fantôme, l'aperçu de pose, l'annonce, le lancement et, depuis
+ * US4, la **désignation du bâtiment à améliorer** — et aucune n'appartient à la
+ * grille. Une grille qui détiendrait son curseur obligerait chacune à en tenir une
+ * copie, c'est-à-dire à afficher un fantôme à un endroit et à poser à un autre.
+ *
+ * **Le curseur sert les deux mécaniques, et c'est ce qui rend US4 accessible sans
+ * rien ajouter** (FR-058, SC-004) : une case libre arme une pose, une case occupée
+ * désigne son bâtiment. Le joueur apprend un seul modèle de navigation.
  */
 export const planetRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -102,7 +114,14 @@ export function PlanetScreen({ snapshot, gateway, onSnapshot }: PlanetScreenProp
   const cursor = useGridCursor(bounds)
   const [selection, setSelection] = useState<BuildSelection>({ typeId: null, variantId: null })
   const [refusal, setRefusal] = useState<PlanetRefusal | null>(null)
-  const [pending, setPending] = useState(false)
+  /**
+   * **Quelle** action est en vol, et non seulement qu'il y en a une.
+   *
+   * Un booléen partagé annoncerait les deux boutons occupés au moment précis où le
+   * joueur a besoin de savoir lequel des deux il a engagé — et `aria-busy` sur un
+   * bouton qu'on n'a pas pressé est une information fausse.
+   */
+  const [pending, setPending] = useState<'build' | 'upgrade' | null>(null)
 
   /**
    * Choisir un type **présélectionne sa première variante**.
@@ -168,6 +187,31 @@ export function PlanetScreen({ snapshot, gateway, onSnapshot }: PlanetScreenProp
     (candidate) => candidate.x === cursor.state.x && candidate.y === cursor.state.y,
   )
 
+  /**
+   * Le bâtiment sous le curseur, ou `null` — la cible d'amélioration.
+   *
+   * Résolu par les **cases** du bâtiment et non par son ancre : une empreinte de
+   * neuf cases se désigne depuis n'importe laquelle, et exiger l'ancre obligerait
+   * le joueur à savoir laquelle des neuf elle est.
+   */
+  const upgradeTarget = useMemo((): BuildingView | null => {
+    return (
+      state.buildings.find((building) =>
+        building.cells.some((one) => one.x === cursor.state.x && one.y === cursor.state.y),
+      ) ?? null
+    )
+  }, [state.buildings, cursor.state.x, cursor.state.y])
+
+  /** L'aperçu d'amélioration, calculé **localement** par le code du serveur (R8). */
+  const upgradePreview = useMemo((): UpgradePreviewResult | null => {
+    if (upgradeTarget === null) return null
+    return previewUpgrade(
+      state,
+      { kind: 'upgrade', workId: 'apercu-local', buildingId: upgradeTarget.id },
+      DEFAULT_CATALOGS,
+    )
+  }, [upgradeTarget, state])
+
   const announcement = useMemo(() => {
     if (cell === undefined) return null
     return {
@@ -191,8 +235,34 @@ export function PlanetScreen({ snapshot, gateway, onSnapshot }: PlanetScreenProp
    * arbitre quand même — il est seul juge —, mais il n'a pas à arbitrer ce qui
    * est déjà tranché.
    */
+  /**
+   * L'envoi, commun aux deux mécaniques.
+   *
+   * Une seule séquence — armer, envoyer, désarmer — parce qu'une seule commande
+   * peut être en vol : la planète n'accepte qu'un chantier (FR-033). Deux
+   * séquences séparées finiraient par différer sur la gestion du refus, qui est
+   * précisément le chemin qu'on éprouve le moins.
+   */
+  const launch = useCallback(
+    async (kind: 'build' | 'upgrade', intent: Parameters<PlanetGateway['startWork']>[0]) => {
+      setPending(kind)
+      setRefusal(null)
+      try {
+        onSnapshot?.(await gateway.startWork(intent))
+        return true
+      } catch (error) {
+        if (error instanceof PlanetRefusal) setRefusal(error)
+        else throw error
+        return false
+      } finally {
+        setPending(null)
+      }
+    },
+    [gateway, onSnapshot],
+  )
+
   const confirm = useCallback(async () => {
-    if (command === null || pending) return
+    if (command === null || pending !== null) return
 
     if (preview !== null && preview.outcome === 'refused') {
       const { code, ...details } = preview.refusal
@@ -200,26 +270,36 @@ export function PlanetScreen({ snapshot, gateway, onSnapshot }: PlanetScreenProp
       return
     }
 
-    setPending(true)
-    setRefusal(null)
-    try {
-      const next = await gateway.startWork({
-        nature: 'build',
-        typeId: command.typeId,
-        variantId: command.variantId,
-        orientation: command.orientation,
-        anchorX: command.anchor.x,
-        anchorY: command.anchor.y,
-      })
-      onSnapshot?.(next)
-      setSelection({ typeId: null, variantId: null })
-    } catch (error) {
-      if (error instanceof PlanetRefusal) setRefusal(error)
-      else throw error
-    } finally {
-      setPending(false)
+    const sent = await launch('build', {
+      nature: 'build',
+      typeId: command.typeId,
+      variantId: command.variantId,
+      orientation: command.orientation,
+      anchorX: command.anchor.x,
+      anchorY: command.anchor.y,
+    })
+    if (sent) setSelection({ typeId: null, variantId: null })
+  }, [command, pending, preview, launch])
+
+  /**
+   * Le lancement d'une amélioration.
+   *
+   * Même discipline que la pose : un **refus local** est traité sans appel réseau,
+   * l'aperçu employant le même code que le serveur (R8). La sélection de
+   * construction n'est pas remise à zéro — l'amélioration ne la consomme pas, et
+   * la vider ferait perdre au joueur un choix qu'il n'a pas défait.
+   */
+  const confirmUpgrade = useCallback(async () => {
+    if (upgradeTarget === null || pending !== null) return
+
+    if (upgradePreview !== null && upgradePreview.outcome === 'refused') {
+      const { code, ...details } = upgradePreview.refusal
+      setRefusal(new PlanetRefusal(409, code, 'Cette amélioration est refusée.', details))
+      return
     }
-  }, [command, pending, preview, gateway, onSnapshot])
+
+    await launch('upgrade', { nature: 'upgrade', buildingId: upgradeTarget.id })
+  }, [upgradeTarget, pending, upgradePreview, launch])
 
   const handleConfirm = useCallback(
     (_cell: CellView) => {
@@ -236,7 +316,7 @@ export function PlanetScreen({ snapshot, gateway, onSnapshot }: PlanetScreenProp
         catalogs={DEFAULT_CATALOGS}
         selection={selection}
         preview={preview}
-        pending={pending}
+        pending={pending === 'build'}
         onSelectType={selectType}
         onSelectVariant={selectVariant}
         onConfirm={() => void confirm()}
@@ -256,6 +336,18 @@ export function PlanetScreen({ snapshot, gateway, onSnapshot }: PlanetScreenProp
       <GridLiveRegion announcement={announcement} catalogs={DEFAULT_CATALOGS} />
       <RefusalNotice refusal={refusal} at={state.at} />
 
+      {/*
+        L'amélioration **après** la grille, parce qu'elle en dépend : sa cible est
+        la case du curseur. La placer avant obligerait à désigner un bâtiment qu'on
+        n'a pas encore vu.
+      */}
+      <UpgradePanel
+        building={upgradeTarget}
+        preview={upgradePreview}
+        pending={pending === 'upgrade'}
+        onConfirm={() => void confirmUpgrade()}
+      />
+
       <ResourcePanel holdings={state.holdings} at={state.at} />
       {/*
         L'énergie après les ressources, et avant le chantier. L'ordre est celui
@@ -264,7 +356,7 @@ export function PlanetScreen({ snapshot, gateway, onSnapshot }: PlanetScreenProp
         sur une contrainte plutôt que sur un état.
       */}
       <EnergyPanel energy={state.energy} buildings={state.buildings} />
-      <CurrentWork work={state.work} />
+      <CurrentWork work={state.work} buildings={state.buildings} />
     </>
   )
 }

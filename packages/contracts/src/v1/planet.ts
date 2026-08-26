@@ -192,10 +192,14 @@ export type CellV1 = z.infer<typeof CellV1>
  * Le sens de l'élargissement est celui que le versionnement autorise : élargir
  * une entrée est **compatible** (README § 2), la resserrer ne l'est pas. Déclarer
  * les quatre natures d'avance nous interdirait d'en retirer une ; les déclarer au
- * fur et à mesure ne coûte rien. `upgrade` arrive avec US4, `clear` avec US5,
- * `demolish` avec US6.
+ * fur et à mesure ne coûte rien. `upgrade` est arrivée avec US4 ; `clear` arrive
+ * avec US5, `demolish` avec US6.
+ *
+ * **Pourquoi deux natures ici, alors que le serveur en honore deux aussi.** La
+ * règle est celle-là : une nature n'entre dans cette liste que quand une route
+ * sait l'exécuter. C'est ce qui distingue un contrat d'une intention de contrat.
  */
-export const WORK_INTENT_NATURES_V1 = ['build'] as const
+export const WORK_INTENT_NATURES_V1 = ['build', 'upgrade'] as const
 
 export const WorkIntentV1 = z.discriminatedUnion('nature', [
   z
@@ -208,6 +212,22 @@ export const WorkIntentV1 = z.discriminatedUnion('nature', [
       anchorY: coordinate,
     })
     .strict(),
+
+  /**
+   * **Une cible, et rien d'autre** — la forme mécanique de FR-039.
+   *
+   * Ni `variantId`, ni `orientation`, ni `anchorX`/`anchorY`, ni `level`. « Une
+   * amélioration ne change ni la variante, ni l'orientation, ni les cases
+   * occupées » n'est donc pas une vérification à écrire dans le module de
+   * construction : c'est un champ à ne pas créer ici. Une vérification vit dans un
+   * chemin de code, et un second chemin la contourne un jour ; un champ qui
+   * n'existe pas ne s'envoie pas.
+   *
+   * Le niveau visé est **dérivé** du niveau courant, jamais annoncé : c'est
+   * toujours `N+1`, et le laisser proposer ferait de la progression un champ de
+   * formulaire.
+   */
+  z.object({ nature: z.literal('upgrade'), buildingId: uuid }).strict(),
 ])
 
 export type WorkIntentV1 = z.infer<typeof WorkIntentV1>

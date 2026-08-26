@@ -1,12 +1,21 @@
 import { randomUUID } from 'node:crypto'
+import type { WorkIntentV1 as WorkIntent } from '@zaliba/contracts'
 import { PlanetSnapshotV1, WorkIntentV1 } from '@zaliba/contracts'
 import type { GameSql } from '@zaliba/db'
 import { lockPlanetByOwner, writePlanet } from '@zaliba/db'
-import type { BuildCommand, BuildRefusal, Catalogs, PlanetSnapshot } from '@zaliba/domain'
+import type {
+  BuildCommand,
+  BuildRefusal,
+  Catalogs,
+  PlanetSnapshot,
+  UpgradeCommand,
+  UpgradeRefusal,
+} from '@zaliba/domain'
 import {
   applyEffects,
   consolidatePlanet,
   decideBuild,
+  decideUpgrade,
   type ProjectedState,
   projectPlanet,
 } from '@zaliba/domain'
@@ -26,11 +35,21 @@ import { AppError } from '../../plugins/errors.js'
  * de commande. Elle ne décide rien : le oui et le non appartiennent au domaine,
  * et le domaine ne mute rien — il retourne des effets que la forme applique.
  *
+ * **Une route pour toutes les natures, et non une par mécanique.** « Au plus un
+ * chantier par planète » (FR-033) est une règle qui porte sur la planète et non
+ * sur une mécanique : quatre routes devraient chacune la vérifier, et la première
+ * qui l'oublierait ouvrirait la porte à deux chantiers simultanés. Ici il n'y a
+ * qu'une séquence verrouillée, et le domaine tranche à l'intérieur.
+ * L'aiguillage — `commandOf` puis `decideWork` — repose sur deux `switch` **sans
+ * branche par défaut** : déclarer une nature au contrat sans l'honorer ici fait
+ * échouer la compilation.
+ *
  * **Le client n'envoie qu'une intention** : un type, une variante, une
- * orientation, une position. Le coût, la durée et l'échéance ne sont pas
- * seulement recalculés — ils sont **absents du contrat**, donc impossibles à
- * annoncer (FR-055, FR-056). Et l'instant de référence est le `now()` de la
- * transaction, donc antidater est hors d'atteinte (FR-057).
+ * orientation, une position pour une pose ; une cible pour une amélioration. Le
+ * coût, la durée et l'échéance ne sont pas seulement recalculés — ils sont
+ * **absents du contrat**, donc impossibles à annoncer (FR-055, FR-056). Et
+ * l'instant de référence est le `now()` de la transaction, donc antidater est hors
+ * d'atteinte (FR-057).
  *
  * **Le `201` porte l'instantané d'après débit et planification.** Le client n'a
  * ainsi aucun `GET` à enchaîner, et son extrapolation locale reprend
@@ -49,6 +68,17 @@ export interface WorksRouteDependencies {
 
 /** Ce que la route rend, et ce que le reçu d'idempotence rejoue à l'identique. */
 type WorkResponse = ReturnType<typeof toContract>
+
+/**
+ * Les commandes et les refus des mécaniques que cette route honore.
+ *
+ * Les unions grandissent tranche par tranche, et elles grandissent **ici** : la
+ * route est le seul endroit qui les voit ensemble. Le domaine, lui, garde ses
+ * mécaniques séparées — `build.ts` ne sait rien de `upgrade.ts`.
+ */
+type WorkCommand = BuildCommand | UpgradeCommand
+type WorkRefusal = BuildRefusal | UpgradeRefusal
+type WorkEffect = Parameters<typeof applyEffects>[1][number]
 
 function playerOf(request: FastifyRequest): string {
   const playerId = request.playerId
@@ -92,13 +122,13 @@ function intentOf(body: unknown) {
  * correspondance entre deux vocabulaires serait un endroit de plus où oublier
  * une entrée — et l'oubli donnerait un 500 là où le jeu voulait dire non.
  */
-function refusalToError(refusal: BuildRefusal): AppError {
+export function refusalToError(refusal: WorkRefusal): AppError {
   const { code, ...details } = refusal
 
   return new AppError({
     category: 'game-rule-refusal',
     code,
-    message: MESSAGES[code],
+    message: REFUSAL_MESSAGES[code],
     details,
   })
 }
@@ -110,13 +140,60 @@ function refusalToError(refusal: BuildRefusal): AppError {
  * aux journaux, au diagnostic et au client qui n'aurait rien de mieux — pas à
  * être analysées.
  */
-const MESSAGES: Readonly<Record<BuildRefusal['code'], string>> = {
+export const REFUSAL_MESSAGES: Readonly<Record<WorkRefusal['code'], string>> = {
   'work-in-progress': 'Un chantier est déjà en cours sur cette planète.',
   'insufficient-resources': 'Les ressources ne suffisent pas à payer ce chantier.',
   'placement-out-of-grid': 'L’empreinte sortirait de la grille.',
   'placement-on-obstructed-cell': 'L’empreinte recouvrirait une case obstruée.',
   'placement-on-occupied-cell': 'L’empreinte recouvrirait une case déjà occupée.',
   'variant-not-available-for-type': 'Ce type de bâtiment n’admet pas cette empreinte.',
+  'building-not-found': 'Ce bâtiment n’est pas sur cette planète.',
+  'max-level-reached': 'Ce bâtiment est au niveau maximal du catalogue.',
+}
+
+/**
+ * L'intention du contrat, enrichie de l'identifiant que **le serveur** engendre.
+ *
+ * Un domaine pur ne tire rien au sort, et le client n'a aucun champ pour proposer
+ * un identifiant de chantier. Le `switch` n'a pas de branche par défaut : ajouter
+ * une nature au contrat sans l'honorer ici fait échouer la compilation, plutôt que
+ * de rendre un défaut serveur là où le jeu voulait dire « pas encore ».
+ */
+function commandOf(intent: WorkIntent, workId: string): WorkCommand {
+  switch (intent.nature) {
+    case 'build':
+      return {
+        kind: 'build',
+        workId,
+        typeId: intent.typeId,
+        variantId: intent.variantId,
+        orientation: intent.orientation,
+        anchor: { x: intent.anchorX, y: intent.anchorY },
+      }
+    case 'upgrade':
+      // Aucune géométrie n'est transmise, et il n'y en a aucune à transmettre :
+      // c'est FR-039 dans la forme du contrat (voir `upgrade-absence.test.ts`).
+      return { kind: 'upgrade', workId, buildingId: intent.buildingId }
+  }
+}
+
+/**
+ * L'arbitrage, aiguillé sur la mécanique.
+ *
+ * **La couche serveur ne décide rien** : elle nomme la fonction de domaine qui
+ * décide. Le `switch` est exhaustif par le même mécanisme que ci-dessus.
+ */
+function decideWork(
+  state: ProjectedState,
+  command: WorkCommand,
+  catalogs: Catalogs,
+): Decision<WorkEffect, WorkRefusal> {
+  switch (command.kind) {
+    case 'build':
+      return decideBuild(state, command, catalogs)
+    case 'upgrade':
+      return decideUpgrade(state, command, catalogs)
+  }
 }
 
 export function registerWorksRoutes(app: FastifyInstance, deps: WorksRouteDependencies): void {
@@ -130,23 +207,16 @@ export function registerWorksRoutes(app: FastifyInstance, deps: WorksRouteDepend
     const playerId = playerOf(request)
     const intent = intentOf(request.body)
 
-    const command: BuildCommand = {
-      kind: 'build',
-      // L'identifiant est engendré **par le serveur** : un domaine pur ne tire
-      // rien au sort, et le client n'a aucun champ pour en proposer un.
-      workId: newId(),
-      typeId: intent.typeId,
-      variantId: intent.variantId,
-      orientation: intent.orientation,
-      anchor: { x: intent.anchorX, y: intent.anchorY },
-    }
+    // L'identifiant est engendré **par le serveur** : un domaine pur ne tire rien
+    // au sort, et le client n'a aucun champ pour en proposer un.
+    const command = commandOf(intent, newId())
 
     const outcome = await executeCommand<
       PlanetSnapshot,
       ProjectedState,
-      BuildCommand,
-      Parameters<typeof applyEffects>[1][number],
-      BuildRefusal,
+      WorkCommand,
+      WorkEffect,
+      WorkRefusal,
       WorkResponse
     >(
       deps.sql,
@@ -168,8 +238,7 @@ export function registerWorksRoutes(app: FastifyInstance, deps: WorksRouteDepend
 
         project: (snapshot, at) => projectPlanet(snapshot, deps.catalogs, at),
 
-        decide: (state, given): Decision<never, BuildRefusal> =>
-          decideBuild(state, given, deps.catalogs) as Decision<never, BuildRefusal>,
+        decide: (state, given) => decideWork(state, given, deps.catalogs),
 
         apply: (snapshot, effects, at) => applyEffects(snapshot, effects, at),
 

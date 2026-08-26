@@ -1,10 +1,16 @@
 import type { BuildingTypeId, FootprintId, ResourceId } from '@zaliba/catalogs'
 import type { Catalogs } from '../../kernel/catalogs.js'
 import { evaluateCurve } from '../../kernel/curves.js'
-import type { Cell, Effect, ResourceAmount, WorkId, WorkNature } from '../../kernel/effects.js'
+import type { Cell, Effect, ResourceAmount, WorkId } from '../../kernel/effects.js'
 import { placementCells, validatePlacement } from '../../kernel/grid.js'
 import type { ProjectedState } from '../../kernel/projection.js'
-import { addDuration, type Duration, duration, type Instant } from '../../kernel/time.js'
+import { addDuration, type Duration, duration } from '../../kernel/time.js'
+import {
+  type InsufficientResourcesRefusal,
+  insufficientResources,
+  type WorkInProgressRefusal,
+  workInProgress,
+} from './refusals.js'
 
 /**
  * La construction : lancer un chantier de pose.
@@ -54,12 +60,16 @@ export interface BuildCommand {
  * donnerait un 500 là où le jeu voulait dire non.
  */
 export type BuildRefusal =
-  | {
-      readonly code: 'work-in-progress'
-      readonly workId: WorkId
-      readonly nature: WorkNature
-      readonly dueAt: Instant
-    }
+  /**
+   * Deux motifs sont partagés avec toute mécanique de construction et vivent
+   * dans `refusals.ts` : la planète déjà occupée par un chantier, et le compte
+   * insuffisant. Ils ne dépendent pas de ce qu'on construit, et les redéclarer
+   * ici en ferait quatre copies indépendamment modifiables — donc quatre endroits
+   * où une forme de détail pourrait dériver, alors que l'API et le client les
+   * indexent par `code`.
+   */
+  | WorkInProgressRefusal
+  | InsufficientResourcesRefusal
   | {
       readonly code: 'variant-not-available-for-type'
       readonly typeId: BuildingTypeId
@@ -68,12 +78,6 @@ export type BuildRefusal =
   | { readonly code: 'placement-out-of-grid'; readonly cells: readonly Cell[] }
   | { readonly code: 'placement-on-obstructed-cell'; readonly cells: readonly Cell[] }
   | { readonly code: 'placement-on-occupied-cell'; readonly cells: readonly Cell[] }
-  | {
-      readonly code: 'insufficient-resources'
-      readonly shortfall: readonly ResourceAmount[]
-      /** `null` quand le rythme courant ne permettra jamais d'y arriver. */
-      readonly secondsUntilAffordable: number | null
-    }
 
 /** Le domaine dit oui avec des effets, ou non avec un motif. Rien d'autre. */
 export type BuildDecision =
@@ -188,15 +192,7 @@ export function decideBuild(
   //    projection a déjà résolu ceux qui sont échus : ce qui reste ici est un
   //    chantier réellement en cours.
   if (state.work !== null) {
-    return {
-      outcome: 'refused',
-      refusal: {
-        code: 'work-in-progress',
-        workId: state.work.id,
-        nature: state.work.nature,
-        dueAt: state.work.dueAt,
-      },
-    }
+    return { outcome: 'refused', refusal: workInProgress(state.work) }
   }
 
   // 3. Le placement tient-il ?
@@ -212,11 +208,7 @@ export function decideBuild(
   if (shortfall.length > 0) {
     return {
       outcome: 'refused',
-      refusal: {
-        code: 'insufficient-resources',
-        shortfall,
-        secondsUntilAffordable: secondsUntilAffordable(state, shortfall, cost),
-      },
+      refusal: insufficientResources(shortfall, secondsUntilAffordable(state, shortfall, cost)),
     }
   }
 

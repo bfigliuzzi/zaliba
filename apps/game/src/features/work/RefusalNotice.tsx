@@ -86,6 +86,23 @@ function describeRefusal(refusal: PlanetRefusal, at: Instant): string {
     case 'variant-not-available-for-type':
       return 'Ce type de bâtiment n’admet pas cette empreinte.'
 
+    /**
+     * La cible a disparu — démolie depuis un second onglet, le plus souvent.
+     *
+     * Le message dit quoi faire, et non seulement ce qui s'est passé : le curseur
+     * du joueur pointe une case qu'il croit occupée, et c'est le rafraîchissement
+     * qui le détrompera.
+     */
+    case 'building-not-found':
+      return 'Ce bâtiment n’est plus sur la planète : rechargez pour voir l’état à jour.'
+
+    case 'max-level-reached': {
+      const maxLevel = details?.['maxLevel']
+      return typeof maxLevel === 'number'
+        ? `Ce bâtiment est au niveau maximal du catalogue (${maxLevel}).`
+        : 'Ce bâtiment est au niveau maximal du catalogue.'
+    }
+
     case 'insufficient-resources': {
       const shortfall = Array.isArray(details?.['shortfall'])
         ? (details['shortfall'] as readonly Shortfall[])

@@ -1,4 +1,4 @@
-import type { WorkView } from '@zaliba/domain'
+import type { BuildingView, WorkView } from '@zaliba/domain'
 import { formatDuration } from '../../lib/format.js'
 import { BUILDING_LABELS, describePosition, FOOTPRINT_LABELS } from '../../lib/labels.js'
 
@@ -26,6 +26,15 @@ const NATURE_LABELS: Readonly<Record<WorkView['nature'], string>> = {
 
 export interface CurrentWorkProps {
   readonly work: WorkView | null
+  /**
+   * Les bâtiments projetés, pour **nommer** la cible d'une amélioration ou d'une
+   * démolition (FR-038).
+   *
+   * La liste vient de la projection, la même dont l'aperçu et le panneau
+   * d'énergie tirent leurs chiffres. La redemander au serveur, ou en tenir une
+   * copie ici, donnerait deux vérités sur un écran qui les montre côte à côte.
+   */
+  readonly buildings: readonly BuildingView[]
 }
 
 /**
@@ -35,13 +44,14 @@ export interface CurrentWorkProps {
  * de cible fera échouer la compilation ici, plutôt qu'afficher un chantier sans
  * cible.
  *
- * La branche `building` reste volontairement sans nom de bâtiment. Le nommer
- * demanderait la liste des bâtiments projetés, et les deux tranches qui
- * produisent ce genre de chantier — l'amélioration et la démolition — ne sont pas
- * livrées. Afficher un identifiant technique en attendant serait pire que ne rien
- * dire : ce serait dire quelque chose d'illisible.
+ * La branche `building` **résout** son bâtiment dans la liste projetée, depuis
+ * US4 : dès qu'un joueur peut lancer une amélioration, savoir *lequel* est ce qui
+ * lui permet de vérifier qu'il a lancé ce qu'il croyait. Le repli — « un bâtiment
+ * posé » — n'est pas décoratif : un second onglet peut démolir la cible, et la
+ * liste cesse alors de la contenir. Afficher un identifiant technique dans ce cas
+ * serait pire que ne rien dire, ce serait dire quelque chose d'illisible.
  */
-function describeTarget(work: WorkView): string {
+function describeTarget(work: WorkView, buildings: readonly BuildingView[]): string {
   switch (work.target.kind) {
     case 'build': {
       const typeId = work.target.typeId as keyof typeof BUILDING_LABELS
@@ -49,14 +59,19 @@ function describeTarget(work: WorkView): string {
       const footprint = FOOTPRINT_LABELS[work.target.variantId] ?? work.target.variantId
       return `${label} (${footprint.toLowerCase()}) en ${describePosition(work.target.anchor)}`
     }
-    case 'building':
-      return 'un bâtiment posé'
+    case 'building': {
+      const buildingId = work.target.buildingId
+      const building = buildings.find((one) => one.id === buildingId)
+      if (building === undefined) return 'un bâtiment posé'
+      const label = BUILDING_LABELS[building.typeId] ?? building.typeId
+      return `${label} niveau ${building.level}, ${describePosition(building.anchor).toLowerCase()}`
+    }
     case 'cell':
       return describePosition(work.target.cell)
   }
 }
 
-export function CurrentWork({ work }: CurrentWorkProps) {
+export function CurrentWork({ work, buildings }: CurrentWorkProps) {
   if (work === null) {
     return (
       // biome-ignore lint/a11y/useSemanticElements: `group` est le rôle juste pour un ensemble de valeurs liées. Une `<section>` étiquetée deviendrait un point de repère `region`, et `<fieldset>` annonce un groupe de champs de saisie : il n'y en a aucun ici.
@@ -72,7 +87,7 @@ export function CurrentWork({ work }: CurrentWorkProps) {
       <h2>{NATURE_LABELS[work.nature]} en cours</h2>
       <dl>
         <dt>Cible</dt>
-        <dd>{describeTarget(work)}</dd>
+        <dd>{describeTarget(work, buildings)}</dd>
 
         <dt>Temps restant</dt>
         <dd>{formatDuration(work.remaining)}</dd>

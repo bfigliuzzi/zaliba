@@ -504,18 +504,101 @@ avec le gain de production exact affiché avant paiement.
 **Test indépendant** : améliorer un extracteur posé, comparer le gain annoncé au
 gain constaté, vérifier que les cases occupées sont inchangées.
 
-- [ ] T116 [US4] Écrire le parcours Playwright dans `apps/game/tests/e2e/us4-upgrade.spec.ts` : améliorer un extracteur **au clavier seul**, vérifier l'aperçu complet et l'identité des cases occupées après achèvement ; passer `axe-core` sans écart. Observer l'échec.
-- [ ] T117 [P] [US4] Écrire l'invariant **I-7** dans `packages/domain/tests/modules/construction/upgrade-invariants.test.ts` : une amélioration laisse l'ensemble des cases occupées identique, **à la case près**, quels que soient le type, la variante et l'orientation (FR-039, US4-1). Observer l'échec.
-- [ ] T118 [P] [US4] Écrire les tests d'amélioration dans `packages/domain/tests/modules/construction/upgrade.test.ts` : coût et durée suivant les courbes publiées (FR-040) ; aperçu portant coût, durée, `rateBefore`, `rateAfter` et `delta` (FR-041) ; refus `insufficient-resources` avec le **manque par ressource** et `secondsUntilAffordable` au rythme courant (US4-3) ; refus `max-level-reached` au niveau maximal du catalogue. Observer l'échec.
-- [ ] T119 [P] [US4] Écrire le test de `secondsUntilAffordable` à `null` dans `packages/domain/tests/modules/construction/affordability.test.ts` : quand le taux courant ne permettra jamais d'atteindre le montant parce que la ressource sature avant, la valeur est `null` — **information utile, pas cas d'erreur** : elle dit au joueur qu'il lui faut d'abord un entrepôt. Observer l'échec.
-- [ ] T120 [P] [US4] Écrire le test d'absence dans `packages/contracts/tests/v1/upgrade-absence.test.ts` : une charge `upgrade` portant `variantId` ou `orientation` est rejetée en **400**. Observer l'échec, puis vérifier qu'il passe sans modifier le contrat — l'absence de champ, et non une validation, est ce qui rend FR-039 inviolable.
-- [ ] T121 [US4] Implémenter `packages/domain/src/modules/construction/upgrade.ts` : effets `debit-resources` et `schedule-work` au lancement, `set-building-level` à l'échéance.
-- [ ] T122 [US4] Étendre `packages/domain/src/modules/construction/preview.ts` avec la variante `upgrade` : `cellsUnchanged: true`, `rateBefore`, `rateAfter`, `delta`, `energyAfter`.
-- [ ] T123 [US4] Étendre `packages/contracts/src/v1/planet.ts` avec la variante `{ nature: 'upgrade', buildingId }` — et **rien d'autre**.
-- [ ] T124 [US4] Étendre `packages/contracts/src/v1/errors.ts` avec `insufficient-resources` (`{ shortfall: [{ resourceId, grains }], secondsUntilAffordable }`), `building-not-found` et `max-level-reached`.
-- [ ] T125 [US4] Implémenter `apps/game/src/features/work/UpgradePanel.tsx` : coût, durée, production actuelle, production résultante et leur différence, plus le manque par ressource et le temps restant en cas d'insuffisance.
+- [x] T116 [US4] Écrire le parcours Playwright dans `apps/game/tests/e2e/us4-upgrade.spec.ts` : améliorer un extracteur **au clavier seul**, vérifier l'aperçu complet et l'identité des cases occupées après achèvement ; passer `axe-core` sans écart. Observer l'échec.
+- [x] T117 [P] [US4] Écrire l'invariant **I-7** dans `packages/domain/tests/modules/construction/upgrade-invariants.test.ts` : une amélioration laisse l'ensemble des cases occupées identique, **à la case près**, quels que soient le type, la variante et l'orientation (FR-039, US4-1). Observer l'échec.
+- [x] T118 [P] [US4] Écrire les tests d'amélioration dans `packages/domain/tests/modules/construction/upgrade.test.ts` : coût et durée suivant les courbes publiées (FR-040) ; aperçu portant coût, durée, `rateBefore`, `rateAfter` et `delta` (FR-041) ; refus `insufficient-resources` avec le **manque par ressource** et `secondsUntilAffordable` au rythme courant (US4-3) ; refus `max-level-reached` au niveau maximal du catalogue. Observer l'échec.
+- [x] T119 [P] [US4] Écrire le test de `secondsUntilAffordable` à `null` dans `packages/domain/tests/modules/construction/affordability.test.ts` : quand le taux courant ne permettra jamais d'atteindre le montant parce que la ressource sature avant, la valeur est `null` — **information utile, pas cas d'erreur** : elle dit au joueur qu'il lui faut d'abord un entrepôt. Observer l'échec.
+- [x] T120 [P] [US4] Écrire le test d'absence dans `packages/contracts/tests/v1/upgrade-absence.test.ts` : une charge `upgrade` portant `variantId` ou `orientation` est rejetée en **400**. Observer l'échec, puis vérifier qu'il passe sans modifier le contrat — l'absence de champ, et non une validation, est ce qui rend FR-039 inviolable.
+- [x] T121 [US4] Implémenter `packages/domain/src/modules/construction/upgrade.ts` : effets `debit-resources` et `schedule-work` au lancement, `set-building-level` à l'échéance.
+- [x] T122 [US4] Étendre `packages/domain/src/modules/construction/preview.ts` avec la variante `upgrade` : `cellsUnchanged: true`, `rateBefore`, `rateAfter`, `delta`, `energyAfter`.
+- [x] T123 [US4] Étendre `packages/contracts/src/v1/planet.ts` avec la variante `{ nature: 'upgrade', buildingId }` — et **rien d'autre**.
+- [x] T124 [US4] Étendre `packages/contracts/src/v1/errors.ts` avec `insufficient-resources` (`{ shortfall: [{ resourceId, grains }], secondsUntilAffordable }`), `building-not-found` et `max-level-reached`.
+- [x] T125 [US4] Implémenter `apps/game/src/features/work/UpgradePanel.tsx` : coût, durée, production actuelle, production résultante et leur différence, plus le manque par ressource et le temps restant en cas d'insuffisance.
 
-**Point de contrôle** : la voie de progression qui ne consomme pas de surface est ouverte.
+**Point de contrôle** : la voie de progression qui ne consomme pas de surface est
+ouverte. ✅ **Franchi le 2026-08-26.**
+
+### Divergences constatées à l'exécution
+
+1. **Une route de plus n'a pas été créée** — `POST /works` **aiguille** désormais
+   sur la nature de l'intention. Aucune tâche ne le nommait, et il le fallait :
+   T123 déclare la nature au contrat, T116 exige le parcours complet, et rien
+   entre les deux ne disait qui l'exécute. Une route par mécanique aurait obligé
+   chacune à vérifier « au plus un chantier par planète » (FR-033) — une règle qui
+   porte sur la planète et non sur la mécanique —, et la première qui l'oublierait
+   ouvrirait la porte à deux chantiers simultanés.
+2. **`modules/construction/refusals.ts` est né.** `work-in-progress` et
+   `insufficient-resources` ne dépendent pas de ce qu'on construit : les
+   redéclarer par mécanique en aurait fait quatre formes identiques et
+   indépendamment modifiables, alors que l'API et le client les indexent par
+   `code`. `build.ts` les importe désormais aussi — la pose est arrivée la
+   première, elle n'est pas propriétaire d'un vocabulaire partagé.
+3. **L'ordre des contrôles a été corrigé par le test d'intégration**, pas par le
+   raisonnement. « Bâtiment introuvable » venait d'abord ; un joueur qui lance une
+   pose puis tente d'améliorer le bâtiment qu'elle produira entendait donc « ce
+   bâtiment n'est pas sur la planète ». C'est vrai et inutile : la cause est le
+   chantier, et le chantier *explique* l'absence. `work-in-progress` passe devant.
+   Aucun ordre n'échouait à compiler, et aucun test de domaine ne le regardait.
+4. **`Preview` s'est scindé en `PreviewTerms` + effet.** Les quatre mécaniques se
+   distinguent par leur effet, jamais par leurs termes — coût, durée, échéance,
+   manque, délai. Un aperçu par mécanique aurait laissé dériver la forme du manque,
+   et l'écran devrait savoir laquelle il regarde pour savoir comment lire un coût.
+5. **`energyAfterUpgrade` **remplace** le bâtiment dans le détail, là où
+   `energyAfterBuilding` l'ajoute.** L'ajouter compterait deux fois un seul
+   bâtiment, donc annoncerait un déficit qui n'arrivera pas — et ferait renoncer le
+   joueur à une amélioration que le jeu lui accordait. Il est remplacé **à sa
+   place** : le détail suit l'ordre de l'instantané, et réordonner le tableau
+   ferait chercher la ligne qu'on regardait.
+6. **`delta` peut être négatif, et c'est publié tel quel.** Une amélioration qui
+   fait basculer la planète en déficit fait *baisser* la production du bâtiment
+   qu'elle améliore. L'écrêter à zéro aurait caché précisément l'information qui
+   doit faire poser une centrale d'abord. Le cas est tenu par un test :
+   `⌊15 × 20 ÷ 22⌋ = 13` avant, `⌊16 × 20 ÷ 26⌋ = 12` après.
+7. **Le libellé des boutons en vol a changé dans les deux panneaux.** « Lancement
+   en cours… » était générique ; avec deux panneaux, les deux boutons auraient
+   porté le **même** nom accessible au moment précis où le joueur a besoin de
+   savoir lequel il a engagé. C'est la leçon d'US2 — noms *distincts*, pas
+   seulement différents — étendue aux états transitoires. Le `pending` de l'écran
+   est devenu `'build' | 'upgrade' | null` pour la même raison : `aria-busy` sur un
+   bouton qu'on n'a pas pressé est une information fausse.
+8. **`CurrentWork` nomme désormais le bâtiment cible.** Sa branche `building`
+   disait « un bâtiment posé », faute de tranche qui produise ce genre de chantier.
+   US4 en produit un, et FR-038 exige de savoir *lequel* — un chantier n'est ni
+   annulable ni remplaçable (FR-037). Le repli reste : une seconde vue peut démolir
+   la cible, et un identifiant technique serait pire que ne rien dire.
+9. **Trois tâches de test manquaient, et ont été écrites.**
+   `upgrade-panel.test.tsx` et les cas ajoutés à `refusal-notice.test.tsx` et
+   `current-work.test.tsx` — **avant** leur sujet, la dette de la phase 4 ne se
+   répétant pas. Plus deux fichiers qu'aucune tâche ne prévoyait :
+   `apps/api/tests/refusal-vocabulary.test.ts`, qui éprouve que le vocabulaire de
+   refus du domaine et celui du contrat sont **le même** — vérifiable dans le seul
+   paquet qui voit les deux, `contracts` n'important pas `domain` —, et
+   `apps/api/tests/integration/upgrade.test.ts`, qui écrit une ligne de chantier
+   d'amélioration dans un vrai PostgreSQL. La valeur du premier a été vérifiée par
+   **mutation** : deux mutations ciblées font tomber huit cas.
+10. **T119 ne créait pas de test, il en déplaçait un.** Le contrat de
+    `secondsUntilAffordable` vivait dans `build.test.ts`. Il a déménagé dans
+    `affordability.test.ts` — son sujet —, et trois propriétés non couvertes s'y
+    sont ajoutées : l'**exactitude** du délai (l'ancien test disait seulement
+    « > 0 »), le **maximum** sur les ressources plutôt que leur somme, et le
+    plafond **atteint** distingué du plafond dépassé.
+11. **T124 était à moitié faite.** `insufficient-resources` avait été avancé en
+    phase 4 ; la tâche n'a donc apporté que `building-not-found` et
+    `max-level-reached`. L'instantané de JSON Schema a bougé d'un diff **purement
+    additif** — une variante de plus dans l'union d'entrée de `startWork`, aucune
+    borne relâchée. Élargir une entrée est compatible ; le diff a été lu et
+    approuvé.
+12. **Le parcours a de nouveau attrapé ce qu'aucun test unitaire ne voyait** — mais
+    pas dans le code : une **API démarrée avant les changements** avait été
+    réutilisée par `reuseExistingServer`, et rejetait la nature `upgrade` en 400.
+    Le piège est consigné depuis la phase 4 ; il s'est représenté à l'identique.
+13. **Quatre cas d'US2 sont tombés, et le défaut était dans leur localisateur.**
+    `getByRole('group', { name: /aperçu/i })` était sans ambiguïté tant qu'il n'y
+    avait qu'un aperçu ; l'écran en porte deux depuis US4, aux noms *distincts*
+    — « Aperçu de la construction », « Aperçu de l'amélioration ». C'est la leçon de
+    la phase 4 appliquée cette fois au test : un localisateur qui accepte deux
+    repères n'éprouve ni l'un ni l'autre. Les deux occurrences ont été nommées en
+    entier, et US2 repasse en entier — plafond de frappes de SC-001 compris.
 
 ---
 

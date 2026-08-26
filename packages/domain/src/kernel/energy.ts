@@ -178,7 +178,48 @@ export function energyAfterBuilding(
   return report(current.base, current.fromPlants + produced, consumers)
 }
 
-/** La formule, en un seul endroit : les deux constructeurs ci-dessus y passent. */
+/**
+ * Le rapport tel qu'il serait **après** l'amélioration d'un bâtiment posé.
+ *
+ * Même promesse que pour la pose, et même raison de la tenir : entre le lancement
+ * d'un chantier et son échéance, aucune autre transition ne peut survenir (FR-033,
+ * R3), donc l'état énergétique à l'échéance est connu dès le lancement.
+ *
+ * La différence avec `energyAfterBuilding` est ce qui compte : le bâtiment est
+ * **remplacé** dans le détail, jamais ajouté. L'ajouter compterait deux fois un
+ * seul bâtiment, donc annoncerait un déficit qui n'arrivera pas — et ferait
+ * renoncer le joueur à une amélioration que le jeu lui accordait.
+ *
+ * Il est remplacé **à sa place**, et non déplacé en fin de liste : le détail suit
+ * l'ordre des bâtiments de l'instantané, et un aperçu qui réordonnerait le tableau
+ * ferait chercher au joueur la ligne qu'il regardait.
+ */
+export function energyAfterUpgrade(
+  current: EnergyReport,
+  buildingId: BuildingId,
+  typeId: BuildingTypeId,
+  levelAfter: number,
+  catalogs: Catalogs,
+): EnergyReport {
+  const gained =
+    energyProduction(typeId, levelAfter, catalogs) -
+    energyProduction(typeId, levelAfter - 1, catalogs)
+  const amount = energyConsumption(typeId, levelAfter, catalogs)
+
+  // Un type qui ne consomme rien n'est pas listé — la centrale (R20). Pour lui,
+  // seule la production change, et le détail reste tel quel.
+  const consumers = current.consumers.some((one) => one.buildingId === buildingId)
+    ? current.consumers.map((one) =>
+        one.buildingId === buildingId ? { ...one, level: levelAfter, amount } : one,
+      )
+    : amount > 0
+      ? [...current.consumers, { buildingId, typeId, level: levelAfter, amount }]
+      : current.consumers
+
+  return report(current.base, current.fromPlants + gained, consumers)
+}
+
+/** La formule, en un seul endroit : les trois constructeurs ci-dessus y passent. */
 function report(
   base: number,
   fromPlants: number,

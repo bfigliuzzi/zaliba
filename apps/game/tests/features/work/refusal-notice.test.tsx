@@ -126,6 +126,53 @@ describe('un manque de ressources se chiffre par ressource (SC-007)', () => {
   })
 })
 
+describe('les refus d’amélioration disent quoi faire (US4)', () => {
+  /**
+   * `building-not-found` arrive quand la cible a disparu entre l'aperçu et
+   * l'envoi — démolie depuis un second onglet, le plus souvent. Dire seulement
+   * « introuvable » laisserait le joueur réessayer sur une case que son écran
+   * montre encore occupée.
+   */
+  it('dit de recharger quand la cible n’est plus là', () => {
+    const alert = show('building-not-found', {
+      buildingId: '88888888-8888-4888-8888-888888888888',
+    })
+    expect(alert.textContent).toMatch(/n’est plus sur la planète/i)
+    expect(alert.textContent).toMatch(/recharg/i)
+  })
+
+  /**
+   * Le plafond **chiffré**. « Niveau maximal atteint » laisserait chercher
+   * lequel, alors que le refus le porte dans son détail.
+   */
+  it('nomme le plafond atteint', () => {
+    const alert = show('max-level-reached', {
+      buildingId: '88888888-8888-4888-8888-888888888888',
+      maxLevel: 30,
+    })
+    expect(alert.textContent).toMatch(/niveau maximal/i)
+    expect(alert.textContent).toMatch(/30/)
+  })
+
+  /** Un détail incomplet reste lisible : le repli ne montre pas d'`undefined`. */
+  it('reste lisible sans plafond fourni', () => {
+    const alert = show('max-level-reached', {})
+    expect(alert.textContent).toMatch(/niveau maximal/i)
+    expect(alert.textContent).not.toMatch(/undefined|NaN/)
+  })
+
+  /**
+   * L'identifiant du bâtiment n'est **jamais** affiché, ici comme ailleurs : il
+   * sert au client à retirer un repère périmé de sa vue, pas au joueur à le lire.
+   */
+  it('n’affiche aucun identifiant technique', () => {
+    const alert = show('building-not-found', {
+      buildingId: '88888888-8888-4888-8888-888888888888',
+    })
+    expect(alert.textContent).not.toContain('88888888')
+  })
+})
+
 describe('un code inconnu retombe sur le message du serveur', () => {
   /**
    * Le serveur peut élargir l'union de refus avant le client — c'est même le

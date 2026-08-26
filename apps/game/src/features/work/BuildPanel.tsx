@@ -21,6 +21,12 @@ import { BUILDING_LABELS, FOOTPRINT_LABELS, RESOURCE_LABELS } from '../../lib/la
  * sans cela, le joueur paierait une frappe pour un choix que le catalogue a déjà
  * fait à sa place quand le type n'a qu'une empreinte.
  *
+ * **Le libellé du bouton nomme l'action, en vol comme au repos.** « Lancement en
+ * cours… » était générique, et l'arrivée du panneau d'amélioration l'a rendu faux :
+ * les deux boutons auraient porté le **même** nom accessible au moment précis où le
+ * joueur a besoin de savoir lequel des deux il a engagé. C'est la leçon d'US2, les
+ * états transitoires compris.
+ *
  * **FR-035 : la confirmation est postérieure à l'affichage.** Le coût, la durée,
  * les gisements recouverts, la production annoncée et l'effet énergétique
  * (US3-3) sont là, dans le document, avant que le bouton ne soit atteignable — et ils suivent le curseur à la
@@ -107,7 +113,7 @@ export function BuildPanel({
 
       {selection.typeId !== null && (
         <button type="button" onClick={onConfirm} disabled={pending} aria-busy={pending}>
-          {pending ? 'Lancement en cours…' : 'Lancer la construction'}
+          {pending ? 'Lancement de la construction…' : 'Lancer la construction'}
         </button>
       )}
     </div>

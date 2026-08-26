@@ -79,9 +79,9 @@ export function categoryOfStatus(status: number): ErrorCategory | null {
 /**
  * L'union **fermée** des motifs de refus de règle de jeu.
  *
- * Elle s'enrichit tranche par tranche : US2 apporte les six ci-dessous, US4
- * `max-level-reached` et `building-not-found`, US5 `cell-not-obstructed`, US6
- * `building-is-work-target`.
+ * Elle s'enrichit tranche par tranche : US2 a apporté les six premiers, US4
+ * `building-not-found` et `max-level-reached` ; US5 apportera
+ * `cell-not-obstructed`, US6 `building-is-work-target`.
  *
  * Le caractère **fermé** est ce qui satisfait FR-013, FR-034 et SC-007 : ces
  * exigences demandent le *motif exact*, qu'un booléen ou un message libre ne
@@ -102,6 +102,17 @@ export const REFUSAL_CODES_V1 = [
   'placement-on-occupied-cell',
   /** Le choix entre variantes est géométrique, et le catalogue le borne (FR-009). */
   'variant-not-available-for-type',
+  /**
+   * La cible d'une amélioration n'est pas sur cette planète.
+   *
+   * C'est un refus de **règle de jeu** et non une requête malformée : le schéma
+   * accepte n'importe quel UUID, et rien en lui ne peut dire qu'une planète porte
+   * ce bâtiment. Le ranger en 400 dirait au joueur « votre requête est malformée »
+   * quand la vérité est « ce bâtiment n'existe plus ».
+   */
+  'building-not-found',
+  /** Le plafond de niveau du catalogue est atteint (FR-040). */
+  'max-level-reached',
 ] as const satisfies readonly string[]
 
 export type RefusalCodeV1 = (typeof REFUSAL_CODES_V1)[number]
@@ -159,6 +170,30 @@ export const RefusalDetailsV1 = {
     .object({
       typeId: z.enum(['mine', 'puits', 'racloir', 'centrale', 'entrepot']),
       variantId: z.enum(['single', 'line-2', 'square-4', 'l-4', 't-4', 'rect-6', 'square-9']),
+    })
+    .strict(),
+
+  /**
+   * L'identifiant demandé, **repris tel quel**.
+   *
+   * Le rendre permet au client de savoir *lequel* de ses repères est périmé, ce
+   * qui compte dès qu'un second onglet est ouvert : la démolition faite ailleurs
+   * explique le refus, et le client peut retirer le bâtiment de sa vue plutôt que
+   * de laisser le joueur réessayer.
+   */
+  'building-not-found': z.object({ buildingId: z.string().uuid() }).strict(),
+
+  /**
+   * Le plafond est **dans le détail**, et non seulement dans le code.
+   *
+   * « Niveau maximal atteint » laisserait chercher lequel, alors que c'est une
+   * donnée publiée du catalogue. Le dire ici évite au client de la redériver — donc
+   * évite qu'il en tienne une copie qui se périmerait au premier rééquilibrage.
+   */
+  'max-level-reached': z
+    .object({
+      buildingId: z.string().uuid(),
+      maxLevel: z.number().int().min(1).max(30),
     })
     .strict(),
 } as const satisfies Record<RefusalCodeV1, z.ZodTypeAny>

@@ -25,6 +25,13 @@ const WELL_FORMED: Readonly<Record<(typeof WORK_INTENT_NATURES_V1)[number], obje
     anchorX: 0,
     anchorY: 4,
   },
+  /**
+   * Une cible, et rien d'autre (FR-039). La table est indexée par le type de
+   * l'union : déclarer une nature au contrat sans en donner d'exemple ici fait
+   * **échouer la compilation**, ce qui est exactement ce qu'on veut d'une liste
+   * qui doit rester complète.
+   */
+  upgrade: { nature: 'upgrade', buildingId: '88888888-8888-4888-8888-888888888888' },
 }
 
 /**

@@ -17,7 +17,6 @@ import {
   buildCost,
   buildDuration,
   decideBuild,
-  secondsUntilAffordable,
 } from '../../../src/modules/construction/build.js'
 import { previewBuild } from '../../../src/modules/construction/preview.js'
 
@@ -36,6 +35,11 @@ import { previewBuild } from '../../../src/modules/construction/preview.js'
  * doit voir avant de confirmer (FR-035, SC-007) —, `decide` **arbitre**. C'est
  * pourquoi un manque de ressources est un champ de l'aperçu et un refus de la
  * décision.
+ *
+ * **Le contrat de `secondsUntilAffordable` vit ailleurs**, dans
+ * `affordability.test.ts` : l'exactitude du délai, le maximum sur les ressources
+ * plutôt que leur somme, et les deux causes du `null`. Ce fichier n'éprouve que sa
+ * remontée dans un motif de refus — ce qui est ici la seule chose qui le concerne.
  */
 
 const T0 = instant(1_787_750_000)
@@ -541,61 +545,6 @@ describe('un type inconnu est une faute de programmation, pas un refus', () => {
     expect(() =>
       previewBuild(stateOf(fresh()), command({ typeId: 'usine' as 'mine' }), CATALOGS),
     ).toThrow(RangeError)
-  })
-})
-
-describe('« payable dans » vaut null quand attendre ne suffira jamais', () => {
-  /**
-   * Deux causes, et une seule conclusion. Soit la ressource ne progresse pas,
-   * soit son plafond est **sous** le montant demandé — elle saturera avant. Dans
-   * les deux cas, dire « dans trois jours » serait faux, et dire « jamais » sans
-   * le pourquoi laisserait le joueur attendre. La valeur est `null`, et l'écran
-   * la traduit en « il vous faut d'abord un entrepôt ».
-   */
-  function broke(overrides: Partial<PlanetSnapshot> = {}): PlanetSnapshot {
-    const snapshot = fresh()
-    return {
-      ...snapshot,
-      holdings: Object.fromEntries(
-        Object.keys(snapshot.holdings).map((resourceId) => [resourceId, { amount: 0, lost: 0 }]),
-      ) as PlanetSnapshot['holdings'],
-      ...overrides,
-    }
-  }
-
-  it('chiffre le délai quand la production y mènera', () => {
-    const state = stateOf(broke())
-    const cost = [{ resourceId: 'camelote' as const, grains: 3_600 }]
-    expect(secondsUntilAffordable(state, cost, cost)).toBeGreaterThan(0)
-  })
-
-  it('rend null quand le coût dépasse le plafond de la ressource', () => {
-    const state = stateOf(broke())
-    const beyondCap = state.holdings['camelote'].cap + 1
-    const cost = [{ resourceId: 'camelote' as const, grains: beyondCap }]
-    expect(secondsUntilAffordable(state, cost, cost)).toBeNull()
-  })
-
-  it('rend null quand la ressource ne progresse pas', () => {
-    // Un catalogue synthétique à production nulle : c'est tout l'intérêt de
-    // passer le catalogue en argument plutôt que de l'importer en dur.
-    const layout = { ...CATALOGS.layouts['berceau-v1'] }
-    const barren = {
-      ...CATALOGS,
-      layouts: {
-        'berceau-v1': {
-          ...layout,
-          baseProductionPerHour: { camelote: 0, jus: 0, 'bave-etoiles': 0 },
-        },
-      },
-    }
-    const state = projectPlanet(broke(), barren, T0)
-    const cost = [{ resourceId: 'camelote' as const, grains: 3_600 }]
-    expect(secondsUntilAffordable(state, cost, cost)).toBeNull()
-  })
-
-  it('rend zéro quand il ne manque rien', () => {
-    expect(secondsUntilAffordable(stateOf(fresh()), [], [])).toBe(0)
   })
 })
 

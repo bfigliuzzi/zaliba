@@ -1,6 +1,11 @@
 import type { Catalogs } from '../../kernel/catalogs.js'
-import type { ResourceAmount } from '../../kernel/effects.js'
-import { applyEnergyRatio, type EnergyReport, energyAfterBuilding } from '../../kernel/energy.js'
+import type { BuildingId, ResourceAmount } from '../../kernel/effects.js'
+import {
+  applyEnergyRatio,
+  type EnergyReport,
+  energyAfterBuilding,
+  energyAfterUpgrade,
+} from '../../kernel/energy.js'
 import { depositsUnder, placementCells, validatePlacement } from '../../kernel/grid.js'
 import type { ProjectedState } from '../../kernel/projection.js'
 import { extractorRate } from '../../kernel/rates.js'
@@ -16,6 +21,15 @@ import {
   secondsUntilAffordable,
   shortfallOf,
 } from './build.js'
+import { workInProgress } from './refusals.js'
+import {
+  type UpgradeCommand,
+  type UpgradeRefusal,
+  upgradeCost,
+  upgradeDuration,
+  upgradeRefusalOf,
+  upgradeTargetOf,
+} from './upgrade.js'
 
 /**
  * L'aperçu : **le même calcul que l'arbitrage**, rendu inoffensif (R8).
@@ -75,7 +89,16 @@ export interface BuildPreviewEffect {
   readonly effectiveRateAfter: RatePerHour
 }
 
-export interface Preview {
+/**
+ * Ce que **toute** action de chantier annonce : ce qu'elle coûte, et quand.
+ *
+ * Les quatre mécaniques — pose, amélioration, déblaiement, démolition — se
+ * distinguent par leur *effet*, jamais par leurs termes. Les redéclarer par
+ * mécanique laisserait dériver la forme du manque d'une action à l'autre, et
+ * l'écran devrait alors savoir laquelle il regarde pour savoir comment lire un
+ * coût.
+ */
+export interface PreviewTerms {
   readonly cost: readonly ResourceAmount[]
   readonly duration: Duration
   readonly dueAt: Instant
@@ -83,12 +106,74 @@ export interface Preview {
   readonly shortfall: readonly ResourceAmount[] | null
   /** `null` quand le compte y est, ou quand le rythme n'y suffira jamais. */
   readonly secondsUntilAffordable: number | null
+}
+
+export interface Preview extends PreviewTerms {
   readonly effect: BuildPreviewEffect
 }
 
 export type PreviewResult =
   | { readonly outcome: 'accepted'; readonly preview: Preview }
   | { readonly outcome: 'refused'; readonly refusal: BuildRefusal }
+
+/**
+ * Ce qu'une amélioration changerait, une fois achevée (FR-041).
+ *
+ * Cinq grandeurs, parce que FR-041 en demande cinq : le coût et la durée sont dans
+ * les termes, la production actuelle, la production résultante et leur différence
+ * sont ici. Un aperçu qui n'annoncerait que la résultante obligerait le joueur à
+ * soustraire de tête pour savoir ce qu'il achète.
+ */
+export interface UpgradePreviewEffect {
+  readonly kind: 'upgrade'
+  readonly buildingId: BuildingId
+  /**
+   * **Toujours vrai**, et c'est le sujet de la tranche (FR-039, I-7).
+   *
+   * Le champ est un littéral et non un booléen calculé : il n'existe aucun chemin
+   * par lequel une amélioration déplacerait une case, donc aucune valeur `false`
+   * à produire. Il est là pour être *affiché* — le joueur doit savoir avant de
+   * payer que sa géométrie ne bougera pas.
+   */
+  readonly cellsUnchanged: true
+  readonly level: number
+  readonly levelAfter: number
+  /** Avant rapport d'énergie, au niveau courant (FR-024). */
+  readonly nominalBefore: RatePerHour
+  /** Avant rapport d'énergie, au niveau visé. */
+  readonly nominalAfter: RatePerHour
+  /** La production **actuelle**, sous le rapport courant : un fait constaté. */
+  readonly rateBefore: RatePerHour
+  /**
+   * La production **résultante**, sous le rapport que l'amélioration laissera
+   * derrière elle.
+   *
+   * Sous le rapport résultant et non le courant, pour la même raison que la pose
+   * (US3-3) : un niveau de plus consomme davantage, et annoncer le gain sous
+   * l'ancien rapport promettrait un chiffre que l'amélioration rendrait faux à
+   * l'instant même où elle l'atteint.
+   */
+  readonly rateAfter: RatePerHour
+  /**
+   * `rateAfter − rateBefore` — le gain tel qu'il sera constaté.
+   *
+   * Il peut être **négatif**, et ce n'est pas un défaut : une amélioration qui
+   * fait basculer la planète en déficit fait baisser la production du bâtiment
+   * qu'elle améliore. Le taire, ou l'écrêter à zéro, cacherait précisément
+   * l'information qui doit faire poser une centrale d'abord.
+   */
+  readonly delta: number
+  /** Le rapport d'énergie de la planète **après** l'amélioration (US3-3). */
+  readonly energyAfter: EnergyReport
+}
+
+export interface UpgradePreview extends PreviewTerms {
+  readonly effect: UpgradePreviewEffect
+}
+
+export type UpgradePreviewResult =
+  | { readonly outcome: 'accepted'; readonly preview: UpgradePreview }
+  | { readonly outcome: 'refused'; readonly refusal: UpgradeRefusal }
 
 /**
  * L'aperçu d'une pose.
@@ -120,15 +205,7 @@ export function previewBuild(
   }
 
   if (state.work !== null) {
-    return {
-      outcome: 'refused',
-      refusal: {
-        code: 'work-in-progress',
-        workId: state.work.id,
-        nature: state.work.nature,
-        dueAt: state.work.dueAt,
-      },
-    }
+    return { outcome: 'refused', refusal: workInProgress(state.work) }
   }
 
   const cells = placementCells(command.variantId, command.orientation, command.anchor, catalogs)
@@ -169,6 +246,77 @@ export function previewBuild(
         effectiveRate: applyEnergyRatio(nominal, state.energy.ratio) as RatePerHour,
         energyAfter,
         effectiveRateAfter: applyEnergyRatio(nominal, energyAfter.ratio) as RatePerHour,
+      },
+    },
+  }
+}
+
+/**
+ * L'aperçu d'une amélioration.
+ *
+ * Refuse pour les mêmes motifs que `decideUpgrade`, **sauf** le manque de
+ * ressources : il n'y a rien à prévisualiser d'une cible qui n'existe pas ou d'un
+ * plafond atteint, alors qu'il y a tout à dire d'une amélioration qu'on ne peut
+ * pas encore payer (FR-035, SC-007, US4-3).
+ *
+ * Les contrôles ne sont pas réécrits ici : ils sont **le même code** que
+ * l'arbitrage (R8). Une seconde liste de contrôles finirait par diverger d'un cas,
+ * et le cas divergent serait un aperçu qui promet ce que le serveur refuse.
+ */
+export function previewUpgrade(
+  state: ProjectedState,
+  command: UpgradeCommand,
+  catalogs: Catalogs,
+): UpgradePreviewResult {
+  const refusal = upgradeRefusalOf(state, command, catalogs)
+  if (refusal !== null) return { outcome: 'refused', refusal }
+
+  const building = upgradeTargetOf(state, command.buildingId)
+  const levelAfter = building.level + 1
+  const cost = upgradeCost(building.typeId, levelAfter, catalogs)
+  const shortfall = shortfallOf(state, cost)
+  const duration = upgradeDuration(building.typeId, levelAfter, catalogs)
+
+  // Le compte de gisements est celui que la grille **projetée** donne, et il ne
+  // change pas : l'empreinte est la même (I-7). C'est ce qui rend le gain d'une
+  // amélioration exactement prévisible, là où celui d'une pose dépend d'où on la
+  // pose.
+  const nominalAfter = extractorRate(
+    building.typeId,
+    levelAfter,
+    building.coveredDeposits,
+    catalogs,
+  )
+  const energyAfter = energyAfterUpgrade(
+    state.energy,
+    building.id,
+    building.typeId,
+    levelAfter,
+    catalogs,
+  )
+  const rateAfter = applyEnergyRatio(nominalAfter, energyAfter.ratio)
+
+  return {
+    outcome: 'accepted',
+    preview: {
+      cost,
+      duration,
+      dueAt: addDuration(state.at, duration),
+      shortfall: shortfall.length > 0 ? shortfall : null,
+      secondsUntilAffordable:
+        shortfall.length > 0 ? secondsUntilAffordable(state, shortfall, cost) : null,
+      effect: {
+        kind: 'upgrade',
+        buildingId: building.id,
+        cellsUnchanged: true,
+        level: building.level,
+        levelAfter,
+        nominalBefore: building.nominalRate,
+        nominalAfter: nominalAfter as RatePerHour,
+        rateBefore: building.effectiveRate,
+        rateAfter: rateAfter as RatePerHour,
+        delta: rateAfter - building.effectiveRate,
+        energyAfter,
       },
     },
   }

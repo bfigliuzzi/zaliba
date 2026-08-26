@@ -98,6 +98,12 @@ test.describe('poser un extracteur, au clavier seul', () => {
    * FR-035 et FR-050 : le coût, la durée et l'effet sont affichés **avant** la
    * confirmation. Le test les relève sur la page, l'empreinte armée et le
    * curseur en place, sans avoir rien validé.
+   *
+   * Le repère est nommé **en entier** — « Aperçu de la construction » — et non par
+   * un `/aperçu/` lâche. L'écran en porte deux depuis US4, et un localisateur
+   * approximatif les confondait : c'est la même leçon que celle qui a imposé des
+   * noms accessibles distincts, appliquée cette fois au test. Un localisateur qui
+   * accepte deux repères n'éprouve ni l'un ni l'autre.
    */
   test('l’aperçu annonce coût, durée, gisements et production avant paiement', async ({ page }) => {
     await signUp(page)
@@ -107,7 +113,7 @@ test.describe('poser un extracteur, au clavier seul', () => {
     await tabToGrid(page, keyboard)
     await keyboard.press('ArrowDown', VEIN.y)
 
-    const preview = page.getByRole('group', { name: /aperçu/i })
+    const preview = page.getByRole('group', { name: /aperçu de la construction/i })
     await expect(preview).toContainText(/coût/i)
     await expect(preview).toContainText(/durée/i)
     await expect(preview).toContainText(/gisements recouverts/i)
@@ -316,7 +322,7 @@ test.describe('accessibilité, sans écart (FR-061)', () => {
     await tabToGrid(page, keyboard)
     await keyboard.press('ArrowDown', VEIN.y)
 
-    await expect(page.getByRole('group', { name: /aperçu/i })).toBeVisible()
+    await expect(page.getByRole('group', { name: /aperçu de la construction/i })).toBeVisible()
     await expectNoAccessibilityViolations(page)
   })
 
