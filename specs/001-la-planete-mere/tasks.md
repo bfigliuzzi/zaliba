@@ -212,7 +212,7 @@ d'observation, comparer au calcul mené à la main depuis les règles publiées.
 
 ### Tests d'abord ⚠️
 
-- [ ] T056 [US1] Écrire le parcours Playwright dans `apps/game/tests/e2e/us1-planet.spec.ts` : créer un compte, ouvrir la planète, vérifier la grille 6×6, les 10 obstacles, les 26 cases libres et les trois gisements aux coordonnées de R7 ; vérifier que les compteurs continuent de progresser **en mode hors ligne du navigateur** ; passer `axe-core` **sans écart**. Observer l'échec.
+- [~] T056 [US1] ⚠️ **Écrit, non éprouvé — aucun projet Supabase n'existe.** Le parcours commence par « créer un compte », qui passe par Supabase ; T055 a déjà consigné l'absence du projet. Le cycle rouge → vert reste à observer, et il le sera à la création du projet, en même temps que le relevé de la majeure PostgreSQL. Écrire le parcours Playwright dans `apps/game/tests/e2e/us1-planet.spec.ts` : créer un compte, ouvrir la planète, vérifier la grille 6×6, les 10 obstacles, les 26 cases libres et les trois gisements aux coordonnées de R7 ; vérifier que les compteurs continuent de progresser **en mode hors ligne du navigateur** ; passer `axe-core` **sans écart**. Observer l'échec.
 - [x] T057 [P] [US1] Écrire les tests de cohérence de la disposition du Berceau dans `packages/catalogs/tests/layout-berceau.test.ts` : 36 cases, **10 obstruées**, 26 libres, exactement une veine de Camelote, un geyser de Jus et un récif de Bave d'étoiles, **au plus un gisement par case et d'une seule ressource** (FR-015), chaque case obstruée portant un type d'obstacle existant (FR-002, FR-004, FR-042). Observer l'échec.
 - [x] T058 [P] [US1] Écrire les tests de cohérence économique du catalogue dans `packages/catalogs/tests/balance.test.ts` : production de base du Berceau **non nulle** pour les trois ressources (FR-018), capacité de base non nulle pour les trois ressources (FR-025), **énergie de base du Berceau non nulle** (FR-022), stock de départ suffisant pour une centrale **et** un extracteur de niveau 1 (FR-019) ; **aucun coût du catalogue n'est libellé en Jus** (FR-062, R22). Observer l'échec.
 - [x] T059 [P] [US1] Écrire les tests unitaires de projection dans `packages/domain/tests/kernel/projection.test.ts` : projection à `t₀ + 1 h`, `+ 3 semaines`, `+ 3 semaines + 1 s` comparée au calcul mené à la main ; segmentation en **deux segments au plus** autour de `dueAt` (R3, FR-032) ; `at < consolidatedAt` est une erreur de programmation, pas un cas de jeu. Observer l'échec.
@@ -240,7 +240,40 @@ d'observation, comparer au calcul mené à la main depuis les règles publiées.
 - [x] T078 [US1] Implémenter `apps/game/src/features/resources/useExtrapolatedHoldings.ts` : la boucle d'animation qui rejoue `project()` localement, **sans un seul appel réseau**, à partir de l'instantané détenu et du décalage d'horloge (R8).
 - [x] T079 [US1] Implémenter `apps/game/src/routes/planet.tsx` : l'écran de planète assemblant grille, ressources et chantier en cours.
 
-**Point de contrôle** : US1 est fonctionnelle et testable seule. Le joueur s'inscrit, reçoit sa planète et la voit produire. C'est le MVP livrable.
+**Point de contrôle** : US1 est fonctionnelle et testable seule. Le joueur s'inscrit, reçoit sa planète et la voit produire. C'est le MVP livrable. ⚠️ **Franchi le 2026-08-26, sauf le parcours de bout en bout** — 660 tests unitaires, 98 d'intégration, types, lint et frontières (125 modules) au vert ; T056 est écrit mais ne peut pas s'exécuter faute de projet Supabase.
+
+### Divergences constatées à l'exécution
+
+1. **`buildings.ts` avancé de la phase 4.** T091 le prévoyait en US2, mais T058
+   est une tâche d'US1 et éprouve FR-019 sur les coûts de bâtiment. Seule la
+   part nécessaire est écrite — identité, variantes, bornes, coûts ; les courbes
+   de production, d'énergie et de capacité restent à T091, T112 et T145.
+2. **`kernel` ne peut pas appeler `effectsOnCompletion`.** La règle « `kernel`
+   n'importe jamais un module. Aucune exception » a été attrapée par
+   `dependency-cruiser`. Le résolveur d'achèvement est injecté en argument
+   **obligatoire**, et câblé par une racine de composition — `src/game.ts` —
+   qui n'est ni noyau ni module. Une valeur par défaut « aucun effet » aurait
+   laissé la segmentation fonctionner en apparence pendant que les chantiers
+   s'achèveraient sans rien produire.
+3. **`schedule-work` ne portait pas sa cible.** Un effet qui ne se suffit pas à
+   lui-même oblige son destinataire à reprendre une décision que le module avait
+   déjà prise. `WorkTarget` a rejoint le vocabulaire du noyau.
+4. **Drizzle ne peut pas s'appuyer sur une transaction `postgres.js`** : son
+   pilote lit `client.options.parsers`, propriété du pool. Le dépôt emploie donc
+   du SQL explicite ; Drizzle garde le schéma et les migrations. Le prix — une
+   liste de colonnes en clair — est payé par les tests d'intégration, qui la
+   confrontent au vrai schéma à chaque exécution.
+5. **Sept tâches d'implémentation n'avaient pas de tâche de test** (T038, T043,
+   T048, T051, T052, T066, T067, plus `snapshot.ts` et `completion.ts`). Les
+   tests ont été écrits d'abord quand la tâche le permettait, et rattrapés avant
+   fusion sinon — c'est le seuil de couverture du domaine qui a rendu le trou
+   visible, en passant de 76 % à 97 % de lignes une fois comblé.
+6. **Le projet Vitest `game` est scindé en `game` et `game-dom`.** Un test de
+   logique n'a pas besoin d'un jsdom, dont le montage coûtait jusqu'à cinquante
+   secondes par fichier sur une machine chargée. La frontière est l'extension.
+7. **`*.contract.json` est exclu du formateur** : Biome repliait les tableaux
+   courts du fichier de référence, et l'instantané de schéma échouait à chaque
+   exécution.
 
 ---
 
