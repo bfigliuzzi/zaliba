@@ -1,5 +1,6 @@
 import cors from '@fastify/cors'
 import type { FastifyInstance } from 'fastify'
+import { IDEMPOTENCY_KEY_HEADER, IDEMPOTENCY_REPLAYED_HEADER } from '../command/idempotency.js'
 import { REQUEST_ID_HEADER } from './correlation.js'
 
 /**
@@ -14,12 +15,6 @@ import { REQUEST_ID_HEADER } from './correlation.js'
  * n'autorise de toute façon pas les requêtes porteuses d'identifiants, et il
  * masque la question de savoir qui appelle.
  */
-
-/** L'en-tête d'idempotence, exigé de toute commande (contrats § 5). */
-export const IDEMPOTENCY_KEY_HEADER = 'idempotency-key'
-
-/** L'en-tête qui signale un rejeu, et non une exécution (contrats § 5). */
-export const IDEMPOTENCY_REPLAYED_HEADER = 'idempotency-replayed'
 
 /** Ce que le client a le droit d'envoyer. */
 const ALLOWED_HEADERS = ['authorization', 'content-type', IDEMPOTENCY_KEY_HEADER]

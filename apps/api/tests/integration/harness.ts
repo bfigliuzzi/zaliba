@@ -2,7 +2,7 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { PostgreSqlContainer, type StartedPostgreSqlContainer } from '@testcontainers/postgresql'
-import postgres from 'postgres'
+import { createSql, type GameSql } from '@zaliba/db'
 
 /**
  * Le harnais d'intégration : un **vrai** PostgreSQL, jamais un simulacre.
@@ -27,7 +27,7 @@ import postgres from 'postgres'
 const POSTGRES_IMAGE = 'postgres:17-alpine'
 
 export interface Harness {
-  readonly sql: postgres.Sql
+  readonly sql: GameSql
   readonly url: string
   /**
    * Le nombre d'instructions de migration réellement exécutées. Zéro veut dire
@@ -60,7 +60,12 @@ export async function startHarness(): Promise<Harness> {
     .start()
 
   const url = container.getConnectionUri()
-  const sql = postgres(url, { max: 5, prepare: true, onnotice: () => {} })
+  // Le **même** constructeur que la production, et non un pilote monté à la
+  // main : sa configuration porte le décodage des `bigint` (les grains) et la
+  // discipline des requêtes préparées. Un harnais qui reconfigure son pilote
+  // éprouve un pilote que la production n'exécute pas — et les divergences se
+  // découvrent alors en production, où elles coûtent le plus cher.
+  const sql = createSql({ url, maxConnections: 5 })
 
   const appliedStatements = await applyMigrations(sql)
 
@@ -103,7 +108,7 @@ function migrationsDir(): string {
  * distinguer « aucune migration à appliquer » de « les migrations n'ont pas été
  * trouvées », deux situations que le silence confondait.
  */
-async function applyMigrations(sql: postgres.Sql): Promise<number> {
+async function applyMigrations(sql: GameSql): Promise<number> {
   const dir = migrationsDir()
   if (!existsSync(dir)) return 0
 
@@ -134,15 +139,13 @@ async function applyMigrations(sql: postgres.Sql): Promise<number> {
  * coûterait plusieurs secondes par test, et le prix se paierait à chaque
  * exécution de la porte de CI.
  */
-async function truncateGameSchema(sql: postgres.Sql): Promise<void> {
+async function truncateGameSchema(sql: GameSql): Promise<void> {
   const tables = await sql<{ tablename: string }[]>`
     select tablename from pg_tables where schemaname = 'game'
   `
   if (tables.length === 0) return
 
-  const names = tables.map((t) => `game.${sql(t.tablename)}`)
   await sql.unsafe(
     `truncate ${tables.map((t) => `game."${t.tablename}"`).join(', ')} restart identity cascade`,
   )
-  void names
 }

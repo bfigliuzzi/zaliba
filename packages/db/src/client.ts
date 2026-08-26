@@ -43,7 +43,21 @@ export function usesTransactionPooler(url: string): boolean {
   }
 }
 
-export function createSql(config: DbConfig): postgres.Sql {
+/**
+ * Le type du pilote, **avec** son enregistrement de `bigint`.
+ *
+ * L'annoter `postgres.Sql` tout court effacerait cet enregistrement du typage :
+ * le pilote décoderait bien les `bigint` à l'exécution, mais TypeScript
+ * refuserait d'en passer un en paramètre de requête. Le type nommé ici rend
+ * visible ce que la configuration a déclaré, au lieu de le cacher derrière une
+ * annotation plus large.
+ */
+export type GameSql = postgres.Sql<{ bigint: bigint }>
+
+/** Une transaction du même pilote, `bigint` compris. */
+export type GameTransaction = postgres.TransactionSql<{ bigint: bigint }>
+
+export function createSql(config: DbConfig): GameSql {
   const transactionPooler = config.transactionPooler ?? usesTransactionPooler(config.url)
   return postgres(config.url, {
     // `prepare: false` est obligatoire derrière le pooler de transaction, et

@@ -150,10 +150,10 @@ précède le schéma qu'il éprouve.
 - [x] T041 [P] Écrire le test de l'adaptateur d'authentification dans `apps/api/tests/auth.test.ts` sur des jetons de fixture signés par une paire de clés de test : jeton absent, expiré, signature invalide → **401 sans détail** ; jeton valide → un identifiant de joueur, et **rien d'autre**. Observer l'échec.
 - [x] T042 Implémenter `apps/api/src/plugins/auth.ts` : vérification **locale** de la signature JWT par JWKS avec `jose`, JWKS mis en cache, aucun appel réseau par requête (R12). **Aucun droit n'est lu dans le jeton.**
 - [x] T043 [P] Implémenter `apps/api/src/plugins/cors.ts` avec `@fastify/cors` : origine du client autorisée, en-tête `Idempotency-Key` accepté.
-- [ ] T044 Écrire le test d'intégration de la forme unique de commande dans `apps/api/tests/integration/command.test.ts` : verrouillage `SELECT … FOR UPDATE`, autorisation vérifiée **sur la ligne verrouillée**, résolution du chantier échu, projection au `now()` de la transaction tronqué à la seconde, `decide()`, `apply()`, écriture de l'instantané et du reçu — le tout dans **une seule** transaction (data-model § 2). Observer l'échec.
-- [ ] T045 Implémenter `apps/api/src/command/execute.ts` : la forme unique de toute mutation, sans exception. L'instant de référence est le `now()` de PostgreSQL, jamais l'horloge du client.
-- [ ] T046 Écrire le test d'idempotence dans `apps/api/tests/integration/idempotency.test.ts` : `Idempotency-Key` obligatoire (absente → **400**) ; deuxième tentative avec la même clé → **la première réponse rejouée à l'identique**, en-tête `Idempotency-Replayed: true`, aucun effet ; un **refus ne consomme pas** la clé. Observer l'échec.
-- [ ] T047 Implémenter `apps/api/src/command/idempotency.ts` : le reçu de commande et le rejeu à l'identique.
+- [x] T044 Écrire le test d'intégration de la forme unique de commande dans `apps/api/tests/integration/command.test.ts` : verrouillage `SELECT … FOR UPDATE`, autorisation vérifiée **sur la ligne verrouillée**, résolution du chantier échu, projection au `now()` de la transaction tronqué à la seconde, `decide()`, `apply()`, écriture de l'instantané et du reçu — le tout dans **une seule** transaction (data-model § 2). Observer l'échec.
+- [x] T045 Implémenter `apps/api/src/command/execute.ts` : la forme unique de toute mutation, sans exception. L'instant de référence est le `now()` de PostgreSQL, jamais l'horloge du client.
+- [x] T046 Écrire le test d'idempotence dans `apps/api/tests/integration/idempotency.test.ts` : `Idempotency-Key` obligatoire (absente → **400**) ; deuxième tentative avec la même clé → **la première réponse rejouée à l'identique**, en-tête `Idempotency-Replayed: true`, aucun effet ; un **refus ne consomme pas** la clé. Observer l'échec.
+- [x] T047 Implémenter `apps/api/src/command/idempotency.ts` : le reçu de commande et le rejeu à l'identique.
 
 ### Socle client
 
