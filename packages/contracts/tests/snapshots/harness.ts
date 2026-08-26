@@ -18,6 +18,13 @@ import { expect } from 'vitest'
  * **Il n'y a pas d'échappatoire prévue.** Pas d'option « mettre à jour tous les
  * instantanés » : chaque diff se lit. C'est le prix de la promesse faite aux
  * clients qu'on ne peut pas forcer à se mettre à jour.
+ *
+ * **Les fichiers `*.contract.json` sont exclus du formateur** (`biome.json`).
+ * Ce n'est pas une préférence de style : le fichier de référence doit être
+ * exactement ce que `JSON.stringify(…, 2)` produit. Biome replie les tableaux
+ * courts sur une ligne, et l'instantané échouait alors à chaque exécution — un
+ * échec permanent qui n'apprend rien, et qui aurait fini par faire ajouter
+ * l'échappatoire qu'on refuse.
  */
 
 /**

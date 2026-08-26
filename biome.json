@@ -15,6 +15,7 @@
       "!**/playwright-report",
       "!**/test-results",
       "!packages/db/migrations",
+      "!**/*.contract.json",
       "!.specify",
       "!.claude"
     ]

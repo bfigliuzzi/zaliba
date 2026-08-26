@@ -8,3 +8,4 @@
  * compilation n'échoue.
  */
 export * from './v1/errors.js'
+export * from './v1/planet.js'

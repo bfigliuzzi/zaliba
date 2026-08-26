@@ -7,4 +7,5 @@
  */
 export * from './client.js'
 export * from './conversions.js'
+export * from './repository/snapshot.js'
 export * from './schema.js'

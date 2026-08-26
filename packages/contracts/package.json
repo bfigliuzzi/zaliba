@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "Schémas Zod et routes versionnées. N'importe PAS domain : la duplication est volontaire.",
+  "description": "Sch\u00e9mas Zod et routes versionn\u00e9es. N'importe PAS domain : la duplication est volontaire.",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -25,7 +25,8 @@
     "zod": "3.25.76"
   },
   "devDependencies": {
-    "@ts-rest/open-api": "3.52.1"
+    "@ts-rest/open-api": "3.52.1",
+    "@types/node": "24.10.1"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts"

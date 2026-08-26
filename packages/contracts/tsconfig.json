@@ -1,7 +1,12 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "noEmit": true
+    "noEmit": true,
+    // Pour les **tests** seuls : ils lisent les échantillons enregistrés depuis
+    // le disque. `tsconfig.build.json` n'inclut que `src`, donc rien de tout
+    // cela n'atteint les types publiés — le paquet reste consommable par un
+    // navigateur, ce qu'il doit rester puisque le client en dépend.
+    "types": ["node"]
   },
   "include": ["src", "tests"]
 }
