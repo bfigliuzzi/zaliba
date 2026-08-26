@@ -212,7 +212,7 @@ d'observation, comparer au calcul mené à la main depuis les règles publiées.
 
 ### Tests d'abord ⚠️
 
-- [~] T056 [US1] ⚠️ **Écrit, non éprouvé — aucun projet Supabase n'existe.** Le parcours commence par « créer un compte », qui passe par Supabase ; T055 a déjà consigné l'absence du projet. Le cycle rouge → vert reste à observer, et il le sera à la création du projet, en même temps que le relevé de la majeure PostgreSQL. Écrire le parcours Playwright dans `apps/game/tests/e2e/us1-planet.spec.ts` : créer un compte, ouvrir la planète, vérifier la grille 6×6, les 10 obstacles, les 26 cases libres et les trois gisements aux coordonnées de R7 ; vérifier que les compteurs continuent de progresser **en mode hors ligne du navigateur** ; passer `axe-core` **sans écart**. Observer l'échec.
+- [x] T056 [US1] **Éprouvé le 2026-08-26 sur la pile Supabase locale : 12 cas, deux profils (bureau et mobile), au vert.** Il a trouvé deux défauts réels — le focus qui ne suivait pas les flèches, et des compteurs qui ne bougeaient qu'une fois toutes les trois minutes. Écrire le parcours Playwright dans `apps/game/tests/e2e/us1-planet.spec.ts` : créer un compte, ouvrir la planète, vérifier la grille 6×6, les 10 obstacles, les 26 cases libres et les trois gisements aux coordonnées de R7 ; vérifier que les compteurs continuent de progresser **en mode hors ligne du navigateur** ; passer `axe-core` **sans écart**. Observer l'échec.
 - [x] T057 [P] [US1] Écrire les tests de cohérence de la disposition du Berceau dans `packages/catalogs/tests/layout-berceau.test.ts` : 36 cases, **10 obstruées**, 26 libres, exactement une veine de Camelote, un geyser de Jus et un récif de Bave d'étoiles, **au plus un gisement par case et d'une seule ressource** (FR-015), chaque case obstruée portant un type d'obstacle existant (FR-002, FR-004, FR-042). Observer l'échec.
 - [x] T058 [P] [US1] Écrire les tests de cohérence économique du catalogue dans `packages/catalogs/tests/balance.test.ts` : production de base du Berceau **non nulle** pour les trois ressources (FR-018), capacité de base non nulle pour les trois ressources (FR-025), **énergie de base du Berceau non nulle** (FR-022), stock de départ suffisant pour une centrale **et** un extracteur de niveau 1 (FR-019) ; **aucun coût du catalogue n'est libellé en Jus** (FR-062, R22). Observer l'échec.
 - [x] T059 [P] [US1] Écrire les tests unitaires de projection dans `packages/domain/tests/kernel/projection.test.ts` : projection à `t₀ + 1 h`, `+ 3 semaines`, `+ 3 semaines + 1 s` comparée au calcul mené à la main ; segmentation en **deux segments au plus** autour de `dueAt` (R3, FR-032) ; `at < consolidatedAt` est une erreur de programmation, pas un cas de jeu. Observer l'échec.
@@ -240,7 +240,7 @@ d'observation, comparer au calcul mené à la main depuis les règles publiées.
 - [x] T078 [US1] Implémenter `apps/game/src/features/resources/useExtrapolatedHoldings.ts` : la boucle d'animation qui rejoue `project()` localement, **sans un seul appel réseau**, à partir de l'instantané détenu et du décalage d'horloge (R8).
 - [x] T079 [US1] Implémenter `apps/game/src/routes/planet.tsx` : l'écran de planète assemblant grille, ressources et chantier en cours.
 
-**Point de contrôle** : US1 est fonctionnelle et testable seule. Le joueur s'inscrit, reçoit sa planète et la voit produire. C'est le MVP livrable. ⚠️ **Franchi le 2026-08-26, sauf le parcours de bout en bout** — 660 tests unitaires, 98 d'intégration, types, lint et frontières (125 modules) au vert ; T056 est écrit mais ne peut pas s'exécuter faute de projet Supabase.
+**Point de contrôle** : US1 est fonctionnelle et testable seule. Le joueur s'inscrit, reçoit sa planète et la voit produire. C'est le MVP livrable. ✅ **Franchi le 2026-08-26, parcours de bout en bout compris** — 669 tests unitaires, 98 d'intégration, 12 cas Playwright sur deux profils, `axe-core` sans écart, types, lint et frontières (127 modules) au vert.
 
 ### Divergences constatées à l'exécution
 
@@ -274,6 +274,30 @@ d'observation, comparer au calcul mené à la main depuis les règles publiées.
 7. **`*.contract.json` est exclu du formateur** : Biome repliait les tableaux
    courts du fichier de référence, et l'instantané de schéma échouait à chaque
    exécution.
+8. **Le parcours de bout en bout a trouvé deux défauts que rien d'autre ne
+   voyait.** Le premier : les flèches déplaçaient le *curseur* — quelle case
+   porte `tabIndex={0}` — sans déplacer le **focus**. Les cas unitaires
+   comptaient les `tabIndex` et le compte était juste ; un joueur au clavier,
+   lui, restait bloqué sur la première case. Le second est ci-dessous.
+9. **La quantité détenue s'affiche au centième d'unité.** Le critère 3 d'US1
+   exige une progression « continue » ; en unités entières, la Camelote change
+   une fois toutes les trois minutes et la Bave d'étoiles toutes les douze —
+   rien ne bouge sous les yeux du joueur. **R1 n'est pas touché** : le grain
+   reste l'unité canonique, seule la résolution d'affichage augmente, et la
+   troncature va toujours vers le bas. Arbitrage pris avec la personne qui
+   développe, contre une barre de progression et contre un amendement du
+   critère.
+10. **L'API n'avait aucun point d'entrée exécutable.** `pnpm dev` importait
+    `server.ts` et rendait la main : rien n'écoutait. `src/main.ts` lit
+    l'environnement, assemble et écoute — et **s'arrête** si une variable
+    manque, plutôt que de démarrer un serveur qui refuserait tout ou, pire, en
+    accepterait qu'il n'aurait pas dû.
+11. **La pile Supabase locale entre dans le dépôt** (`supabase/config.toml`), en
+    clés **asymétriques** ES256 comme R12 l'exige. Deux pièges rencontrés et
+    consignés en quickstart § 1 : `[analytics]` monte le socket Docker de l'hôte
+    — que la VM Rancher refuse, **même cause que Ryuk** — et le JWK doit porter
+    `key_ops: ["sign","verify"]`, sans quoi GoTrue ne trouve aucune clé de
+    signature.
 
 ---
 

@@ -1,4 +1,4 @@
-import { cleanup, render, screen, within } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { PlanetSnapshotV1 } from '@zaliba/contracts'
 import { DEFAULT_CATALOGS, instant, projectPlanet } from '@zaliba/domain'
 import { afterEach, describe, expect, it } from 'vitest'
@@ -127,5 +127,79 @@ describe('la grille est un tableau de données, pas une image', () => {
     const grid = screen.getByRole('grid')
     expect(grid.getAttribute('aria-colcount')).toBe('6')
     expect(grid.getAttribute('aria-rowcount')).toBe('6')
+  })
+})
+
+describe('les flèches déplacent réellement le focus', () => {
+  /**
+   * Le défaut que les cas précédents ne voyaient pas, et que le parcours de bout
+   * en bout a trouvé : déplacer le curseur **n'est pas** déplacer le focus.
+   * Changer quel élément porte `tabIndex={0}` ne focalise rien — le navigateur
+   * garde le focus là où il était, et un joueur au clavier reste bloqué sur la
+   * première case en croyant que la grille ne répond pas.
+   *
+   * Compter les `tabIndex` ne pouvait pas l'attraper : le compte était juste.
+   */
+  it('va à la case de droite sur ArrowRight', () => {
+    renderGrid()
+    const cells = screen.getAllByRole('gridcell')
+    const first = cells[0]
+    if (first === undefined) throw new Error('grille vide')
+
+    first.focus()
+    fireEvent.keyDown(first, { key: 'ArrowRight' })
+
+    expect(document.activeElement?.getAttribute('aria-label')).toMatch(/Colonne 2, rangée 1/)
+  })
+
+  it('va à la case du dessous sur ArrowDown', () => {
+    renderGrid()
+    const cells = screen.getAllByRole('gridcell')
+    const first = cells[0]
+    if (first === undefined) throw new Error('grille vide')
+
+    first.focus()
+    fireEvent.keyDown(first, { key: 'ArrowDown' })
+
+    expect(document.activeElement?.getAttribute('aria-label')).toMatch(/Colonne 1, rangée 2/)
+  })
+
+  it('ne bouge pas au bord de la grille', () => {
+    renderGrid()
+    const cells = screen.getAllByRole('gridcell')
+    const first = cells[0]
+    if (first === undefined) throw new Error('grille vide')
+
+    first.focus()
+    fireEvent.keyDown(first, { key: 'ArrowLeft' })
+    fireEvent.keyDown(document.activeElement ?? first, { key: 'ArrowUp' })
+
+    expect(document.activeElement?.getAttribute('aria-label')).toMatch(/Colonne 1, rangée 1/)
+  })
+
+  it('ne change pas de rangée en fin de ligne', () => {
+    renderGrid()
+    const cells = screen.getAllByRole('gridcell')
+    const lastOfRow = cells[5]
+    if (lastOfRow === undefined) throw new Error('grille trop courte')
+
+    lastOfRow.focus()
+    fireEvent.keyDown(lastOfRow, { key: 'ArrowRight' })
+
+    expect(document.activeElement?.getAttribute('aria-label')).toMatch(/Colonne 6, rangée 1/)
+  })
+
+  /** Le focus suit le curseur : la case atteinte devient la seule tabulable. */
+  it('transfère la tabulation à la case atteinte', () => {
+    renderGrid()
+    const cells = screen.getAllByRole('gridcell')
+    const first = cells[0]
+    if (first === undefined) throw new Error('grille vide')
+
+    first.focus()
+    fireEvent.keyDown(first, { key: 'ArrowRight' })
+
+    expect(first.tabIndex).toBe(-1)
+    expect((document.activeElement as HTMLElement).tabIndex).toBe(0)
   })
 })

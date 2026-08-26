@@ -39,6 +39,51 @@ SUPABASE_JWT_AUDIENCE=…    # audience attendue
 CORS_ALLOWED_ORIGINS=…     # liste close ; l'absence n'ouvre rien
 ```
 
+### La pile Supabase locale
+
+Le parcours de bout en bout commence par « créer un compte », donc par Supabase.
+La pile locale suffit : `supabase/config.toml` est dans le dépôt, et
+`[db] major_version = 17` y fixe la majeure PostgreSQL — la même que le
+`postgres:17-alpine` du harnais d'intégration.
+
+**La clé de signature est à produire, une fois.** Elle n'est pas dans le dépôt :
+c'est une clé **privée**, fût-elle de développement.
+
+```sh
+node --input-type=module -e "
+import { generateKeyPair, exportJWK } from 'jose'
+import { randomUUID } from 'node:crypto'
+import { writeFileSync } from 'node:fs'
+const { privateKey } = await generateKeyPair('ES256', { extractable: true })
+const { crv, x, y, d } = await exportJWK(privateKey)
+writeFileSync('supabase/signing_keys.json', JSON.stringify([{
+  kty: 'EC', kid: randomUUID(), use: 'sig',
+  key_ops: ['sign', 'verify'], alg: 'ES256', ext: true, d, crv, x, y,
+}], null, 2) + '\n')
+"
+supabase start
+```
+
+**`key_ops` n'est pas décoratif.** GoTrue choisit sa clé de signature sur la
+présence de `sign` dans ce tableau — `use: "sig"` seul ne suffit pas. Sans lui,
+le démarrage échoue sur `no signing key found`, ce qui laisse croire à un
+fichier absent alors qu'il est simplement incomplet. La CLI valide par ailleurs
+`kid` comme un UUID et `key_ops` comme un tableau de **deux** entrées exactement.
+
+**Pourquoi ES256 et pas le secret partagé par défaut.** R12 exige une
+vérification **asymétrique** : la même clé ne doit pas pouvoir signer *et*
+vérifier, sans quoi sa fuite depuis l'API permet de se faire passer pour
+n'importe qui. `signing_keys_path` fait servir à GoTrue un JWKS public sur
+`/auth/v1/.well-known/jwks.json`, et l'API n'y récupère que de quoi vérifier.
+
+Une pile locale laissée en HS256 fonctionnerait — et l'API la refuserait, parce
+que `createAuthenticator` n'accepte que `RS256` et `ES256`. Ce refus est voulu :
+il vaut mieux qu'une pile de développement s'écarte visiblement de la production
+qu'un jeu de tests vert obtenu en abaissant la garde.
+
+Les valeurs à reporter dans `.env` sont celles que `supabase status` affiche.
+`supabase stop` arrête la pile ; `supabase stop --no-backup` la remet à zéro.
+
 ### Testcontainers ne trouve pas toujours le démon tout seul
 
 Constaté le 2026-08-26, sur une machine où **Rancher Desktop** est le contexte

@@ -3,11 +3,12 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "Serveur autoritaire Fastify. Seul arbitre de toute valeur dérivable.",
+  "description": "Serveur autoritaire Fastify. Seul arbitre de toute valeur d\u00e9rivable.",
   "scripts": {
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "dev": "tsx watch src/server.ts"
+    "dev": "node --env-file=../../.env --import tsx --watch src/main.ts",
+    "start": "node --env-file=../../.env --import tsx src/main.ts"
   },
   "dependencies": {
     "@fastify/cors": "11.3.0",

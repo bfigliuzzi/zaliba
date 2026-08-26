@@ -11,6 +11,11 @@ import { defineConfig } from 'vite'
  */
 export default defineConfig({
   plugins: [react()],
+  // Le `.env` vit à la racine du dépôt et sert aux deux applications. Sans
+  // cela, Vite chercherait le sien dans `apps/game/` et démarrerait avec des
+  // `VITE_*` absentes — c'est-à-dire un client qui échoue à la construction de
+  // sa session, pour une raison qui ne se lit nulle part.
+  envDir: '../..',
   server: {
     host: '127.0.0.1',
     port: 5173,

@@ -1,0 +1,12 @@
+# Supabase
+.branches
+.temp
+
+# dotenvx
+.env.keys
+.env.local
+.env.*.local
+
+# La clé de signature JWT est une **clé privée**, fût-elle de développement.
+# Elle se régénère en une commande — voir quickstart.md § 1.
+signing_keys.json

@@ -50,8 +50,8 @@ describe('chaque ressource a son bloc', () => {
 describe('les quatre grandeurs sont affichées', () => {
   it('affiche la quantité détenue en unités', () => {
     renderPanel()
-    // 1 440 000 grains = 400 unités.
-    expect(group(/camelote/i).getByText(/\b400\b/)).toBeDefined()
+    // 1 440 000 grains = 400,00 unités exactement.
+    expect(group(/camelote/i).getByText('400,00')).toBeDefined()
   })
 
   it('affiche le plafond en unités', () => {
@@ -106,5 +106,54 @@ describe('l’affichage est perceptible sans la couleur (FR-060)', () => {
     renderPanel()
     const panel = screen.getAllByRole('group')[0]
     expect(panel?.getAttribute('aria-live')).toBeNull()
+  })
+})
+
+describe('la quantité détenue progresse de façon continue (US1, critère 3)', () => {
+  /**
+   * Le critère 3 demande une progression **continue**. En unités entières, le
+   * chiffre de la Camelote change une fois toutes les trois minutes à vingt
+   * unités par heure, celui de la Bave d'étoiles toutes les douze : rien ne
+   * bouge sous les yeux du joueur, et le parcours de bout en bout l'a montré en
+   * expirant.
+   *
+   * Deux décimales suffisent — la seconde change environ toutes les 1,8 s à
+   * vingt unités par heure. **R1 n'est pas touché** : le grain reste l'unité
+   * canonique, et c'est seulement la résolution d'affichage qui augmente.
+   */
+  it('montre deux décimales sur la quantité détenue', () => {
+    renderPanel()
+    expect(group(/camelote/i).getByText('400,00')).toBeDefined()
+  })
+
+  it('bouge après quelques secondes seulement', () => {
+    // La quantité détenue est la seule à porter des décimales : c'est ce qui la
+    // désigne sans ambiguïté parmi les quatre grandeurs.
+    const held = /^[\d {2}]+,\d{2}$/
+
+    const { unmount } = renderPanel(0)
+    const before = group(/camelote/i).getByText(held).textContent
+    unmount()
+
+    // Deux secondes : 20 u/h × 2 s = 40 grains, soit 0,011 unité.
+    renderPanel(2)
+    expect(group(/camelote/i).getByText(held).textContent).not.toBe(before)
+  })
+
+  it('garde le plafond et la perte en unités entières', () => {
+    renderPanel(21 * 86_400)
+    const camelote = group(/camelote/i)
+    // Le plafond ne bouge jamais et la perte se compte en milliers : les
+    // décimales n'y apporteraient que du bruit.
+    expect(camelote.getByText('5 000')).toBeDefined()
+    expect(camelote.getByText('5 480')).toBeDefined()
+  })
+
+  it('reste exact au grain près', () => {
+    // 1 440 040 grains = 400,0111… → tronqué à 400,01, jamais arrondi au-dessus :
+    // annoncer une ressource qu'on n'a pas ferait refuser une commande que
+    // l'écran présentait comme payable.
+    renderPanel(2)
+    expect(group(/camelote/i).getByText('400,01')).toBeDefined()
   })
 })

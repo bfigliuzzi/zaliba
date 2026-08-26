@@ -811,17 +811,19 @@ contournement de code.
 n'était pas au relevé initial : il est arrivé avec le journal structuré de T040,
 dont la liste noire est la raison d'être.
 
-**PostgreSQL** : **toujours à relever.** La version majeure est imposée par le
-provisionnement Supabase, et aucun projet Supabase n'existe à ce jour. Le harnais
-d'intégration s'exécute entre-temps sur `postgres:17-alpine`, épinglé dans
-`apps/api/tests/integration/harness.ts`.
+**PostgreSQL 17** — relevé le 2026-08-26. C'est la majeure que le provisionnement
+Supabase impose (`supabase/config.toml`, `[db] major_version = 17`), et l'image
+locale est `public.ecr.aws/supabase/postgres:17.6.1.141`.
 
-L'écart est nommé plutôt que masqué : si Supabase provisionne une majeure
-différente, les tests d'intégration valident un moteur que la production
-n'exécute pas — et les contraintes qui portent des règles de jeu (index partiel
-de `works`, clé primaire de `building_cells`) sont précisément le genre de chose
-dont le comportement mérite d'être vérifié sur le bon moteur. À la création du
-projet Supabase : relever la majeure, l'aligner ici **et** dans le harnais.
+**Elle correspond au `postgres:17-alpine` du harnais d'intégration**, épinglé dans
+`apps/api/tests/integration/harness.ts`. L'écart que la version précédente de ce
+document signalait n'existe donc pas — ce qui compte, parce que les contraintes
+qui portent des règles de jeu (index partiel de `works`, clé primaire de
+`building_cells`) doivent être vérifiées sur le moteur que la production exécute,
+et non sur un voisin.
+
+Les deux valeurs sont à tenir ensemble : changer l'une sans l'autre remettrait
+l'écart en place, cette fois sans que rien ne le dise.
 
 ---
 

@@ -44,12 +44,36 @@ export default defineConfig({
     },
   ],
 
+  /**
+   * **Deux** serveurs, et l'ordre n'a pas d'importance : Playwright attend que
+   * chacun réponde avant de lancer le premier cas.
+   *
+   * L'API est là parce qu'un parcours de bout en bout qui interrogerait un
+   * simulacre ne prouverait rien de ce qu'on lui demande de prouver. Elle a
+   * besoin de la pile Supabase locale — base et authentification — dont la mise
+   * en route est décrite dans `specs/001-la-planete-mere/quickstart.md` § 1.
+   *
+   * `reuseExistingServer` hors intégration continue : on relance les parcours
+   * dix fois pendant une mise au point, et redémarrer la pile à chaque fois
+   * ferait renoncer à les lancer.
+   */
   webServer: process.env['E2E_BASE_URL']
     ? undefined
-    : {
-        command: 'pnpm --filter @zaliba/game dev --port 5173 --strictPort',
-        url: 'http://127.0.0.1:5173',
-        reuseExistingServer: !process.env['CI'],
-        timeout: 120_000,
-      },
+    : [
+        {
+          command: 'pnpm --filter @zaliba/api start',
+          url: 'http://127.0.0.1:3000/v1/me/planet',
+          // L'API répond 401 sans jeton, et c'est le bon signe de vie : exiger
+          // un 2xx obligerait à ouvrir une route de santé non authentifiée.
+          ignoreHTTPSErrors: true,
+          reuseExistingServer: !process.env['CI'],
+          timeout: 60_000,
+        },
+        {
+          command: 'pnpm --filter @zaliba/game dev --port 5173 --strictPort',
+          url: 'http://127.0.0.1:5173',
+          reuseExistingServer: !process.env['CI'],
+          timeout: 120_000,
+        },
+      ],
 })

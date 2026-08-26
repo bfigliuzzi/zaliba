@@ -141,9 +141,14 @@ test.describe('les compteurs progressent, réseau coupé (R8)', () => {
     await context.setOffline(true)
 
     const before = await camelote.textContent()
-    // La production de base est de vingt unités par heure : trois minutes
-    // suffisent à faire bouger l'unité affichée.
-    await page.waitForTimeout(185_000)
+    // La quantité détenue s'affiche au centième d'unité : à vingt unités par
+    // heure, la seconde décimale change environ toutes les 1,8 s. Dix secondes
+    // laissent la marge nécessaire sans faire d'un parcours une attente.
+    //
+    // Ce chiffre est la raison d'être de l'affichage décimal : en unités
+    // entières il aurait fallu trois minutes, et ce cas — le seul qui éprouve
+    // vraiment l'extrapolation hors ligne — aurait expiré à chaque exécution.
+    await page.waitForTimeout(10_000)
     const after = await camelote.textContent()
 
     expect(after).not.toBe(before)

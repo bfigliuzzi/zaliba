@@ -31,15 +31,43 @@ export interface ResourcePanelProps {
   readonly at: Instant
 }
 
-/** Les unités affichées : `⌊grains ÷ 3600⌋`, la partie entière que le joueur voit. */
-function toUnits(grains: number): number {
-  return Math.floor(grains / GRAINS_PER_UNIT)
+/**
+ * La quantité détenue, **au centième d'unité**.
+ *
+ * Le critère 3 d'US1 exige une progression *continue*. En unités entières, la
+ * Camelote change une fois toutes les trois minutes à vingt unités par heure et
+ * la Bave d'étoiles toutes les douze : rien ne bouge sous les yeux du joueur.
+ * Deux décimales font changer la seconde environ toutes les 1,8 s.
+ *
+ * **R1 n'est pas touché** : le grain reste l'unité canonique, et le serveur
+ * comme le client comptent toujours en entiers. Ce qui augmente ici est la
+ * *résolution d'affichage*, pas la précision du modèle.
+ *
+ * La troncature va vers le bas, comme partout ailleurs. Arrondir au-dessus
+ * annoncerait une ressource qu'on n'a pas — et ferait refuser une commande que
+ * l'écran venait de présenter comme payable.
+ */
+const HELD_FORMAT = new Intl.NumberFormat('fr-FR', {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+})
+
+function formatHeld(grains: number): string {
+  const hundredths = Math.floor((grains * 100) / GRAINS_PER_UNIT)
+  return HELD_FORMAT.format(hundredths / 100)
 }
 
-const NUMBER_FORMAT = new Intl.NumberFormat('fr-FR')
+/**
+ * Les grandeurs qui ne bougent pas, en unités entières.
+ *
+ * Le plafond est constant et la perte se compte en milliers : y mettre des
+ * décimales n'ajouterait que du bruit autour du seul chiffre qui doit attirer
+ * l'œil.
+ */
+const WHOLE_FORMAT = new Intl.NumberFormat('fr-FR')
 
 function formatUnits(grains: number): string {
-  return NUMBER_FORMAT.format(toUnits(grains))
+  return WHOLE_FORMAT.format(Math.floor(grains / GRAINS_PER_UNIT))
 }
 
 /**
@@ -68,7 +96,7 @@ export function ResourcePanel({ holdings, at }: ResourcePanelProps) {
             <h2>{label}</h2>
             <dl>
               <dt>Détenu</dt>
-              <dd>{formatUnits(holding.amount)}</dd>
+              <dd>{formatHeld(holding.amount)}</dd>
 
               <dt>Plafond</dt>
               <dd>{formatUnits(holding.cap)}</dd>

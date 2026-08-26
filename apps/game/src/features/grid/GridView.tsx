@@ -1,5 +1,5 @@
 import type { CellView } from '@zaliba/domain'
-import { type KeyboardEvent, useState } from 'react'
+import { type KeyboardEvent, useRef, useState } from 'react'
 
 /**
  * La grille de la planète.
@@ -70,6 +70,22 @@ export function describeCell(cell: CellView): string {
 export function GridView({ cells, width, height, onSelect }: GridViewProps) {
   /** Le curseur : l'index de la seule case tabulable. */
   const [cursor, setCursor] = useState(0)
+  const container = useRef<HTMLDivElement>(null)
+
+  /**
+   * Déplacer le curseur **et** le focus, dans cet ordre.
+   *
+   * Les deux sont distincts, et les confondre est le défaut que le parcours de
+   * bout en bout a trouvé : changer quel élément porte `tabIndex={0}` ne
+   * focalise rien. Le navigateur garde le focus là où il était, et un joueur au
+   * clavier reste bloqué sur la première case en croyant que la grille ne
+   * répond pas. Compter les `tabIndex` ne pouvait pas l'attraper — le compte
+   * était juste.
+   */
+  function moveTo(index: number) {
+    setCursor(index)
+    container.current?.querySelector<HTMLElement>(`[data-index="${index}"]`)?.focus()
+  }
 
   const rows = Array.from({ length: height }, (_, y) => cells.slice(y * width, (y + 1) * width))
 
@@ -83,7 +99,7 @@ export function GridView({ cells, width, height, onSelect }: GridViewProps) {
     const next = neighbourOf(event.key, index, width, cells.length)
     if (next === null) return
     event.preventDefault()
-    setCursor(next)
+    moveTo(next)
   }
 
   return (
@@ -97,7 +113,13 @@ export function GridView({ cells, width, height, onSelect }: GridViewProps) {
       au lint est justifiée à son emplacement.
     */
     // biome-ignore lint/a11y/useSemanticElements: aucun élément natif ne porte le rôle `grid` ; une `<table role="grid">` est refusée par la règle noNoninteractiveElementToInteractiveRole.
-    <div role="grid" aria-label="Grille de la planète" aria-colcount={width} aria-rowcount={height}>
+    <div
+      ref={container}
+      role="grid"
+      aria-label="Grille de la planète"
+      aria-colcount={width}
+      aria-rowcount={height}
+    >
       {rows.map((row, y) => (
         // biome-ignore lint/a11y/useSemanticElements: `<tr>` hors d'une table n'est pas du HTML valide ; le rôle explicite est la seule voie. `tabIndex={-1}` rend la rangée atteignable par programme sans la rendre tabulable — seule la case du curseur l'est —, ce que le motif ARIA de grille attend d'une rangée.
         <div role="row" tabIndex={-1} key={`row-${row[0]?.y ?? y}`}>
@@ -108,6 +130,7 @@ export function GridView({ cells, width, height, onSelect }: GridViewProps) {
               <div
                 role="gridcell"
                 key={`cell-${cell.x}-${cell.y}`}
+                data-index={index}
                 tabIndex={index === cursor ? 0 : -1}
                 aria-label={describeCell(cell)}
                 data-state={cell.state}
