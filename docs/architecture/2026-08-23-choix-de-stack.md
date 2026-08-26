@@ -769,6 +769,10 @@ constitution et devront être épinglées exactement dans les manifestes.
 | Schémas | zod | 3.25.76 |
 | Contrats | @ts-rest/core, @ts-rest/fastify, @ts-rest/open-api | 3.52.1 |
 | Accès aux données | drizzle-orm | 0.45.2 |
+| Pilote PostgreSQL | postgres (postgres.js) | 3.4.9 |
+| Vérification de JWT | jose | 6.2.10 |
+| CORS | @fastify/cors | 11.3.0 |
+| Journal structuré | pino | 10.3.1 |
 | Migrations | drizzle-kit | 0.31.10 |
 | Client d'infrastructure | @supabase/supabase-js | 2.112.3 |
 | Emballage natif | @capacitor/core, cli, ios, android | 8.5.0 |
@@ -802,8 +806,22 @@ vérification du 2026-08-26 montre que le greffon **fonctionne** avec Fastify
 5.12.1 ; l'écart de peer se traite par `pnpm.peerDependencyRules`, jamais par un
 contournement de code.
 
-**PostgreSQL** : la version majeure est imposée par le provisionnement Supabase
-et doit être relevée puis consignée à la création du projet.
+**jose, postgres.js, @fastify/cors, pino** : versions relevées à l'installation le
+2026-08-26 (T055), et épinglées exactement dans `apps/api/package.json`. `pino`
+n'était pas au relevé initial : il est arrivé avec le journal structuré de T040,
+dont la liste noire est la raison d'être.
+
+**PostgreSQL** : **toujours à relever.** La version majeure est imposée par le
+provisionnement Supabase, et aucun projet Supabase n'existe à ce jour. Le harnais
+d'intégration s'exécute entre-temps sur `postgres:17-alpine`, épinglé dans
+`apps/api/tests/integration/harness.ts`.
+
+L'écart est nommé plutôt que masqué : si Supabase provisionne une majeure
+différente, les tests d'intégration valident un moteur que la production
+n'exécute pas — et les contraintes qui portent des règles de jeu (index partiel
+de `works`, clé primaire de `building_cells`) sont précisément le genre de chose
+dont le comportement mérite d'être vérifié sur le bon moteur. À la création du
+projet Supabase : relever la majeure, l'aligner ici **et** dans le harnais.
 
 ---
 

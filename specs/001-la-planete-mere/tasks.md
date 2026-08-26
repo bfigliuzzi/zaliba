@@ -157,16 +157,46 @@ précède le schéma qu'il éprouve.
 
 ### Socle client
 
-- [ ] T048 Implémenter le squelette de `apps/game` dans `apps/game/src/main.tsx` : Vite, React, TanStack Router (`routes/planet.tsx`, `routes/rules.tsx`) et TanStack Query.
-- [ ] T049 [P] Écrire le test de session dans `apps/game/tests/session.test.ts` : la session est la **seule** source du jeton ; sans session, aucune requête n'est émise et l'écran de connexion s'affiche ; un jeton expiré est renouvelé silencieusement puis la requête réémise ; le jeton ne figure **jamais** dans une URL ni dans un journal. Observer l'échec.
-- [ ] T050 Implémenter `apps/game/src/lib/session.ts` : `@supabase/supabase-js` employé **exclusivement** comme client d'authentification. Aucun accès direct à la base — le schéma `game` n'est pas exposé et le client n'a que l'API pour interlocuteur (doc de stack § 6.1).
-- [ ] T051 Implémenter `apps/game/src/features/auth/AuthScreen.tsx` : inscription et connexion par courriel, **intégralement au clavier** (FR-058), erreurs annoncées de façon perceptible sans dépendre de la couleur seule (FR-060), conformes à WCAG 2.1 AA (FR-061).
-- [ ] T052 Implémenter `apps/game/src/lib/api.ts` : le client `ts-rest` typé, l'en-tête `Authorization` alimenté par la session, la génération d'une `Idempotency-Key` UUID par commande.
-- [ ] T053 [P] Écrire le test du décalage d'horloge dans `apps/game/tests/clock.test.ts` : `serverInstant` de la réponse est la seule référence ; l'horloge locale ne sert qu'à mesurer un **écoulement**, jamais un instant absolu. Observer l'échec.
-- [ ] T054 Implémenter `apps/game/src/lib/clock.ts` : le décalage d'horloge et la mesure d'écoulement.
-- [ ] T055 Reporter dans la table des versions épinglées de `docs/architecture/2026-08-23-choix-de-stack.md` § 8 les versions exactes relevées à l'installation de `jose`, `postgres` (postgres.js) et `@fastify/cors`, ainsi que la version majeure de PostgreSQL fournie par Supabase.
+- [x] T048 Implémenter le squelette de `apps/game` dans `apps/game/src/main.tsx` : Vite, React, TanStack Router (`routes/planet.tsx`, `routes/rules.tsx`) et TanStack Query.
+- [x] T049 [P] Écrire le test de session dans `apps/game/tests/session.test.ts` : la session est la **seule** source du jeton ; sans session, aucune requête n'est émise et l'écran de connexion s'affiche ; un jeton expiré est renouvelé silencieusement puis la requête réémise ; le jeton ne figure **jamais** dans une URL ni dans un journal. Observer l'échec.
+- [x] T050 Implémenter `apps/game/src/lib/session.ts` : `@supabase/supabase-js` employé **exclusivement** comme client d'authentification. Aucun accès direct à la base — le schéma `game` n'est pas exposé et le client n'a que l'API pour interlocuteur (doc de stack § 6.1).
+- [x] T051 Implémenter `apps/game/src/features/auth/AuthScreen.tsx` : inscription et connexion par courriel, **intégralement au clavier** (FR-058), erreurs annoncées de façon perceptible sans dépendre de la couleur seule (FR-060), conformes à WCAG 2.1 AA (FR-061).
+- [x] T052 Implémenter `apps/game/src/lib/api.ts` : le client `ts-rest` typé, l'en-tête `Authorization` alimenté par la session, la génération d'une `Idempotency-Key` UUID par commande.
+- [x] T053 [P] Écrire le test du décalage d'horloge dans `apps/game/tests/clock.test.ts` : `serverInstant` de la réponse est la seule référence ; l'horloge locale ne sert qu'à mesurer un **écoulement**, jamais un instant absolu. Observer l'échec.
+- [x] T054 Implémenter `apps/game/src/lib/clock.ts` : le décalage d'horloge et la mesure d'écoulement.
+- [x] T055 Reporter dans la table des versions épinglées de `docs/architecture/2026-08-23-choix-de-stack.md` § 8 les versions exactes relevées à l'installation de `jose`, `postgres` (postgres.js) et `@fastify/cors`, ainsi que la version majeure de PostgreSQL fournie par Supabase.
 
-**Point de contrôle** : `pnpm -w typecheck`, `pnpm -w boundaries` et `pnpm -w test` passent. Un joueur peut s'inscrire et se connecter ; il n'a encore aucune planète. Les fondations sont posées ; les tranches peuvent démarrer.
+**Point de contrôle** : `pnpm -w typecheck`, `pnpm -w boundaries` et `pnpm -w test` passent. Un joueur peut s'inscrire et se connecter ; il n'a encore aucune planète. Les fondations sont posées ; les tranches peuvent démarrer. ✅ **Franchi le 2026-08-26** — 326 tests unitaires, 72 d'intégration, lint et frontières (81 modules) au vert.
+
+### Divergences constatées à l'exécution
+
+1. **T038 et T043 n'avaient pas de tâche de test associée.** Le principe III
+   étant non négociable, `apps/api/tests/server.test.ts` et
+   `apps/api/tests/cors.test.ts` ont été écrits d'abord et observés en échec.
+   Même chose côté client pour T048, T051 et T052.
+2. **Le harnais d'intégration sautait ses migrations en silence** (T029).
+   `migrationsDir()` résolvait depuis `process.cwd()`, que Vitest place à la
+   racine du dépôt et non au `root` du projet : `existsSync` répondait « non »
+   et les 43 cas de T030 échouaient en dénonçant un schéma manquant. Corrigé par
+   une résolution depuis `import.meta.url`, et `applyMigrations` rend désormais
+   compte du nombre d'instructions exécutées. **Deuxième occurrence** du motif
+   de R17 : un outil qui rapporte un succès sans avoir rien traité.
+3. **Le harnais montait son propre pilote PostgreSQL**, sans la configuration
+   `bigint` de la production — il éprouvait donc un pilote que la production
+   n'exécute pas. Il emploie `createSql`, et `packages/db` expose `GameSql` et
+   `GameTransaction` : annoncer `postgres.Sql` effaçait du typage
+   l'enregistrement `bigint` que la configuration venait de déclarer.
+4. **Aucune dépendance nouvelle n'a été ajoutée.** `fastify-plugin` a été
+   écarté : les greffons sont des fonctions ordinaires appliquées à l'instance
+   racine, ce qui rend l'encapsulation — et donc le paquet qui la rompt —
+   inutile (principe V).
+5. **La porte de verrouillage a été éprouvée par violation délibérée.** Sans
+   `FOR UPDATE`, deux crédits de 500 en donnent 1500 au lieu de 2000. Un verrou
+   jamais vu manquer ne prouve rien.
+6. **T055 reste partielle et le dit** : la majeure PostgreSQL de Supabase n'a pas
+   pu être relevée — aucun projet Supabase n'existe. Le harnais tourne
+   entre-temps sur `postgres:17-alpine`, et l'écart est nommé au § 8 du document
+   de stack plutôt que masqué.
 
 ---
 

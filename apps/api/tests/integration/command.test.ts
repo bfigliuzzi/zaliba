@@ -241,7 +241,7 @@ function request(planetId: string, playerId: string, command: TestCommand) {
   return { planetId, playerId, command, idempotencyKey: randomUUID() }
 }
 
-async function cameloteDe(planetId: string): Promise<bigint> {
+async function cameloteOf(planetId: string): Promise<bigint> {
   const [row] = await harness.sql<{ amountGrains: string }[]>`
     select amount_grains::text as "amountGrains" from game.planet_resources
     where planet_id = ${planetId} and resource_id = 'camelote'
@@ -306,15 +306,15 @@ describe('le verrou tient : deux commandes simultanées ne se perdent pas', () =
     const player = randomUUID()
     const planetId = await insertPlanet(player, 1_000n)
 
-    const premier = recorder()
-    premier.decideDelayMs = 150
+    const first = recorder()
+    first.decideDelayMs = 150
     const second = recorder()
 
     await Promise.all([
       executeCommand(
         harness.sql,
         request(planetId, player, { kind: 'credit', grains: 500n }),
-        shapeUnderTest(premier),
+        shapeUnderTest(first),
       ),
       executeCommand(
         harness.sql,
@@ -323,22 +323,22 @@ describe('le verrou tient : deux commandes simultanées ne se perdent pas', () =
       ),
     ])
 
-    expect(await cameloteDe(planetId)).toBe(2_000n)
+    expect(await cameloteOf(planetId)).toBe(2_000n)
   })
 
   it('les deux commandes s’exécutent bien dans deux transactions distinctes', async () => {
     const player = randomUUID()
     const planetId = await insertPlanet(player, 1_000n)
 
-    const premier = recorder()
-    premier.decideDelayMs = 150
+    const first = recorder()
+    first.decideDelayMs = 150
     const second = recorder()
 
     await Promise.all([
       executeCommand(
         harness.sql,
         request(planetId, player, { kind: 'credit', grains: 500n }),
-        shapeUnderTest(premier),
+        shapeUnderTest(first),
       ),
       executeCommand(
         harness.sql,
@@ -347,9 +347,9 @@ describe('le verrou tient : deux commandes simultanées ne se perdent pas', () =
       ),
     ])
 
-    const [un] = [...premier.txids]
-    const [deux] = [...second.txids]
-    expect(un).not.toBe(deux)
+    const [one] = [...first.txids]
+    const [two] = [...second.txids]
+    expect(one).not.toBe(two)
   })
 })
 
@@ -380,7 +380,7 @@ describe('l’autorisation se vérifie sur la ligne verrouillée (FR-007)', () =
       ),
     ).rejects.toBeInstanceOf(AppError)
 
-    expect(await cameloteDe(planetId)).toBe(1_000n)
+    expect(await cameloteOf(planetId)).toBe(1_000n)
   })
 
   /**
@@ -481,7 +481,7 @@ describe('le chantier échu est résolu par la projection (R3, FR-032)', () => {
       shapeUnderTest(recorder()),
     )
 
-    expect(await cameloteDe(planetId)).toBe(WORK_COMPLETION_CREDIT + 500n)
+    expect(await cameloteOf(planetId)).toBe(WORK_COMPLETION_CREDIT + 500n)
   })
 
   /**
@@ -557,7 +557,7 @@ describe('l’instantané et le reçu sont écrits dans la même transaction', (
       executeCommand(harness.sql, attempt, shapeUnderTest(recorder())),
     ).rejects.toMatchObject({ category: 'game-rule-refusal', code: 'work-in-progress' })
 
-    expect(await cameloteDe(planetId)).toBe(1_000n)
+    expect(await cameloteOf(planetId)).toBe(1_000n)
     const receipts = await harness.sql`
       select 1 from game.command_receipts
       where player_id = ${player} and idempotency_key = ${attempt.idempotencyKey}
@@ -586,7 +586,7 @@ describe('l’instantané et le reçu sont écrits dans la même transaction', (
       }),
     ).rejects.toThrow(/panne/)
 
-    expect(await cameloteDe(planetId)).toBe(1_000n)
+    expect(await cameloteOf(planetId)).toBe(1_000n)
     const receipts = await harness.sql`
       select 1 from game.command_receipts where player_id = ${player}
     `

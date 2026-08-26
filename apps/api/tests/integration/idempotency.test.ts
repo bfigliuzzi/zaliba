@@ -65,7 +65,7 @@ interface TestEffect {
 
 interface TestResponse {
   readonly camelote: string
-  /** Un jeton tiré à chaque exécution : un rejeu doit rendre **le premier**. */
+  /** Un jeton tiré à chaque exécution : un rejeu doit rendre **le first**. */
   readonly executionId: string
 }
 
@@ -138,7 +138,7 @@ async function insertPlanet(occupantId: string, camelote = 0n): Promise<string> 
   return id
 }
 
-async function cameloteDe(planetId: string): Promise<bigint> {
+async function cameloteOf(planetId: string): Promise<bigint> {
   const [row] = await harness.sql<{ amountGrains: string }[]>`
     select amount_grains::text as "amountGrains" from game.planet_resources
     where planet_id = ${planetId} and resource_id = 'camelote'
@@ -163,7 +163,7 @@ describe('la même clé rejoue la première réponse, à l’identique', () => {
     await executeCommand(harness.sql, attempt, shapeUnderTest())
     await executeCommand(harness.sql, attempt, shapeUnderTest())
 
-    expect(await cameloteDe(planetId)).toBe(1_500n)
+    expect(await cameloteOf(planetId)).toBe(1_500n)
   })
 
   /**
@@ -181,10 +181,10 @@ describe('la même clé rejoue la première réponse, à l’identique', () => {
       idempotencyKey: randomUUID(),
     }
 
-    const premier = await executeCommand(harness.sql, attempt, shapeUnderTest())
+    const first = await executeCommand(harness.sql, attempt, shapeUnderTest())
     const second = await executeCommand(harness.sql, attempt, shapeUnderTest())
 
-    expect(second.response).toEqual(premier.response)
+    expect(second.response).toEqual(first.response)
   })
 
   it('signale le rejeu, et ne le signale pas la première fois', async () => {
@@ -197,10 +197,10 @@ describe('la même clé rejoue la première réponse, à l’identique', () => {
       idempotencyKey: randomUUID(),
     }
 
-    const premier = await executeCommand(harness.sql, attempt, shapeUnderTest())
+    const first = await executeCommand(harness.sql, attempt, shapeUnderTest())
     const second = await executeCommand(harness.sql, attempt, shapeUnderTest())
 
-    expect(premier.replayed).toBe(false)
+    expect(first.replayed).toBe(false)
     expect(second.replayed).toBe(true)
   })
 
@@ -245,35 +245,35 @@ describe('la même clé rejoue la première réponse, à l’identique', () => {
       shapeUnderTest(),
     )
 
-    expect(await cameloteDe(planetId)).toBe(2_000n)
+    expect(await cameloteOf(planetId)).toBe(2_000n)
   })
 
   /**
    * Le reçu est **par joueur**. Deux joueurs qui tirent la même clé — un UUID,
    * mais rien n'oblige un client à en tirer un bon — ne doivent pas se rejouer
-   * la réponse l'un de l'autre.
+   * la réponse l'un de l'other.
    */
   it('ne partage pas un reçu entre deux joueurs', async () => {
-    const premier = randomUUID()
+    const first = randomUUID()
     const second = randomUUID()
-    const planetUn = await insertPlanet(premier, 1_000n)
-    const planetDeux = await insertPlanet(second, 1_000n)
+    const planetOne = await insertPlanet(first, 1_000n)
+    const planetTwo = await insertPlanet(second, 1_000n)
     const key = randomUUID()
     const command = { kind: 'credit', grains: 500n } as const
 
     await executeCommand(
       harness.sql,
-      { planetId: planetUn, playerId: premier, command, idempotencyKey: key },
+      { planetId: planetOne, playerId: first, command, idempotencyKey: key },
       shapeUnderTest(),
     )
-    const autre = await executeCommand(
+    const other = await executeCommand(
       harness.sql,
-      { planetId: planetDeux, playerId: second, command, idempotencyKey: key },
+      { planetId: planetTwo, playerId: second, command, idempotencyKey: key },
       shapeUnderTest(),
     )
 
-    expect(autre.replayed).toBe(false)
-    expect(await cameloteDe(planetDeux)).toBe(1_500n)
+    expect(other.replayed).toBe(false)
+    expect(await cameloteOf(planetTwo)).toBe(1_500n)
   })
 })
 
@@ -291,7 +291,7 @@ describe('un refus ne consomme pas la clé', () => {
       ),
     ).rejects.toMatchObject({ category: 'game-rule-refusal' })
 
-    const rattrapage = await executeCommand(
+    const retryAttempt = await executeCommand(
       harness.sql,
       {
         planetId,
@@ -302,8 +302,8 @@ describe('un refus ne consomme pas la clé', () => {
       shapeUnderTest(),
     )
 
-    expect(rattrapage.replayed).toBe(false)
-    expect(await cameloteDe(planetId)).toBe(1_500n)
+    expect(retryAttempt.replayed).toBe(false)
+    expect(await cameloteOf(planetId)).toBe(1_500n)
   })
 })
 
