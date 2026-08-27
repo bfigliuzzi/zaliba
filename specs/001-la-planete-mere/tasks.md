@@ -786,7 +786,7 @@ visible et comptabilisée.
 **Test indépendant** : poser un entrepôt et vérifier que le plafond et le temps
 avant saturation augmentent des montants annoncés.
 
-- [ ] T142 [US7] Écrire le parcours Playwright dans `apps/game/tests/e2e/us7-storage.spec.ts` : poser un entrepôt **au clavier seul, sans aucun dispositif de pointage** (FR-058, SC-004), vérifier que les trois plafonds augmentent du montant annoncé et que le temps avant saturation s'allonge ; vérifier qu'une ressource saturée cesse de croître et que la perte est comptabilisée ; passer `axe-core` sans écart. Observer l'échec.
+- [x] T142 [US7] Écrire le parcours Playwright dans `apps/game/tests/e2e/us7-storage.spec.ts` : poser un entrepôt **au clavier seul, sans aucun dispositif de pointage** (FR-058, SC-004), vérifier que les trois plafonds augmentent du montant annoncé et que le temps avant saturation s'allonge ; vérifier qu'une ressource saturée cesse de croître et que la perte est comptabilisée ; passer `axe-core` sans écart. Observer l'échec.
 - [x] T143 [P] [US7] Écrire les tests de capacité dans `packages/domain/tests/kernel/capacity.test.ts` : plafond = capacité de base du Berceau **plus** celle des entrepôts posés (FR-025) ; l'entrepôt relève le plafond des **trois** ressources ; le plafond augmente exactement du montant annoncé avant la pose (US7-1). Observer l'échec.
 - [x] T144 [P] [US7] Écrire le test de saturation longue dans `packages/domain/tests/kernel/saturation.test.ts` : saturer pendant trois semaines puis projeter — la ressource vaut **exactement** son plafond, la durée de saturation et la quantité perdue sont exactes (US1-5, US7-3, SC-003). Observer l'échec.
 - [x] T145 [US7] Étendre `packages/catalogs/src/buildings.ts` avec la courbe de capacité de l'`entrepot`.
@@ -960,7 +960,66 @@ cause que T142.
   demanderait un projet de test sur la documentation, qu'aucune tâche ne prévoit.
 - **T163 ⛔ bloquée** — même cause.
 
-### Reprise du 2026-08-27, après remise en route de la pile
+### Seconde reprise du 2026-08-27, après redémarrage de Rancher Desktop
+
+**T142 est franchie** : 14 cas sur 14, les deux profils, en 1,9 min. L'assertion corrigée
+passe.
+
+**T149 ne passe pas, et la cause est enfin mesurée** — ce n'est ni le code, ni le
+schéma, ni un plafond d'inscriptions :
+
+```sh
+$ for i in 1 2 3; do /usr/bin/time -p psql -h 127.0.0.1 -p 54322 -U postgres -c 'select 1;'; done
+real 1.34
+real 1.96
+real 2.78
+```
+
+**Une seconde et demie à trois secondes pour ouvrir une connexion PostgreSQL**, et la
+latence croît. Sur une machine saine, c'est une dizaine de millisecondes. PostgreSQL
+*fork* à chaque connexion, et ce fork est très lent dans la machine virtuelle Docker de
+Rancher Desktop sur macOS.
+
+Tout en découle : GoTrue ouvre une connexion par requête quand son pool est vide,
+dépasse son propre délai, et rend `couldn't start a new transaction: context deadline
+exceeded` puis un **504**. Ce qui écarte les autres pistes, une par une :
+
+| Piste | Écartée par |
+| --- | --- |
+| Schéma `auth` cassé | `psql` rend ses 667 comptes sans effort |
+| Volume des tables | 667 lignes, un mégaoctet en tout |
+| Plafond d'inscriptions | GoTrue rend des **504**, jamais un 429 |
+| Saturation de `max_connections` | 17 connexions sur 100 |
+| Réseau Docker | `nc -z supabase_db_zaliba 5432` depuis le conteneur `auth` : **TCP OK** |
+| Concurrence des parcours | échoue autant à `--workers=1` |
+| Pool bloqué de GoTrue | le redémarrer n'y change rien : 14 échecs sur 16 juste après |
+
+**La dégradation est dans la machine virtuelle, et elle survit au redémarrage des
+conteneurs.** C'est pourquoi US7 a passé 14 cas sur 14 immédiatement après le
+redémarrage de Rancher Desktop, puis plus rien vingt minutes plus tard.
+
+**Marche à suivre** : redémarrer Rancher Desktop, puis enchaîner **sans attendre** —
+chaque série consomme la fraîcheur de la machine virtuelle.
+
+### Corrections de harnais apportées au passage
+
+Trois, toutes utiles au-delà du blocage — mais ⚠️ **non revérifiées sur US1 à US7**, dont
+`signUp` est le point d'entrée commun :
+
+1. **Le délai d'entrée en jeu passe de cinq à vingt secondes.** L'inscription n'est pas
+   une requête, c'est une chaîne de cinq maillons dont trois traversent une pile
+   conteneurisée. Vingt et non trente, pour rester **sous** le délai du test : les faire
+   égaux rendait l'attente inatteignable, et le message disait « test timeout » là où la
+   cause était une inscription lente.
+2. **Le délai de test passe de trente à quatre-vingt-dix secondes**, globalement : tout
+   parcours commence par `signUp`.
+3. **`signUp` distingue une panne d'infrastructure d'un refus de jeu**, et ne réessaie
+   que la première — une seule fois. Le motif est étroit à dessein : un identifiant
+   refusé ou un mot de passe trop court produit un autre message, et n'est pas réessayé.
+   Un refus de jeu lève désormais une erreur qui **le nomme**, au lieu d'expirer sur une
+   attente muette.
+
+### Première reprise du 2026-08-27, après remise en route de la pile
 
 La pile a été remise en route — `docker rm -f supabase_auth_zaliba` pour lever une tâche
 containerd orpheline, puis `supabase stop && supabase start`. **Les clés n'ont pas

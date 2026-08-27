@@ -27,6 +27,25 @@ export default defineConfig({
     hasTouch: false,
   },
 
+  /**
+   * **Quatre-vingt-dix secondes par cas**, et non les trente par défaut.
+   *
+   * Tout parcours commence par `signUp`, et l'inscription n'est pas une requête : c'est
+   * une chaîne de cinq maillons — créer le compte, obtenir la session, lire la planète
+   * qui répond 404 pour un joueur neuf, la provisionner, rendre l'écran — dont trois
+   * traversent une pile conteneurisée.
+   *
+   * Le défaut de trente secondes suffisait tant que la pile était fraîche. Il a
+   * commencé à échouer par intermittence après plusieurs séries de parcours, et le
+   * message était trompeur : « test timeout » là où la cause était une inscription
+   * lente. Les cas qui attendent une échéance de jeu déclarent leur propre délai, plus
+   * large encore.
+   *
+   * **Ce n'est pas une tolérance sur le comportement** : un vrai défaut échoue tout
+   * autant à quatre-vingt-dix secondes qu'à trente.
+   */
+  timeout: 90_000,
+
   projects: [
     {
       name: 'bureau',

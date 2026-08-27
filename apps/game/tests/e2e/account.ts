@@ -26,15 +26,99 @@ export function freshAccount(): Credentials {
   return { email: `joueuse-${stamp}@zaliba.test`, password: `Mot-de-passe-${stamp}` }
 }
 
-/** S'inscrit, et attend que la planète soit là. */
-export async function signUp(page: Page, credentials = freshAccount()): Promise<Credentials> {
-  await page.goto('/planet')
-  await page.getByRole('button', { name: /créer un compte/i }).click()
+/**
+ * Le délai d'attente de l'entrée en jeu.
+ *
+ * **Vingt secondes, et non les cinq par défaut.** L'inscription n'est pas une requête,
+ * c'est une chaîne : créer le compte auprès de GoTrue, obtenir la session, lire la
+ * planète — qui répond 404 pour un joueur neuf (R11) —, la provisionner, puis rendre
+ * l'écran. Cinq maillons, dont trois traversent une pile conteneurisée.
+ *
+ * Le délai par défaut suffisait tant que la pile était fraîche. Il a commencé à échouer
+ * par intermittence après plusieurs séries de parcours, et le diagnostic est net :
+ * GoTrue rend `couldn't start a new transaction` sous concurrence — son pool interne,
+ * non celui de PostgreSQL, qui reste à dix-sept connexions sur cent. Un délai qui tient
+ * seulement sur une pile neuve n'éprouve pas le jeu, il éprouve la machine.
+ *
+ * **Vingt et non trente**, et l'écart n'est pas arbitraire : le délai d'un *test* vaut
+ * trente secondes par défaut. Les faire égaux rendrait cette attente inatteignable —
+ * le test expirerait avant que l'assertion n'ait le droit d'échouer, et le message
+ * dirait « test timeout » là où la cause est une inscription lente. Une attente doit
+ * pouvoir échouer en nommant ce qu'elle attendait.
+ *
+ * **Ce n'est pas une tolérance sur le comportement**, et la nuance compte : l'attente
+ * ne masque aucun défaut du jeu, elle laisse à l'infrastructure locale le temps de
+ * répondre. Un vrai défaut échouerait tout autant à vingt secondes qu'à cinq.
+ */
+const ENTRY_TIMEOUT = 20_000
+
+/**
+ * La seule défaillance d'infrastructure que `signUp` réessaie.
+ *
+ * GoTrue local abandonne parfois l'ouverture d'une connexion vers PostgreSQL —
+ * `couldn't start a new transaction: context deadline exceeded` dans ses journaux, un
+ * **504** sur le réseau, et cette phrase à l'écran. La cause est la latence
+ * d'entrée-sortie de la machine virtuelle Docker sur macOS, qui frôle le délai que
+ * GoTrue s'accorde ; à volume égal — six cent soixante-sept comptes tiennent dans un
+ * mégaoctet —, l'échec est intermittent et non progressif.
+ *
+ * **Le motif est étroit à dessein.** Un identifiant refusé, un mot de passe trop court,
+ * un compte déjà pris : tous produisent d'autres messages, et aucun n'est réessayé. Ce
+ * qu'on absorbe est une panne de la pile locale, jamais un refus du jeu.
+ */
+const INFRASTRUCTURE_TIMEOUT = /timed out, please retry|Database error/i
+
+/**
+ * Remplit le formulaire d'inscription et l'envoie.
+ *
+ * Séparé de `signUp` pour que la réémission n'ait pas à rejouer la navigation : le
+ * formulaire est déjà à l'écran, et son état d'erreur y reste jusqu'au prochain envoi.
+ */
+async function submitSignUp(page: Page, credentials: Credentials): Promise<void> {
   await page.getByLabel(/courriel/i).fill(credentials.email)
   await page.getByLabel(/mot de passe/i).fill(credentials.password)
   await page.getByRole('button', { name: /^s’inscrire$/i }).click()
+}
 
-  await expect(page.getByRole('heading', { name: /ma planète/i })).toBeVisible()
+/**
+ * S'inscrit, et attend que la planète soit là.
+ *
+ * **Une seule réémission**, et seulement sur la défaillance nommée ci-dessus. Boucler
+ * plus longtemps ferait d'un test un outil de surveillance : si la pile locale ne
+ * répond pas deux fois de suite, ce n'est plus une intermittence, et le parcours doit
+ * le dire plutôt que l'absorber.
+ */
+export async function signUp(page: Page, credentials = freshAccount()): Promise<Credentials> {
+  await page.goto('/planet')
+  await page.getByRole('button', { name: /créer un compte/i }).click()
+  await submitSignUp(page, credentials)
+
+  const planet = page.getByRole('heading', { name: /ma planète/i })
+  const alert = page.getByRole('alert')
+
+  // La première des deux issues qui se présente : l'écran de planète, ou une alerte.
+  // Attendre l'écran seul ferait patienter vingt secondes sur un refus immédiat.
+  await expect
+    .poll(
+      async () =>
+        (await planet.count()) > 0 ? 'planete' : (await alert.count()) > 0 ? 'alerte' : 'attente',
+      {
+        timeout: ENTRY_TIMEOUT,
+      },
+    )
+    .not.toBe('attente')
+
+  if ((await planet.count()) === 0) {
+    const message = (await alert.first().textContent()) ?? ''
+    if (!INFRASTRUCTURE_TIMEOUT.test(message)) {
+      throw new Error(`L’inscription a été refusée pour une raison de jeu : ${message}`)
+    }
+    // La pile locale a abandonné. Une seule réémission, sur le même compte : GoTrue
+    // n'a rien écrit, donc l'identifiant est encore libre.
+    await submitSignUp(page, credentials)
+  }
+
+  await expect(planet).toBeVisible({ timeout: ENTRY_TIMEOUT })
   return credentials
 }
 
@@ -51,7 +135,11 @@ export async function signIn(page: Page, credentials: Credentials): Promise<void
   await page.getByLabel(/mot de passe/i).fill(credentials.password)
   await page.getByRole('button', { name: /^se connecter$/i }).click()
 
-  await expect(page.getByRole('heading', { name: /ma planète/i })).toBeVisible()
+  // Même patience que pour l'inscription, et pour la même raison : la chaîne est la
+  // même, moins la création du compte.
+  await expect(page.getByRole('heading', { name: /ma planète/i })).toBeVisible({
+    timeout: ENTRY_TIMEOUT,
+  })
 }
 
 /**
