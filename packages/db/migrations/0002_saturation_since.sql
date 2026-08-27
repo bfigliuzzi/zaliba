@@ -1,0 +1,19 @@
+-- L'instant d'**entrée** en saturation, par possession (US1/AC5).
+--
+-- L'exigence demande deux choses de la ressource saturée : combien s'est perdu
+-- — c'est `lost_grains` — et depuis quand. La seconde n'est pas dérivable de la
+-- première : `perdu ÷ taux` est faux dès que le taux a changé depuis, ce qu'une
+-- pose, une amélioration ou une bascule en déficit d'énergie suffisent à
+-- provoquer. Ce n'est pas une durée qu'il faut calculer, c'est un instant qu'il
+-- faut porter.
+--
+-- Annulable et sans valeur par défaut : « pas saturée » est l'état courant d'une
+-- ressource, pas un cas d'erreur. Les lignes existantes prennent donc `null`, et
+-- la première projection les redate — de leur consolidation si elles sont au
+-- plafond, ce qui ne surestime jamais l'ancienneté, et de `null` sinon.
+--
+-- Aucune contrainte ne lie cette colonne à `amount_grains` : le plafond n'est pas
+-- une donnée de la base — il se dérive des entrepôts posés et du catalogue —,
+-- donc la base ne saurait pas juger de la cohérence. C'est la projection qui la
+-- tient, à chaque segment.
+ALTER TABLE "game"."planet_resources" ADD COLUMN "saturated_since" timestamp with time zone;

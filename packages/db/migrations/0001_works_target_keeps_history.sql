@@ -1,0 +1,12 @@
+-- La cible d'un chantier perd sa clé étrangère vers `game.buildings`.
+--
+-- La contrainte `works_target_building_id_buildings_id_fk` cascadait à la
+-- suppression : à l'achèvement d'une démolition, le bâtiment disparaît, et la
+-- cascade emportait avec lui la **ligne de chantier résolue** — c'est-à-dire
+-- l'histoire de la planète, au moment précis où elle devient intéressante.
+--
+-- Ce que la démolition rend structurellement vrai, c'est qu'un chantier résolu
+-- peut légitimement désigner un bâtiment qui n'existe plus. L'intégrité d'un
+-- chantier **en cours** reste tenue par le domaine, qui refuse
+-- `building-not-found` sur l'état verrouillé, dans la transaction de mutation.
+ALTER TABLE "game"."works" DROP CONSTRAINT IF EXISTS "works_target_building_id_buildings_id_fk";

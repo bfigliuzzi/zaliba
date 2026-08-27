@@ -176,7 +176,7 @@ zaliba/
 │       │   ├── plugins/           # auth (JWT/JWKS), cors, corrélation, erreurs
 │       │   ├── routes/v1/         # enregistrement des routes ts-rest
 │       │   ├── command/           # la forme unique de commande (doc de stack §4.5)
-│       │   └── repository/        # chargement d'instantané, écriture d'instantané
+│       │   └── mapping/           # persistance ⇄ domaine ⇄ contrat : les trois formes
 │       └── tests/
 │           └── integration/       # Testcontainers : concurrence, idempotence, autorisation
 ├── packages/
@@ -208,6 +208,8 @@ zaliba/
 │   │   └── tests/                 # instantanés de JSON Schema, échantillons par version
 │   └── db/                        # schéma Drizzle et migrations — importe catalogs
 │       ├── src/schema.ts
+│       ├── src/conversions.ts     # grains et instants, à la frontière du paquet
+│       ├── src/repository/        # chargement d'instantané, écriture d'instantané
 │       └── migrations/
 ├── .dependency-cruiser.cjs        # le principe II rendu mécanique
 ├── biome.json
@@ -217,7 +219,17 @@ zaliba/
 ```
 
 **Structure Decision** : le découpage est celui du document de stack §3, amputé de
-`apps/site` (différé, voir plus bas). Les règles de dépendance de sa table §3 sont
+`apps/site` (différé, voir plus bas).
+
+**Un écart tranché, et par où.** Ce diagramme plaçait d'abord le dépôt d'instantané
+dans `apps/api/src/repository/`. Il vit dans `packages/db/src/repository/`, où T071,
+T098, T132 et T140 l'ont écrit, et c'est le code qui a raison : le § 3 du document de
+stack range le schéma de persistance parmi les préoccupations d'infrastructure, et un
+dépôt qui rendrait des formes de domaine ferait suivre au modèle de jeu la forme des
+tables. `apps/api` garde à la place le `mapping/` qui traduit entre les **trois**
+formes — persistance, domaine, contrat —, et qui est le seul endroit où elles se
+rencontrent. Le principe I interdisant de laisser l'écart implicite, il est tranché
+ici : le diagramme est amendé, le code ne bouge pas. Les règles de dépendance de sa table §3 sont
 écrites dans `.dependency-cruiser.cjs` et vérifiées en CI, ainsi que les deux
 règles de module de sa §5.2 :
 

@@ -31,12 +31,87 @@ SUPABASE_SERVICE_ROLE_KEY=…  # compromission totale si elle fuite — jamais a
 `apps/game` ne connaît que l'URL de l'API et la clé `anon` — qui **n'est pas un
 secret**, mais un identifiant de projet. Ne rien construire sur son secret.
 
+Ajouter, pour le socle HTTP :
+
+```
+SUPABASE_JWT_ISSUER=…      # émetteur attendu, vérifié en plus de la signature
+SUPABASE_JWT_AUDIENCE=…    # audience attendue
+CORS_ALLOWED_ORIGINS=…     # liste close ; l'absence n'ouvre rien
+```
+
+### La pile Supabase locale
+
+Le parcours de bout en bout commence par « créer un compte », donc par Supabase.
+La pile locale suffit : `supabase/config.toml` est dans le dépôt, et
+`[db] major_version = 17` y fixe la majeure PostgreSQL — la même que le
+`postgres:17-alpine` du harnais d'intégration.
+
+**La clé de signature est à produire, une fois.** Elle n'est pas dans le dépôt :
+c'est une clé **privée**, fût-elle de développement.
+
+```sh
+node scripts/generate-signing-keys.mjs
+supabase start
+```
+
+Le script est **le même que celui de la porte 8** (`.github/workflows/ci.yml`, travail
+`parcours`) : deux recettes de clé divergeraient, et la divergence se lirait en
+`no signing key found` sur l'exécutant d'intégration continue seulement. Il refuse
+d'écraser une clé existante — régénérer invalide tous les jetons déjà émis, et le
+symptôme, des 401 soudains, ne nomme pas sa cause. `--force` pour le vouloir
+explicitement.
+
+**`key_ops` n'est pas décoratif.** GoTrue choisit sa clé de signature sur la
+présence de `sign` dans ce tableau — `use: "sig"` seul ne suffit pas. Sans lui,
+le démarrage échoue sur `no signing key found`, ce qui laisse croire à un
+fichier absent alors qu'il est simplement incomplet. La CLI valide par ailleurs
+`kid` comme un UUID et `key_ops` comme un tableau de **deux** entrées exactement.
+
+**Pourquoi ES256 et pas le secret partagé par défaut.** R12 exige une
+vérification **asymétrique** : la même clé ne doit pas pouvoir signer *et*
+vérifier, sans quoi sa fuite depuis l'API permet de se faire passer pour
+n'importe qui. `signing_keys_path` fait servir à GoTrue un JWKS public sur
+`/auth/v1/.well-known/jwks.json`, et l'API n'y récupère que de quoi vérifier.
+
+Une pile locale laissée en HS256 fonctionnerait — et l'API la refuserait, parce
+que `createAuthenticator` n'accepte que `RS256` et `ES256`. Ce refus est voulu :
+il vaut mieux qu'une pile de développement s'écarte visiblement de la production
+qu'un jeu de tests vert obtenu en abaissant la garde.
+
+Les valeurs à reporter dans `.env` sont celles que `supabase status` affiche.
+`supabase stop` arrête la pile ; `supabase stop --no-backup` la remet à zéro.
+
+### Testcontainers ne trouve pas toujours le démon tout seul
+
+Constaté le 2026-08-26, sur une machine où **Rancher Desktop** est le contexte
+Docker actif alors qu'un socket Docker Desktop périmé subsiste. `docker info`
+répond correctement, et Testcontainers échoue quand même : sa détection
+automatique retient `~/.docker/run/docker.sock`, présent mais mort, et n'essaie
+jamais le socket du contexte actif.
+
+Deux variables suffisent, à poser dans l'environnement local :
+
+```sh
+export DOCKER_HOST="unix://$HOME/.rd/docker.sock"   # le socket du contexte actif
+export TESTCONTAINERS_RYUK_DISABLED=true            # voir ci-dessous
+```
+
+`TESTCONTAINERS_RYUK_DISABLED` n'est pas une commodité : le conteneur de
+nettoyage de Testcontainers monte le socket Docker de l'hôte, ce que la machine
+virtuelle de Rancher Desktop refuse (`operation not supported`). Le harnais
+arrête lui-même son conteneur dans `stop()` ; c'est ce qui rend le nettoyage
+automatique dispensable ici, et seulement ici. En intégration continue, le
+démon est un Docker ordinaire et aucune de ces deux variables n'est nécessaire.
+
+Symptôme si l'on oublie : `Could not find a working container runtime strategy`.
+
 ---
 
 ## 2. Mise en route
 
 ```bash
 pnpm install
+pnpm -w build              # **obligatoire** — voir ci-dessous
 pnpm -w typecheck          # tsc --noEmit sur tous les paquets
 pnpm -w boundaries         # dependency-cruiser : le principe II, mécaniquement
 pnpm -w test               # domaine, catalogues, contrats
@@ -44,6 +119,15 @@ pnpm -w test:integration   # Testcontainers : concurrence, idempotence, autorisa
 pnpm -w dev                # apps/api et apps/game
 pnpm -w e2e                # Playwright + axe-core
 ```
+
+**`build` n'est pas une commodité, c'est une condition.** Les applications et
+`dependency-cruiser` résolvent les paquets de l'espace de travail par leur champ
+`exports`, qui pointe sur `dist/`. Sans compilation, `boundaries` rend cent
+trente-deux violations `aucun-module-inexistant`, et une fonction de domaine
+ajoutée reste invisible aux tests de composant — le symptôme est
+`X is not a function`, qui n'accuse jamais sa cause. Sur un poste où l'on a
+compilé une fois, l'oubli ne se voit pas ; il s'est vu au premier passage en
+intégration continue.
 
 **L'ordre compte pour un diagnostic rapide.** `boundaries` échoue avant les tests
 si une frontière de paquet a été franchie : c'est une erreur d'architecture, pas
@@ -229,6 +313,105 @@ Doc de stack §7.4. S'ils manquent, la tranche n'est pas livrée.
 Le troisième est le moins intuitif et le plus important : les planètes sont
 conçues pour changer d'occupant. Vérifier la propriété puis muter laisse un
 intervalle qui est ici une **mécanique de jeu**, pas une hypothèse théorique.
+
+---
+
+## 5 bis. Objectifs de performance — machine, charge et relevé
+
+Les objectifs de `plan.md` § « Performance Goals » se **mesurent**, et le relevé est
+consigné ici avec la machine et la charge : un chiffre sans son contexte n'est pas
+reproductible, et un objectif dont on ne sait pas sur quoi il a été atteint n'engage
+personne.
+
+**Ce n'est pas une porte de CI**, et c'est délibéré : un seuil de durée mesuré sur une
+machine partagée échoue par intermittence, et une porte qui échoue au hasard finit par
+être ignorée — donc par ne plus rien garder.
+
+### La machine de référence
+
+| | |
+| --- | --- |
+| Processeur | Apple M1 Pro, 10 cœurs |
+| Mémoire | 16 Gio |
+| Système | macOS 26.6.2 |
+| Node | 24.18.0 (contre 24.19.0 porté par `.nvmrc` — écart consigné en phase 1) |
+| PostgreSQL | 17, provisionné par Supabase local |
+
+### Projection d'une planète — objectif : sous la milliseconde
+
+```sh
+pnpm --filter @zaliba/domain bench
+```
+
+**La charge est choisie pour être la pire** que 001 permette : vingt bâtiments — la
+borne que l'objectif nomme, et plus que ce que trente-six cases peuvent porter —, un
+chantier **échu** qui force la segmentation en deux temps (R3), et trois semaines
+d'écart, la durée que SC-003 nomme.
+
+Relevé du **2026-08-27**, sur dix mille itérations après mille de préchauffage :
+
+| Grandeur | Mesure |
+| --- | --- |
+| Médiane | 0,103 ms |
+| 95ᵉ centile | **0,158 ms** |
+| 99ᵉ centile | 0,216 ms |
+| Maximum | 1,401 ms |
+
+**Objectif atteint**, avec un facteur six de marge au 95ᵉ centile. Le maximum dépasse la
+milliseconde une fois sur dix mille : c'est une pause du ramasse-miettes, pas un coût du
+calcul — et c'est précisément pourquoi le relevé publie des centiles et non le pire cas.
+
+### Joueur inactif — objectif : zéro écriture, zéro calcul
+
+**Tenu par construction, et vérifiable par l'absence.** Il n'existe aucune tâche de
+fond côté serveur : `git grep -nE "setInterval|setTimeout|cron" apps/api/src/` ne rend
+**rien**. Un joueur qui ne joue pas ne déclenche donc aucun travail — sa planète est un
+instantané daté, et rien ne la fait avancer avant sa prochaine requête.
+
+L'absence d'écriture à la lecture est éprouvée séparément, par
+`apps/api/tests/integration/get-planet.test.ts` : un `GET` ne consolide pas, même sur un
+chantier échu depuis trois semaines (FR-031).
+
+### `GET` de l'état — objectif : sous 200 ms au 95ᵉ centile
+
+```sh
+# 1 000 requêtes, l'API et la pile locale démarrées, un compte provisionné.
+# Le jeton s'obtient de la pile locale, comme le client le fait :
+ANON=$(grep '^VITE_SUPABASE_ANON_KEY=' .env | cut -d= -f2-)
+JETON=$(curl -s -X POST http://127.0.0.1:54321/auth/v1/signup \
+  -H "apikey: $ANON" -H 'Content-Type: application/json' \
+  -d '{"email":"mesure@zaliba.test","password":"MotDePasse-123!"}' \
+  | python3 -c 'import sys,json; print(json.load(sys.stdin)["access_token"])')
+curl -s -o /dev/null -X POST http://127.0.0.1:3000/v1/me/planet \
+  -H "Authorization: Bearer $JETON" -H "Idempotency-Key: $(uuidgen)" \
+  -H 'Content-Type: application/json' -d '{}'
+
+for i in $(seq 1000); do
+  curl -s -o /dev/null -w '%{time_total}\n' \
+    -H "Authorization: Bearer $JETON" http://127.0.0.1:3000/v1/me/planet
+done | sort -n | awk '{a[NR]=$1} END {printf "95e centile : %.3f s\n", a[int(NR*0.95)]}'
+```
+
+**La charge.** Une planète neuve — l'état le plus fréquent, et le seul dont on puisse
+garantir la reproductibilité —, mille requêtes séquentielles après cinquante de
+préchauffage, sur la pile Supabase locale du dépôt. Réponse de 600 octets, code 200
+sur les mille.
+
+Relevé du **2026-08-27**, sur la machine de référence ci-dessus :
+
+| Grandeur | Mesure |
+| --- | --- |
+| Minimum | 3,4 ms |
+| Médiane | 6,4 ms |
+| 95ᵉ centile | **10,7 ms** |
+| 99ᵉ centile | 16,6 ms |
+| Maximum | 30,8 ms |
+
+**Objectif atteint**, avec presque deux ordres de grandeur de marge au 95ᵉ centile. Ce
+que la mesure ne dit pas, et qu'il faut savoir en la lisant : la base est locale, donc
+sans latence de réseau, et la planète est neuve, donc sans bâtiment à projeter. Un
+hébergement réel ajoutera l'aller-retour vers la base, qui dominera alors le calcul —
+lequel se mesure, lui, en dixièmes de milliseconde (relevé ci-dessus).
 
 ---
 

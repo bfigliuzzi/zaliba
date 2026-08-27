@@ -1,0 +1,33 @@
+{
+  "name": "@zaliba/domain",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Règles du jeu, fonctions pures. Sans serveur, sans navigateur, sans base.",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./*": {
+      "types": "./dist/*.d.ts",
+      "default": "./dist/*.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -b tsconfig.build.json",
+    "clean": "rm -rf dist *.tsbuildinfo",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "bench": "tsx scripts/bench-projection.ts"
+  },
+  "dependencies": {
+    "@zaliba/catalogs": "workspace:*"
+  },
+  "devDependencies": {
+    "fast-check": "4.9.0",
+    "tsx": "4.23.12"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts"
+}

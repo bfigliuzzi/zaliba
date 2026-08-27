@@ -1,0 +1,309 @@
+/*
+ * La mise en page du jeu — écrite pour tenir SC-009, et pour rien d'autre.
+ *
+ * **Ce fichier n'existait pas jusqu'à la vérification de SC-009**, et son absence
+ * n'était pas un oubli visible : les parcours d'US1 à US8 éprouvent le *chemin clavier*
+ * et la sémantique du document, qu'aucune feuille de style ne change. Ils passaient donc
+ * tous sur un écran sans mise en page — trente-six cases empilées en colonne, hautes de
+ * dix-huit pixels, et des cibles de treize.
+ *
+ * SC-009 est le seul critère qui regarde la géométrie de l'écran, et il en nomme trois :
+ *
+ * - **les 36 cases visibles ensemble** sur 360 × 640 px, sans défilement ni zoom. C'est
+ *   la contrainte qui décide de tout le reste : ranger des polyominos suppose de voir
+ *   l'espace où on les range, et une grille qu'il faut faire défiler détruit le sujet
+ *   du jeu ;
+ * - **le corps de texte à 16 px au moins.** En dessous, iOS Safari zoome de lui-même à
+ *   la mise au point d'un champ — donc le zoom que SC-009 interdit arriverait *par*
+ *   l'interface, sans que personne l'ait demandé ;
+ * - **les cibles interactives à 44 × 44 px au moins.** C'est la taille du doigt, pas
+ *   celle du curseur.
+ *
+ * **Aucune couleur ne porte d'information** (FR-060). Les teintes ici distinguent des
+ * états déjà nommés dans l'attribut `aria-label` de chaque case et déjà marqués par un
+ * caractère visible ; les retirer ne retire rien. C'est pourquoi ce fichier ne définit
+ * pas de palette : il définit une géométrie.
+ */
+
+/* ── Réglages de base ─────────────────────────────────────────────────────── */
+
+:root {
+  /*
+   * Le côté d'une case, et le minimum d'une cible tactile. Une seule valeur pour les
+   * deux : la case *est* la cible la plus sollicitée du jeu, et les séparer laisserait
+   * l'une dériver sous l'autre.
+   */
+  --cible-min: 44px;
+  --espacement: 0.5rem;
+  --bordure: 1px solid currentColor;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  /*
+   * Seize pixels, jamais moins : c'est le seuil sous lequel iOS Safari zoome de
+   * lui-même. `100%` plutôt qu'une valeur en pixels respecte le réglage de taille du
+   * système, qu'un joueur malvoyant a peut-être augmenté.
+   */
+  font-size: 100%;
+  line-height: 1.5;
+  font-family: system-ui, sans-serif;
+}
+
+main {
+  padding: var(--espacement);
+  /*
+   * La largeur est bornée pour que les lignes de texte restent lisibles sur grand
+   * écran, mais jamais au-delà de la fenêtre : `min()` fait les deux d'un trait.
+   */
+  max-width: min(48rem, 100%);
+  margin-inline: auto;
+}
+
+/* ── Cibles tactiles ──────────────────────────────────────────────────────── */
+
+/*
+ * **Tout ce qu'on peut viser fait au moins 44 × 44 px.** Les cases de grille sont
+ * traitées plus bas, avec la grille ; ici, les liens, les boutons et les champs.
+ *
+ * `inline-flex` avec centrage : sans lui, un lien d'une ligne resterait haut de son
+ * texte, et grandir la boîte laisserait le texte collé en haut.
+ */
+button,
+a,
+input,
+select,
+textarea {
+  min-height: var(--cible-min);
+  font: inherit;
+}
+
+button,
+a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--cible-min);
+  padding: 0 var(--espacement);
+}
+
+button {
+  border: var(--bordure);
+  border-radius: 0.25rem;
+  background: transparent;
+  cursor: pointer;
+}
+
+button[disabled] {
+  opacity: 0.6;
+  cursor: default;
+}
+
+input[type="email"],
+input[type="password"],
+input[type="text"] {
+  width: 100%;
+  padding: 0 var(--espacement);
+  border: var(--bordure);
+  border-radius: 0.25rem;
+}
+
+/*
+ * **Une case à cocher ou un bouton radio ne grandit pas ; son étiquette le fait.**
+ * Étirer la commande elle-même la déforme selon le navigateur ; c'est l'étiquette qui
+ * porte la cible, et cliquer une étiquette active sa commande — le navigateur s'en
+ * charge, sans une ligne de script.
+ */
+input[type="radio"],
+input[type="checkbox"] {
+  min-height: 0;
+  margin: 0;
+}
+
+label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--espacement);
+  min-height: var(--cible-min);
+  padding-inline: calc(var(--espacement) / 2);
+  cursor: pointer;
+}
+
+nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espacement);
+  padding: var(--espacement);
+  border-bottom: var(--bordure);
+}
+
+/* ── La grille de la planète ──────────────────────────────────────────────── */
+
+/*
+ * **Six colonnes de cases carrées, et la contrainte de SC-009 tient dans une ligne.**
+ *
+ * `min(var(--cible-min), (100vw - marges) / 6)` serait le calcul complet ; il n'est pas
+ * nécessaire : six cases de quarante-quatre pixels font deux cent soixante-quatre, plus
+ * les espacements et le rembourrage, soit moins de trois cent soixante. La grille tient
+ * donc à sa taille minimale, et grandit sur les écrans qui le permettent —
+ * `minmax(var(--cible-min), 1fr)` dit exactement cela.
+ *
+ * `width: fit-content` empêche la grille de s'étirer sur un écran large : des cases de
+ * huit centimètres ne se survolent pas d'un coup d'œil, et le jeu se lit d'un coup
+ * d'œil ou ne se lit pas.
+ */
+[role="grid"] {
+  display: grid;
+  /*
+   * Les rangées sont des `role="row"` : elles doivent disparaître de la mise en page
+   * pour que les cases s'alignent en grille. `display: contents` fait exactement cela —
+   * l'élément ne produit plus de boîte, mais reste dans l'arbre d'accessibilité.
+   */
+  grid-template-columns: repeat(6, minmax(var(--cible-min), 1fr));
+  gap: 2px;
+  width: fit-content;
+  margin: var(--espacement) 0;
+}
+
+[role="row"] {
+  display: contents;
+}
+
+[role="gridcell"] {
+  /*
+   * Carrée, et au moins à la taille du doigt. `aspect-ratio` garde le carré quand la
+   * case grandit sur un écran large.
+   */
+  aspect-ratio: 1;
+  min-width: var(--cible-min);
+  min-height: var(--cible-min);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: var(--bordure);
+  cursor: pointer;
+  /*
+   * Le caractère de repère — `▓`, `■`, `·`, `◆` — doit rester lisible sans être le
+   * sujet : il double le nom accessible, il ne le remplace pas (FR-060).
+   */
+  font-size: 1.25rem;
+  line-height: 1;
+  user-select: none;
+}
+
+/*
+ * **Le curseur se voit**, et pas seulement par la couleur : un contour épais le marque
+ * en noir et blanc comme en couleur, et il survit à un mode de contraste élevé.
+ */
+[role="gridcell"]:focus-visible {
+  outline: 3px solid currentColor;
+  outline-offset: -3px;
+}
+
+/* ── Panneaux ─────────────────────────────────────────────────────────────── */
+
+/*
+ * Les panneaux sont des `role="group"` : ils encadrent des valeurs liées. Un filet et
+ * un peu d'air suffisent à les distinguer — ce sont des groupes de données, pas des
+ * régions de navigation, et les faire ressembler à des cartes cliquables inviterait à
+ * les cliquer.
+ */
+[role="group"] {
+  margin: var(--espacement) 0;
+  padding: var(--espacement);
+  border: var(--bordure);
+  border-radius: 0.25rem;
+}
+
+fieldset {
+  margin: var(--espacement) 0;
+  border: var(--bordure);
+  border-radius: 0.25rem;
+}
+
+/*
+ * Les listes de définition portent l'essentiel des chiffres du jeu. Deux colonnes sur
+ * grand écran, une seule sur téléphone : à trois cent soixante pixels, un terme et sa
+ * valeur côte à côte ne laissent la place ni à l'un ni à l'autre.
+ */
+dl {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0 var(--espacement);
+  margin: 0;
+}
+
+@media (min-width: 30rem) {
+  dl {
+    grid-template-columns: auto 1fr;
+  }
+}
+
+dt {
+  font-weight: 600;
+}
+
+dd {
+  margin: 0 0 var(--espacement);
+}
+
+/*
+ * Les tables de la page de règles sont larges par nature. Elles défilent **dans leur
+ * propre boîte** plutôt que de pousser la page : un défilement horizontal du document
+ * ferait perdre la grille au joueur, et SC-009 l'interdit.
+ *
+ * **Le défilement est porté par un conteneur, jamais par la table.** Mettre
+ * `overflow-x` sur le `<table>` lui-même paraissait plus court et créait une région
+ * défilante qu'aucune tabulation n'atteignait — un écart `scrollable-region-focusable`
+ * que le parcours d'accessibilité a attrapé aussitôt. Le conteneur, lui, est focalisable
+ * et nommé : on y entre au clavier, et les flèches font défiler.
+ */
+.table-defilante {
+  overflow-x: auto;
+  max-width: 100%;
+  margin: var(--espacement) 0;
+}
+
+.table-defilante:focus-visible {
+  outline: 3px solid currentColor;
+  outline-offset: 2px;
+}
+
+table {
+  border-collapse: collapse;
+}
+
+th,
+td {
+  padding: calc(var(--espacement) / 2);
+  border: var(--bordure);
+  text-align: start;
+  white-space: nowrap;
+}
+
+caption {
+  padding: calc(var(--espacement) / 2);
+  font-weight: 600;
+  text-align: start;
+}
+
+/* ── Régions vivantes ─────────────────────────────────────────────────────── */
+
+/*
+ * La région d'annonce du curseur est destinée aux lecteurs d'écran, pas aux yeux. La
+ * technique est celle qui la garde **lisible par les outils** : la masquer par
+ * `display: none` ou `visibility: hidden` la retirerait de l'arbre d'accessibilité,
+ * c'est-à-dire supprimerait la seule chose qu'elle sert à faire.
+ */
+[aria-live]:not([role="alert"]):empty {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

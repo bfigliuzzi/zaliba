@@ -53,7 +53,18 @@ PlanetSnapshot
   archetypeId    ArchetypeId       — 'berceau' en 001
   layoutId       LayoutId          — 'berceau-v1', renvoie au catalogue (FR-003)
   consolidatedAt Instant           — l'instant du dernier écrit
-  holdings       Map<ResourceId, { amount: Grains, lost: Grains }>
+  holdings       Map<ResourceId, {
+                   amount:         Grains,
+                   lost:           Grains,
+                   saturatedSince: Instant | null  — l'instant d'entrée en
+                                   saturation (US1/AC5). Le **seul** état de
+                                   possession non dérivable : au plafond, la
+                                   quantité ne dit plus depuis quand, et
+                                   `lost ÷ taux` est faux dès que le taux a
+                                   changé depuis. N'a de sens que tant que
+                                   `amount ≥ cap` ; en dessous, la projection le
+                                   remet à `null`.
+                 }>
   buildings      PlacedBuilding[]
   clearedCells   Cell[]            — les cases déblayées, par écart au catalogue
   work           ScheduledWork | null
@@ -85,6 +96,14 @@ ScheduledWork
 | les plafonds de stockage | les entrepôts posés + la capacité de base |
 | les taux de production, l'énergie | les bâtiments + les courbes |
 | la quantité *courante* de ressource | `holdings` + `consolidatedAt` + les taux + l'instant demandé |
+| la **durée** de saturation | `at − saturatedSince` |
+
+**L'instant d'entrée en saturation fait exception, et c'est la seule.** Il est
+persisté parce qu'il n'est dérivable de rien : une consolidation efface tout ce qui
+précède, et ni la quantité — au plafond, elle ne dit plus depuis quand — ni la perte
+cumulée — dont la division par le taux est fausse dès que le taux a changé — ne
+permettent de le retrouver. Sans lui, l'ancienneté d'une saturation se
+réinitialiserait à chaque action du joueur, ce qu'US1/AC5 interdit précisément.
 
 ### 1.3 L'état projeté — ce qui est calculé
 
@@ -106,6 +125,10 @@ ProjectedState
               rate          RatePerHour   — effectif, énergie appliquée
               nominalRate   RatePerHour   — avant énergie (FR-024)
               saturationAt  Instant | null — null si taux nul ou déjà saturé (FR-027)
+              saturatedSince Instant | null — l'instant d'**entrée** en saturation,
+                            null si la ressource ne l'est pas (US1/AC5). Exclusif de
+                            `saturationAt` : la saturation est soit à venir, soit
+                            acquise. La durée écoulée vaut `at − saturatedSince`.
             }>
   energy    { produced, consumed, ratio: { numerator, denominator } }   (FR-021..024)
             — `produced` somme l'énergie de base du Berceau et les centrales (FR-022) ;
@@ -210,11 +233,11 @@ et ce sont eux qui portent la valeur de la tranche.
 | # | Invariant | Exigence servie |
 | --- | --- | --- |
 | I-1 | `0 ≤ amount ≤ cap`, pour toute suite de commandes légales | FR-025, FR-026 |
-| I-2 | `project(t₀→t₁→t₂)` = `project(t₀→t₂)`, **quantité et perte cumulée** | SC-003, R4 |
+| I-2 | `project(t₀→t₁→t₂)` = `project(t₀→t₂)`, **quantité, perte cumulée et instant d'entrée en saturation** | SC-003, R4, US1/AC5 |
 | I-3 | Dépenser puis projeter = projeter puis dépenser, au même instant | doc de stack §7.1 |
 | I-4 | **Aucune suite de commandes légales ne crée de ressource à partir de rien** | garde-fou anti-exploit |
 | I-5 | Les cases de deux bâtiments d'une même planète sont disjointes | FR-012 |
-| I-6 | Aucune suite de rotations ne produit le miroir d'une empreinte chirale | FR-011 |
+| I-6 | Aucune suite de rotations ne produit le miroir d'une empreinte chirale — `l-4` est la seule du vocabulaire | FR-011 |
 | I-7 | Une amélioration laisse l'ensemble des cases occupées identique | FR-039, US4-1 |
 | I-8 | Une case déblayée ne redevient jamais obstruée | FR-045 |
 | I-9 | Au plus un chantier non résolu par planète | FR-033 |
@@ -284,6 +307,7 @@ concurrence.
 | `resource_id` | text | clé primaire composée |
 | `amount_grains` | bigint | non nul, `≥ 0` |
 | `lost_grains` | bigint | non nul, défaut 0, `≥ 0` |
+| `saturated_since` | timestamptz | **annulable**, sans défaut — l'instant d'entrée en saturation (US1/AC5) |
 
 Une ligne par ressource, jamais une colonne par ressource : les ressources sont des
 données déclaratives (doc de conception §1), donc tout renommage ou ajout reste
@@ -292,6 +316,12 @@ sans coût de migration.
 `bigint` en base, converti en `number` à la frontière de `packages/db` avec une
 **assertion de sûreté** — les grains restent très loin de `2⁵³` aux échelles du jeu,
 et l'assertion transforme un dépassement futur en erreur bruyante.
+
+`saturated_since` est la **seule** colonne du schéma qui porte un état non dérivable
+des autres. Aucune contrainte ne la lie à `amount_grains` : le plafond n'est pas une
+donnée de la base — il se dérive des entrepôts posés et du catalogue —, donc la base
+ne saurait pas juger de la cohérence. C'est la projection qui la tient, segment par
+segment, et elle seule connaît les plafonds.
 
 ### `game.buildings`
 

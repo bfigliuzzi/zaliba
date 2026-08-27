@@ -1,0 +1,1902 @@
+{
+  "info": {
+    "version": "1"
+  },
+  "openapi": "3.0.2",
+  "paths": {
+    "/v1/me/planet": {
+      "get": {
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "buildings": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "anchorX": {
+                            "maximum": 15,
+                            "minimum": 0,
+                            "type": "integer"
+                          },
+                          "anchorY": {
+                            "maximum": 15,
+                            "minimum": 0,
+                            "type": "integer"
+                          },
+                          "id": {
+                            "format": "uuid",
+                            "type": "string"
+                          },
+                          "level": {
+                            "maximum": 30,
+                            "minimum": 1,
+                            "type": "integer"
+                          },
+                          "orientation": {
+                            "maximum": 3,
+                            "minimum": 0,
+                            "type": "integer"
+                          },
+                          "typeId": {
+                            "enum": [
+                              "mine",
+                              "puits",
+                              "racloir",
+                              "centrale",
+                              "entrepot"
+                            ],
+                            "type": "string"
+                          },
+                          "variantId": {
+                            "enum": [
+                              "single",
+                              "line-2",
+                              "square-4",
+                              "l-4",
+                              "t-4",
+                              "rect-6",
+                              "square-9"
+                            ],
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "anchorX",
+                          "anchorY",
+                          "id",
+                          "level",
+                          "orientation",
+                          "typeId",
+                          "variantId"
+                        ],
+                        "type": "object"
+                      },
+                      "maxItems": 36,
+                      "type": "array"
+                    },
+                    "catalogVersion": {
+                      "maxLength": 64,
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "clearedCells": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "x": {
+                            "maximum": 15,
+                            "minimum": 0,
+                            "type": "integer"
+                          },
+                          "y": {
+                            "maximum": 15,
+                            "minimum": 0,
+                            "type": "integer"
+                          }
+                        },
+                        "required": [
+                          "x",
+                          "y"
+                        ],
+                        "type": "object"
+                      },
+                      "maxItems": 36,
+                      "type": "array"
+                    },
+                    "holdings": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "amountGrains": {
+                            "maximum": 9007199254740991,
+                            "minimum": 0,
+                            "type": "integer"
+                          },
+                          "lostGrains": {
+                            "maximum": 9007199254740991,
+                            "minimum": 0,
+                            "type": "integer"
+                          },
+                          "resourceId": {
+                            "enum": [
+                              "camelote",
+                              "jus",
+                              "bave-etoiles"
+                            ],
+                            "type": "string"
+                          },
+                          "saturatedSince": {
+                            "maximum": 9007199254740991,
+                            "minimum": 0,
+                            "nullable": true,
+                            "type": "integer"
+                          }
+                        },
+                        "required": [
+                          "amountGrains",
+                          "lostGrains",
+                          "resourceId",
+                          "saturatedSince"
+                        ],
+                        "type": "object"
+                      },
+                      "maxItems": 3,
+                      "minItems": 3,
+                      "type": "array"
+                    },
+                    "planet": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "archetypeId": {
+                          "enum": [
+                            "berceau"
+                          ],
+                          "type": "string"
+                        },
+                        "consolidatedAt": {
+                          "maximum": 9007199254740991,
+                          "minimum": 0,
+                          "type": "integer"
+                        },
+                        "id": {
+                          "format": "uuid",
+                          "type": "string"
+                        },
+                        "layoutId": {
+                          "maxLength": 64,
+                          "minLength": 1,
+                          "type": "string"
+                        },
+                        "occupantId": {
+                          "format": "uuid",
+                          "type": "string"
+                        },
+                        "ownerId": {
+                          "format": "uuid",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "archetypeId",
+                        "consolidatedAt",
+                        "id",
+                        "layoutId",
+                        "occupantId",
+                        "ownerId"
+                      ],
+                      "type": "object"
+                    },
+                    "serverInstant": {
+                      "maximum": 9007199254740991,
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    "work": {
+                      "additionalProperties": false,
+                      "nullable": true,
+                      "properties": {
+                        "dueAt": {
+                          "maximum": 9007199254740991,
+                          "minimum": 0,
+                          "type": "integer"
+                        },
+                        "id": {
+                          "format": "uuid",
+                          "type": "string"
+                        },
+                        "startedAt": {
+                          "maximum": 9007199254740991,
+                          "minimum": 0,
+                          "type": "integer"
+                        },
+                        "target": {
+                          "discriminator": {
+                            "propertyName": "nature"
+                          },
+                          "oneOf": [
+                            {
+                              "additionalProperties": false,
+                              "properties": {
+                                "anchorX": {
+                                  "maximum": 15,
+                                  "minimum": 0,
+                                  "type": "integer"
+                                },
+                                "anchorY": {
+                                  "maximum": 15,
+                                  "minimum": 0,
+                                  "type": "integer"
+                                },
+                                "nature": {
+                                  "enum": [
+                                    "build"
+                                  ],
+                                  "type": "string"
+                                },
+                                "orientation": {
+                                  "maximum": 3,
+                                  "minimum": 0,
+                                  "type": "integer"
+                                },
+                                "typeId": {
+                                  "enum": [
+                                    "mine",
+                                    "puits",
+                                    "racloir",
+                                    "centrale",
+                                    "entrepot"
+                                  ],
+                                  "type": "string"
+                                },
+                                "variantId": {
+                                  "enum": [
+                                    "single",
+                                    "line-2",
+                                    "square-4",
+                                    "l-4",
+                                    "t-4",
+                                    "rect-6",
+                                    "square-9"
+                                  ],
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "anchorX",
+                                "anchorY",
+                                "nature",
+                                "orientation",
+                                "typeId",
+                                "variantId"
+                              ],
+                              "type": "object"
+                            },
+                            {
+                              "additionalProperties": false,
+                              "properties": {
+                                "buildingId": {
+                                  "format": "uuid",
+                                  "type": "string"
+                                },
+                                "nature": {
+                                  "enum": [
+                                    "upgrade"
+                                  ],
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "buildingId",
+                                "nature"
+                              ],
+                              "type": "object"
+                            },
+                            {
+                              "additionalProperties": false,
+                              "properties": {
+                                "buildingId": {
+                                  "format": "uuid",
+                                  "type": "string"
+                                },
+                                "nature": {
+                                  "enum": [
+                                    "demolish"
+                                  ],
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "buildingId",
+                                "nature"
+                              ],
+                              "type": "object"
+                            },
+                            {
+                              "additionalProperties": false,
+                              "properties": {
+                                "nature": {
+                                  "enum": [
+                                    "clear"
+                                  ],
+                                  "type": "string"
+                                },
+                                "x": {
+                                  "maximum": 15,
+                                  "minimum": 0,
+                                  "type": "integer"
+                                },
+                                "y": {
+                                  "maximum": 15,
+                                  "minimum": 0,
+                                  "type": "integer"
+                                }
+                              },
+                              "required": [
+                                "nature",
+                                "x",
+                                "y"
+                              ],
+                              "type": "object"
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "dueAt",
+                        "id",
+                        "startedAt",
+                        "target"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "buildings",
+                    "catalogVersion",
+                    "clearedCells",
+                    "holdings",
+                    "planet",
+                    "serverInstant",
+                    "work"
+                  ],
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "details": {
+                      "additionalProperties": {
+                        "nullable": true
+                      },
+                      "type": "object"
+                    },
+                    "message": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "requestId": {
+                      "minLength": 1,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "requestId"
+                  ],
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "details": {
+                      "additionalProperties": {
+                        "nullable": true
+                      },
+                      "type": "object"
+                    },
+                    "message": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "requestId": {
+                      "minLength": 1,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "requestId"
+                  ],
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": []
+      },
+      "post": {
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "properties": {},
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "buildings": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "anchorX": {
+                            "maximum": 15,
+                            "minimum": 0,
+                            "type": "integer"
+                          },
+                          "anchorY": {
+                            "maximum": 15,
+                            "minimum": 0,
+                            "type": "integer"
+                          },
+                          "id": {
+                            "format": "uuid",
+                            "type": "string"
+                          },
+                          "level": {
+                            "maximum": 30,
+                            "minimum": 1,
+                            "type": "integer"
+                          },
+                          "orientation": {
+                            "maximum": 3,
+                            "minimum": 0,
+                            "type": "integer"
+                          },
+                          "typeId": {
+                            "enum": [
+                              "mine",
+                              "puits",
+                              "racloir",
+                              "centrale",
+                              "entrepot"
+                            ],
+                            "type": "string"
+                          },
+                          "variantId": {
+                            "enum": [
+                              "single",
+                              "line-2",
+                              "square-4",
+                              "l-4",
+                              "t-4",
+                              "rect-6",
+                              "square-9"
+                            ],
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "anchorX",
+                          "anchorY",
+                          "id",
+                          "level",
+                          "orientation",
+                          "typeId",
+                          "variantId"
+                        ],
+                        "type": "object"
+                      },
+                      "maxItems": 36,
+                      "type": "array"
+                    },
+                    "catalogVersion": {
+                      "maxLength": 64,
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "clearedCells": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "x": {
+                            "maximum": 15,
+                            "minimum": 0,
+                            "type": "integer"
+                          },
+                          "y": {
+                            "maximum": 15,
+                            "minimum": 0,
+                            "type": "integer"
+                          }
+                        },
+                        "required": [
+                          "x",
+                          "y"
+                        ],
+                        "type": "object"
+                      },
+                      "maxItems": 36,
+                      "type": "array"
+                    },
+                    "holdings": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "amountGrains": {
+                            "maximum": 9007199254740991,
+                            "minimum": 0,
+                            "type": "integer"
+                          },
+                          "lostGrains": {
+                            "maximum": 9007199254740991,
+                            "minimum": 0,
+                            "type": "integer"
+                          },
+                          "resourceId": {
+                            "enum": [
+                              "camelote",
+                              "jus",
+                              "bave-etoiles"
+                            ],
+                            "type": "string"
+                          },
+                          "saturatedSince": {
+                            "maximum": 9007199254740991,
+                            "minimum": 0,
+                            "nullable": true,
+                            "type": "integer"
+                          }
+                        },
+                        "required": [
+                          "amountGrains",
+                          "lostGrains",
+                          "resourceId",
+                          "saturatedSince"
+                        ],
+                        "type": "object"
+                      },
+                      "maxItems": 3,
+                      "minItems": 3,
+                      "type": "array"
+                    },
+                    "planet": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "archetypeId": {
+                          "enum": [
+                            "berceau"
+                          ],
+                          "type": "string"
+                        },
+                        "consolidatedAt": {
+                          "maximum": 9007199254740991,
+                          "minimum": 0,
+                          "type": "integer"
+                        },
+                        "id": {
+                          "format": "uuid",
+                          "type": "string"
+                        },
+                        "layoutId": {
+                          "maxLength": 64,
+                          "minLength": 1,
+                          "type": "string"
+                        },
+                        "occupantId": {
+                          "format": "uuid",
+                          "type": "string"
+                        },
+                        "ownerId": {
+                          "format": "uuid",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "archetypeId",
+                        "consolidatedAt",
+                        "id",
+                        "layoutId",
+                        "occupantId",
+                        "ownerId"
+                      ],
+                      "type": "object"
+                    },
+                    "serverInstant": {
+                      "maximum": 9007199254740991,
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    "work": {
+                      "additionalProperties": false,
+                      "nullable": true,
+                      "properties": {
+                        "dueAt": {
+                          "maximum": 9007199254740991,
+                          "minimum": 0,
+                          "type": "integer"
+                        },
+                        "id": {
+                          "format": "uuid",
+                          "type": "string"
+                        },
+                        "startedAt": {
+                          "maximum": 9007199254740991,
+                          "minimum": 0,
+                          "type": "integer"
+                        },
+                        "target": {
+                          "discriminator": {
+                            "propertyName": "nature"
+                          },
+                          "oneOf": [
+                            {
+                              "additionalProperties": false,
+                              "properties": {
+                                "anchorX": {
+                                  "maximum": 15,
+                                  "minimum": 0,
+                                  "type": "integer"
+                                },
+                                "anchorY": {
+                                  "maximum": 15,
+                                  "minimum": 0,
+                                  "type": "integer"
+                                },
+                                "nature": {
+                                  "enum": [
+                                    "build"
+                                  ],
+                                  "type": "string"
+                                },
+                                "orientation": {
+                                  "maximum": 3,
+                                  "minimum": 0,
+                                  "type": "integer"
+                                },
+                                "typeId": {
+                                  "enum": [
+                                    "mine",
+                                    "puits",
+                                    "racloir",
+                                    "centrale",
+                                    "entrepot"
+                                  ],
+                                  "type": "string"
+                                },
+                                "variantId": {
+                                  "enum": [
+                                    "single",
+                                    "line-2",
+                                    "square-4",
+                                    "l-4",
+                                    "t-4",
+                                    "rect-6",
+                                    "square-9"
+                                  ],
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "anchorX",
+                                "anchorY",
+                                "nature",
+                                "orientation",
+                                "typeId",
+                                "variantId"
+                              ],
+                              "type": "object"
+                            },
+                            {
+                              "additionalProperties": false,
+                              "properties": {
+                                "buildingId": {
+                                  "format": "uuid",
+                                  "type": "string"
+                                },
+                                "nature": {
+                                  "enum": [
+                                    "upgrade"
+                                  ],
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "buildingId",
+                                "nature"
+                              ],
+                              "type": "object"
+                            },
+                            {
+                              "additionalProperties": false,
+                              "properties": {
+                                "buildingId": {
+                                  "format": "uuid",
+                                  "type": "string"
+                                },
+                                "nature": {
+                                  "enum": [
+                                    "demolish"
+                                  ],
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "buildingId",
+                                "nature"
+                              ],
+                              "type": "object"
+                            },
+                            {
+                              "additionalProperties": false,
+                              "properties": {
+                                "nature": {
+                                  "enum": [
+                                    "clear"
+                                  ],
+                                  "type": "string"
+                                },
+                                "x": {
+                                  "maximum": 15,
+                                  "minimum": 0,
+                                  "type": "integer"
+                                },
+                                "y": {
+                                  "maximum": 15,
+                                  "minimum": 0,
+                                  "type": "integer"
+                                }
+                              },
+                              "required": [
+                                "nature",
+                                "x",
+                                "y"
+                              ],
+                              "type": "object"
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "dueAt",
+                        "id",
+                        "startedAt",
+                        "target"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "buildings",
+                    "catalogVersion",
+                    "clearedCells",
+                    "holdings",
+                    "planet",
+                    "serverInstant",
+                    "work"
+                  ],
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "buildings": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "anchorX": {
+                            "maximum": 15,
+                            "minimum": 0,
+                            "type": "integer"
+                          },
+                          "anchorY": {
+                            "maximum": 15,
+                            "minimum": 0,
+                            "type": "integer"
+                          },
+                          "id": {
+                            "format": "uuid",
+                            "type": "string"
+                          },
+                          "level": {
+                            "maximum": 30,
+                            "minimum": 1,
+                            "type": "integer"
+                          },
+                          "orientation": {
+                            "maximum": 3,
+                            "minimum": 0,
+                            "type": "integer"
+                          },
+                          "typeId": {
+                            "enum": [
+                              "mine",
+                              "puits",
+                              "racloir",
+                              "centrale",
+                              "entrepot"
+                            ],
+                            "type": "string"
+                          },
+                          "variantId": {
+                            "enum": [
+                              "single",
+                              "line-2",
+                              "square-4",
+                              "l-4",
+                              "t-4",
+                              "rect-6",
+                              "square-9"
+                            ],
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "anchorX",
+                          "anchorY",
+                          "id",
+                          "level",
+                          "orientation",
+                          "typeId",
+                          "variantId"
+                        ],
+                        "type": "object"
+                      },
+                      "maxItems": 36,
+                      "type": "array"
+                    },
+                    "catalogVersion": {
+                      "maxLength": 64,
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "clearedCells": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "x": {
+                            "maximum": 15,
+                            "minimum": 0,
+                            "type": "integer"
+                          },
+                          "y": {
+                            "maximum": 15,
+                            "minimum": 0,
+                            "type": "integer"
+                          }
+                        },
+                        "required": [
+                          "x",
+                          "y"
+                        ],
+                        "type": "object"
+                      },
+                      "maxItems": 36,
+                      "type": "array"
+                    },
+                    "holdings": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "amountGrains": {
+                            "maximum": 9007199254740991,
+                            "minimum": 0,
+                            "type": "integer"
+                          },
+                          "lostGrains": {
+                            "maximum": 9007199254740991,
+                            "minimum": 0,
+                            "type": "integer"
+                          },
+                          "resourceId": {
+                            "enum": [
+                              "camelote",
+                              "jus",
+                              "bave-etoiles"
+                            ],
+                            "type": "string"
+                          },
+                          "saturatedSince": {
+                            "maximum": 9007199254740991,
+                            "minimum": 0,
+                            "nullable": true,
+                            "type": "integer"
+                          }
+                        },
+                        "required": [
+                          "amountGrains",
+                          "lostGrains",
+                          "resourceId",
+                          "saturatedSince"
+                        ],
+                        "type": "object"
+                      },
+                      "maxItems": 3,
+                      "minItems": 3,
+                      "type": "array"
+                    },
+                    "planet": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "archetypeId": {
+                          "enum": [
+                            "berceau"
+                          ],
+                          "type": "string"
+                        },
+                        "consolidatedAt": {
+                          "maximum": 9007199254740991,
+                          "minimum": 0,
+                          "type": "integer"
+                        },
+                        "id": {
+                          "format": "uuid",
+                          "type": "string"
+                        },
+                        "layoutId": {
+                          "maxLength": 64,
+                          "minLength": 1,
+                          "type": "string"
+                        },
+                        "occupantId": {
+                          "format": "uuid",
+                          "type": "string"
+                        },
+                        "ownerId": {
+                          "format": "uuid",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "archetypeId",
+                        "consolidatedAt",
+                        "id",
+                        "layoutId",
+                        "occupantId",
+                        "ownerId"
+                      ],
+                      "type": "object"
+                    },
+                    "serverInstant": {
+                      "maximum": 9007199254740991,
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    "work": {
+                      "additionalProperties": false,
+                      "nullable": true,
+                      "properties": {
+                        "dueAt": {
+                          "maximum": 9007199254740991,
+                          "minimum": 0,
+                          "type": "integer"
+                        },
+                        "id": {
+                          "format": "uuid",
+                          "type": "string"
+                        },
+                        "startedAt": {
+                          "maximum": 9007199254740991,
+                          "minimum": 0,
+                          "type": "integer"
+                        },
+                        "target": {
+                          "discriminator": {
+                            "propertyName": "nature"
+                          },
+                          "oneOf": [
+                            {
+                              "additionalProperties": false,
+                              "properties": {
+                                "anchorX": {
+                                  "maximum": 15,
+                                  "minimum": 0,
+                                  "type": "integer"
+                                },
+                                "anchorY": {
+                                  "maximum": 15,
+                                  "minimum": 0,
+                                  "type": "integer"
+                                },
+                                "nature": {
+                                  "enum": [
+                                    "build"
+                                  ],
+                                  "type": "string"
+                                },
+                                "orientation": {
+                                  "maximum": 3,
+                                  "minimum": 0,
+                                  "type": "integer"
+                                },
+                                "typeId": {
+                                  "enum": [
+                                    "mine",
+                                    "puits",
+                                    "racloir",
+                                    "centrale",
+                                    "entrepot"
+                                  ],
+                                  "type": "string"
+                                },
+                                "variantId": {
+                                  "enum": [
+                                    "single",
+                                    "line-2",
+                                    "square-4",
+                                    "l-4",
+                                    "t-4",
+                                    "rect-6",
+                                    "square-9"
+                                  ],
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "anchorX",
+                                "anchorY",
+                                "nature",
+                                "orientation",
+                                "typeId",
+                                "variantId"
+                              ],
+                              "type": "object"
+                            },
+                            {
+                              "additionalProperties": false,
+                              "properties": {
+                                "buildingId": {
+                                  "format": "uuid",
+                                  "type": "string"
+                                },
+                                "nature": {
+                                  "enum": [
+                                    "upgrade"
+                                  ],
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "buildingId",
+                                "nature"
+                              ],
+                              "type": "object"
+                            },
+                            {
+                              "additionalProperties": false,
+                              "properties": {
+                                "buildingId": {
+                                  "format": "uuid",
+                                  "type": "string"
+                                },
+                                "nature": {
+                                  "enum": [
+                                    "demolish"
+                                  ],
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "buildingId",
+                                "nature"
+                              ],
+                              "type": "object"
+                            },
+                            {
+                              "additionalProperties": false,
+                              "properties": {
+                                "nature": {
+                                  "enum": [
+                                    "clear"
+                                  ],
+                                  "type": "string"
+                                },
+                                "x": {
+                                  "maximum": 15,
+                                  "minimum": 0,
+                                  "type": "integer"
+                                },
+                                "y": {
+                                  "maximum": 15,
+                                  "minimum": 0,
+                                  "type": "integer"
+                                }
+                              },
+                              "required": [
+                                "nature",
+                                "x",
+                                "y"
+                              ],
+                              "type": "object"
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "dueAt",
+                        "id",
+                        "startedAt",
+                        "target"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "buildings",
+                    "catalogVersion",
+                    "clearedCells",
+                    "holdings",
+                    "planet",
+                    "serverInstant",
+                    "work"
+                  ],
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "details": {
+                      "additionalProperties": {
+                        "nullable": true
+                      },
+                      "type": "object"
+                    },
+                    "message": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "requestId": {
+                      "minLength": 1,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "requestId"
+                  ],
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": []
+      }
+    },
+    "/v1/me/planet/works": {
+      "post": {
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "discriminator": {
+                  "propertyName": "nature"
+                },
+                "oneOf": [
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "anchorX": {
+                        "maximum": 15,
+                        "minimum": 0,
+                        "type": "integer"
+                      },
+                      "anchorY": {
+                        "maximum": 15,
+                        "minimum": 0,
+                        "type": "integer"
+                      },
+                      "nature": {
+                        "enum": [
+                          "build"
+                        ],
+                        "type": "string"
+                      },
+                      "orientation": {
+                        "maximum": 3,
+                        "minimum": 0,
+                        "type": "integer"
+                      },
+                      "typeId": {
+                        "enum": [
+                          "mine",
+                          "puits",
+                          "racloir",
+                          "centrale",
+                          "entrepot"
+                        ],
+                        "type": "string"
+                      },
+                      "variantId": {
+                        "enum": [
+                          "single",
+                          "line-2",
+                          "square-4",
+                          "l-4",
+                          "t-4",
+                          "rect-6",
+                          "square-9"
+                        ],
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "anchorX",
+                      "anchorY",
+                      "nature",
+                      "orientation",
+                      "typeId",
+                      "variantId"
+                    ],
+                    "type": "object"
+                  },
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "buildingId": {
+                        "format": "uuid",
+                        "type": "string"
+                      },
+                      "nature": {
+                        "enum": [
+                          "upgrade"
+                        ],
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "buildingId",
+                      "nature"
+                    ],
+                    "type": "object"
+                  },
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "nature": {
+                        "enum": [
+                          "clear"
+                        ],
+                        "type": "string"
+                      },
+                      "x": {
+                        "maximum": 15,
+                        "minimum": 0,
+                        "type": "integer"
+                      },
+                      "y": {
+                        "maximum": 15,
+                        "minimum": 0,
+                        "type": "integer"
+                      }
+                    },
+                    "required": [
+                      "nature",
+                      "x",
+                      "y"
+                    ],
+                    "type": "object"
+                  },
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "buildingId": {
+                        "format": "uuid",
+                        "type": "string"
+                      },
+                      "nature": {
+                        "enum": [
+                          "demolish"
+                        ],
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "buildingId",
+                      "nature"
+                    ],
+                    "type": "object"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "buildings": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "anchorX": {
+                            "maximum": 15,
+                            "minimum": 0,
+                            "type": "integer"
+                          },
+                          "anchorY": {
+                            "maximum": 15,
+                            "minimum": 0,
+                            "type": "integer"
+                          },
+                          "id": {
+                            "format": "uuid",
+                            "type": "string"
+                          },
+                          "level": {
+                            "maximum": 30,
+                            "minimum": 1,
+                            "type": "integer"
+                          },
+                          "orientation": {
+                            "maximum": 3,
+                            "minimum": 0,
+                            "type": "integer"
+                          },
+                          "typeId": {
+                            "enum": [
+                              "mine",
+                              "puits",
+                              "racloir",
+                              "centrale",
+                              "entrepot"
+                            ],
+                            "type": "string"
+                          },
+                          "variantId": {
+                            "enum": [
+                              "single",
+                              "line-2",
+                              "square-4",
+                              "l-4",
+                              "t-4",
+                              "rect-6",
+                              "square-9"
+                            ],
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "anchorX",
+                          "anchorY",
+                          "id",
+                          "level",
+                          "orientation",
+                          "typeId",
+                          "variantId"
+                        ],
+                        "type": "object"
+                      },
+                      "maxItems": 36,
+                      "type": "array"
+                    },
+                    "catalogVersion": {
+                      "maxLength": 64,
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "clearedCells": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "x": {
+                            "maximum": 15,
+                            "minimum": 0,
+                            "type": "integer"
+                          },
+                          "y": {
+                            "maximum": 15,
+                            "minimum": 0,
+                            "type": "integer"
+                          }
+                        },
+                        "required": [
+                          "x",
+                          "y"
+                        ],
+                        "type": "object"
+                      },
+                      "maxItems": 36,
+                      "type": "array"
+                    },
+                    "holdings": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "amountGrains": {
+                            "maximum": 9007199254740991,
+                            "minimum": 0,
+                            "type": "integer"
+                          },
+                          "lostGrains": {
+                            "maximum": 9007199254740991,
+                            "minimum": 0,
+                            "type": "integer"
+                          },
+                          "resourceId": {
+                            "enum": [
+                              "camelote",
+                              "jus",
+                              "bave-etoiles"
+                            ],
+                            "type": "string"
+                          },
+                          "saturatedSince": {
+                            "maximum": 9007199254740991,
+                            "minimum": 0,
+                            "nullable": true,
+                            "type": "integer"
+                          }
+                        },
+                        "required": [
+                          "amountGrains",
+                          "lostGrains",
+                          "resourceId",
+                          "saturatedSince"
+                        ],
+                        "type": "object"
+                      },
+                      "maxItems": 3,
+                      "minItems": 3,
+                      "type": "array"
+                    },
+                    "planet": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "archetypeId": {
+                          "enum": [
+                            "berceau"
+                          ],
+                          "type": "string"
+                        },
+                        "consolidatedAt": {
+                          "maximum": 9007199254740991,
+                          "minimum": 0,
+                          "type": "integer"
+                        },
+                        "id": {
+                          "format": "uuid",
+                          "type": "string"
+                        },
+                        "layoutId": {
+                          "maxLength": 64,
+                          "minLength": 1,
+                          "type": "string"
+                        },
+                        "occupantId": {
+                          "format": "uuid",
+                          "type": "string"
+                        },
+                        "ownerId": {
+                          "format": "uuid",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "archetypeId",
+                        "consolidatedAt",
+                        "id",
+                        "layoutId",
+                        "occupantId",
+                        "ownerId"
+                      ],
+                      "type": "object"
+                    },
+                    "serverInstant": {
+                      "maximum": 9007199254740991,
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    "work": {
+                      "additionalProperties": false,
+                      "nullable": true,
+                      "properties": {
+                        "dueAt": {
+                          "maximum": 9007199254740991,
+                          "minimum": 0,
+                          "type": "integer"
+                        },
+                        "id": {
+                          "format": "uuid",
+                          "type": "string"
+                        },
+                        "startedAt": {
+                          "maximum": 9007199254740991,
+                          "minimum": 0,
+                          "type": "integer"
+                        },
+                        "target": {
+                          "discriminator": {
+                            "propertyName": "nature"
+                          },
+                          "oneOf": [
+                            {
+                              "additionalProperties": false,
+                              "properties": {
+                                "anchorX": {
+                                  "maximum": 15,
+                                  "minimum": 0,
+                                  "type": "integer"
+                                },
+                                "anchorY": {
+                                  "maximum": 15,
+                                  "minimum": 0,
+                                  "type": "integer"
+                                },
+                                "nature": {
+                                  "enum": [
+                                    "build"
+                                  ],
+                                  "type": "string"
+                                },
+                                "orientation": {
+                                  "maximum": 3,
+                                  "minimum": 0,
+                                  "type": "integer"
+                                },
+                                "typeId": {
+                                  "enum": [
+                                    "mine",
+                                    "puits",
+                                    "racloir",
+                                    "centrale",
+                                    "entrepot"
+                                  ],
+                                  "type": "string"
+                                },
+                                "variantId": {
+                                  "enum": [
+                                    "single",
+                                    "line-2",
+                                    "square-4",
+                                    "l-4",
+                                    "t-4",
+                                    "rect-6",
+                                    "square-9"
+                                  ],
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "anchorX",
+                                "anchorY",
+                                "nature",
+                                "orientation",
+                                "typeId",
+                                "variantId"
+                              ],
+                              "type": "object"
+                            },
+                            {
+                              "additionalProperties": false,
+                              "properties": {
+                                "buildingId": {
+                                  "format": "uuid",
+                                  "type": "string"
+                                },
+                                "nature": {
+                                  "enum": [
+                                    "upgrade"
+                                  ],
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "buildingId",
+                                "nature"
+                              ],
+                              "type": "object"
+                            },
+                            {
+                              "additionalProperties": false,
+                              "properties": {
+                                "buildingId": {
+                                  "format": "uuid",
+                                  "type": "string"
+                                },
+                                "nature": {
+                                  "enum": [
+                                    "demolish"
+                                  ],
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "buildingId",
+                                "nature"
+                              ],
+                              "type": "object"
+                            },
+                            {
+                              "additionalProperties": false,
+                              "properties": {
+                                "nature": {
+                                  "enum": [
+                                    "clear"
+                                  ],
+                                  "type": "string"
+                                },
+                                "x": {
+                                  "maximum": 15,
+                                  "minimum": 0,
+                                  "type": "integer"
+                                },
+                                "y": {
+                                  "maximum": 15,
+                                  "minimum": 0,
+                                  "type": "integer"
+                                }
+                              },
+                              "required": [
+                                "nature",
+                                "x",
+                                "y"
+                              ],
+                              "type": "object"
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "dueAt",
+                        "id",
+                        "startedAt",
+                        "target"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "buildings",
+                    "catalogVersion",
+                    "clearedCells",
+                    "holdings",
+                    "planet",
+                    "serverInstant",
+                    "work"
+                  ],
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "details": {
+                      "additionalProperties": {
+                        "nullable": true
+                      },
+                      "type": "object"
+                    },
+                    "message": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "requestId": {
+                      "minLength": 1,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "requestId"
+                  ],
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "details": {
+                      "additionalProperties": {
+                        "nullable": true
+                      },
+                      "type": "object"
+                    },
+                    "message": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "requestId": {
+                      "minLength": 1,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "requestId"
+                  ],
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "details": {
+                      "additionalProperties": {
+                        "nullable": true
+                      },
+                      "type": "object"
+                    },
+                    "message": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "requestId": {
+                      "minLength": 1,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "requestId"
+                  ],
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "details": {
+                      "additionalProperties": {
+                        "nullable": true
+                      },
+                      "type": "object"
+                    },
+                    "message": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "requestId": {
+                      "minLength": 1,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "requestId"
+                  ],
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "details": {
+                      "additionalProperties": {
+                        "nullable": true
+                      },
+                      "type": "object"
+                    },
+                    "message": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "requestId": {
+                      "minLength": 1,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "requestId"
+                  ],
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": []
+      }
+    }
+  }
+}

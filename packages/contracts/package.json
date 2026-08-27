@@ -1,0 +1,35 @@
+{
+  "name": "@zaliba/contracts",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Schémas Zod et routes versionnées. N'importe PAS domain : la duplication est volontaire.",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./*": {
+      "types": "./dist/*.d.ts",
+      "default": "./dist/*.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -b tsconfig.build.json",
+    "clean": "rm -rf dist *.tsbuildinfo",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "openapi": "tsx scripts/emit-openapi.ts"
+  },
+  "dependencies": {
+    "@ts-rest/core": "3.52.1",
+    "zod": "3.25.76"
+  },
+  "devDependencies": {
+    "@ts-rest/open-api": "3.52.1",
+    "@types/node": "24.10.1",
+    "tsx": "4.23.12"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts"
+}

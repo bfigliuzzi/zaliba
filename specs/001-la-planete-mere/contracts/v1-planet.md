@@ -36,6 +36,13 @@ PlanetSnapshotV1
     resourceId     'camelote' | 'jus' | 'bave-etoiles'
     amountGrains   entier, 0..2^53−1          — grains : 1/3600 unité (R1)
     lostGrains     entier, 0..2^53−1          — perte cumulée par saturation (FR-026)
+    saturatedSince entier | null              — instant d'**entrée** en saturation
+                                                (US1/AC5). Obligatoire et annulable :
+                                                « pas saturée » est un état courant, pas
+                                                un cas d'erreur. Le seul état de
+                                                possession non dérivable — la **durée**,
+                                                elle, reste absente : elle vaut
+                                                `serverInstant − saturatedSince`.
   buildings        tableau, 0..36
     id             uuid
     typeId         'mine' | 'puits' | 'racloir' | 'centrale' | 'entrepot'

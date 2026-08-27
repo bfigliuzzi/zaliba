@@ -1,0 +1,301 @@
+name: CI
+
+# Les onze portes de la table § 7.8 du document de stack. Toutes bloquantes,
+# aucune consultative. Une porte consultative est une porte qu'on finit par
+# ignorer, et le jour où on l'ignore est celui où elle aurait servi.
+#
+# L'ordre des travaux n'est pas cosmétique : `frontieres` échoue avant les
+# tests si une frontière de paquet a été franchie. C'est une erreur
+# d'architecture, pas une erreur de logique, et la lire dans un échec de test
+# coûte une heure (quickstart § 2).
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  NODE_VERSION: '24.19.0'
+  PNPM_VERSION: '11.22.0'
+  # La pile locale de la porte 8. Épinglée comme tout le reste : une CLI qui se
+  # met à jour d'elle-même change la pile sous les parcours, et l'échec
+  # apparaîtrait alors sur une fusion qui n'y est pour rien.
+  SUPABASE_CLI_VERSION: '2.109.1'
+  TURBO_TELEMETRY_DISABLED: '1'
+
+jobs:
+  # ───────────────────────────────────────────────────────────────────────────
+  # Porte 10 — Fuite de secrets. En tête, et sur l'historique complet :
+  # c'est la seule porte dont l'échec est irréversible. Un secret poussé est
+  # un secret publié, même après réécriture.
+  # ───────────────────────────────────────────────────────────────────────────
+  secrets:
+    name: Porte — fuite de secrets (gitleaks)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # Portes 1 à 3 — types, format et lint, frontières de paquets.
+  # ───────────────────────────────────────────────────────────────────────────
+  statique:
+    name: Portes — types, lint, frontières
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      - uses: actions/setup-node@v5
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      # **La compilation est une condition d'exécution, pas une porte.**
+      # `dependency-cruiser` résout les paquets de l'espace de travail par leur
+      # champ `exports`, qui pointe sur `dist/`. Sans compilation préalable, il
+      # ne trouve rien à résoudre et rend **cent trente-deux** violations
+      # `aucun-module-inexistant` — un échec qui accuse l'architecture pour un
+      # défaut d'outillage, c'est-à-dire le contraire de ce qu'on attend d'une
+      # porte. Le poste de développement compilait sans y penser ; le premier
+      # passage en intégration continue l'a mis au jour.
+      - run: pnpm -w build
+
+      # Porte 3 en premier : une frontière franchie invalide tout le reste.
+      - name: Porte — frontières de paquets (le principe II, mécaniquement)
+        run: pnpm -w boundaries
+
+      - name: Porte — types
+        run: pnpm -w typecheck
+
+      - name: Porte — format et lint
+        run: pnpm -w lint
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # Portes 4 à 6 et 11 — domaine et propriétés, cohérence des catalogues,
+  # contrats, seuil de couverture domaine.
+  # ───────────────────────────────────────────────────────────────────────────
+  unitaires:
+    name: Portes — domaine, catalogues, contrats, couverture
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      - uses: actions/setup-node@v5
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm -w build
+
+      - name: Porte — cohérence des catalogues
+        run: pnpm vitest run --project catalogs
+
+      - name: Porte — domaine et propriétés (fast-check)
+        run: pnpm vitest run --project domain
+
+      - name: Porte — contrats et compatibilité (instantanés de JSON Schema)
+        run: pnpm vitest run --project contracts --project db
+
+      - name: Porte — client (chemin clavier)
+        run: pnpm vitest run --project game --project api
+
+      # La transparence promise à P4, publiée en artefact : le document est
+      # **engendré** depuis les schémas Zod, jamais rédigé, et attaché à la
+      # vérification qui l'a produit — donc au commit exact du contrat qu'il décrit.
+      - name: Export OpenAPI de la version 1
+        run: pnpm --filter @zaliba/contracts openapi openapi/v1.json
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: openapi-v1
+          path: packages/contracts/openapi/v1.json
+          retention-days: 30
+
+      # Porte 11. Mesurée sur `packages/domain` **uniquement** : un chiffre
+      # mêlant interface et domaine ne veut rien dire (quickstart § 6).
+      - name: Porte — seuil de couverture domaine
+        run: pnpm -w test:coverage
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # Porte 7 — Intégration. Un vrai PostgreSQL, jamais un simulacre : un
+  # simulacre testerait le simulacre, pas le SQL. Or verrous, transactions et
+  # contraintes sont précisément ce qui doit être vérifié.
+  # ───────────────────────────────────────────────────────────────────────────
+  integration:
+    name: Porte — intégration (Testcontainers, PostgreSQL réel)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      - uses: actions/setup-node@v5
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm -w build
+
+      - name: Démon Docker disponible
+        run: docker info
+
+      - name: Porte — concurrence, idempotence, autorisation dans la transaction
+        run: pnpm -w test:integration
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # Porte 8 — Parcours et accessibilité. Les priorités 1 et 3.
+  # FR-058 à FR-061 sont des tests, pas des intentions.
+  #
+  # **La porte porte sa propre pile.** Le `webServer` de Playwright démarre
+  # `@zaliba/api`, qui exige `DATABASE_URL` et les trois variables de
+  # vérification de jeton, et `@zaliba/game`, qui exige l'URL et la clé `anon`
+  # de Supabase. Un parcours interrogeant un simulacre ne prouverait rien de ce
+  # qu'on lui demande de prouver — c'est la raison d'être de cette porte —, donc
+  # la pile locale du dépôt est montée ici, comme le décrit
+  # `specs/001-la-planete-mere/quickstart.md` § 1.
+  #
+  # L'objectif de tout ce qui suit tient en une phrase : **cette porte doit
+  # échouer sur un défaut du jeu, jamais sur son environnement.** Chaque étape
+  # de câblage vérifie donc son propre effet, plutôt que de sortir en succès
+  # sans avoir rien fait.
+  # ───────────────────────────────────────────────────────────────────────────
+  parcours:
+    name: Porte — parcours et accessibilité (Playwright, axe-core)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      - uses: actions/setup-node@v5
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm -w build
+      - run: pnpm exec playwright install --with-deps chromium
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: ${{ env.SUPABASE_CLI_VERSION }}
+
+      # La clé de signature est **privée**, fût-elle de développement : elle
+      # n'est pas dans le dépôt, et se reproduit en une commande. Le même script
+      # sert au poste de développement (quickstart § 1) : deux recettes de clé
+      # divergeraient, et la divergence se lirait en `no signing key found`.
+      - name: Clé de signature ES256 de la pile locale
+        run: node scripts/generate-signing-keys.mjs
+
+      - name: Pile Supabase locale démarrée (base et authentification)
+        run: supabase start
+
+      # Le schéma de jeu, appliqué dans l'ordre lexical des fichiers — le
+      # **même** ordre et le même découpage que le harnais d'intégration. Un
+      # `drizzle-kit migrate` s'en remettrait au journal, qui ne connaît pas les
+      # migrations écrites à la main : la porte tournerait alors sur un schéma
+      # incomplet sans le dire.
+      - name: Schéma de jeu appliqué à la pile locale
+        run: |
+          set -euo pipefail
+          DB_URL="$(supabase status -o env | sed -n 's/^DB_URL="\(.*\)"$/\1/p')"
+          test -n "$DB_URL"
+          shopt -s nullglob
+          fichiers=(packages/db/migrations/*.sql)
+          if [ ${#fichiers[@]} -eq 0 ]; then
+            echo '::error::Aucune migration trouvée dans packages/db/migrations.'
+            exit 1
+          fi
+          for fichier in "${fichiers[@]}"; do
+            echo "→ $fichier"
+            psql "$DB_URL" -v ON_ERROR_STOP=1 -q -f "$fichier"
+          done
+          # Une porte qui sort en succès sans rien avoir appliqué est pire
+          # qu'une porte absente : le compte de tables est ce qui l'interdit.
+          tables="$(psql "$DB_URL" -At -c "select count(*) from pg_tables where schemaname = 'game'")"
+          echo "Schéma game : $tables tables."
+          if [ "$tables" -ne 7 ]; then
+            echo "::error::Le schéma game compte $tables tables, 7 attendues."
+            exit 1
+          fi
+
+      # Le `.env` de la racine sert aux **deux** serveurs : `@zaliba/api` le lit
+      # par `node --env-file`, et `@zaliba/game` par l'`envDir` de sa
+      # configuration Vite. Les valeurs viennent de `supabase status`, jamais
+      # d'une constante recopiée — les ports d'une pile locale sont sa
+      # propriété, pas la nôtre.
+      - name: Variables d'environnement des deux serveurs
+        run: |
+          set -euo pipefail
+          eval "$(supabase status -o env | grep -E '^[A-Z0-9_]+="' | sed 's/^/export /')"
+          test -n "$DB_URL" && test -n "$API_URL" && test -n "$ANON_KEY"
+          cat > .env <<ENV
+          DATABASE_URL=$DB_URL
+          SUPABASE_JWKS_URL=$API_URL/auth/v1/.well-known/jwks.json
+          SUPABASE_JWT_ISSUER=$API_URL/auth/v1
+          SUPABASE_JWT_AUDIENCE=authenticated
+          CORS_ALLOWED_ORIGINS=http://127.0.0.1:5173
+          PORT=3000
+          HOST=127.0.0.1
+          VITE_API_URL=http://127.0.0.1:3000
+          VITE_SUPABASE_URL=$API_URL
+          VITE_SUPABASE_ANON_KEY=$ANON_KEY
+          ENV
+          # Les valeurs ne sont pas journalisées — seulement les noms, qui
+          # suffisent à diagnostiquer un oubli.
+          cut -d= -f1 .env
+
+      - name: Porte — parcours clavier et WCAG 2.1 AA
+        run: pnpm -w e2e
+
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: rapport-playwright
+          path: playwright-report/
+          retention-days: 7
+
+      # `--no-backup` : rien de cette pile ne doit survivre à la porte, et un
+      # instantané laissé derrière ferait démarrer la suivante sur un état qui
+      # n'est plus celui du dépôt.
+      - name: Pile Supabase locale arrêtée
+        if: ${{ always() }}
+        run: supabase stop --no-backup
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # Porte 9 — Vulnérabilités. La chaîne d'approvisionnement.
+  # ───────────────────────────────────────────────────────────────────────────
+  vulnerabilites:
+    name: Porte — vulnérabilités
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      - uses: actions/setup-node@v5
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      - name: Porte — audit de dépendances
+        run: pnpm audit --audit-level moderate

@@ -1,0 +1,42 @@
+# La porte 10 — fuite de secrets, et ses sept faux positifs.
+#
+# `gitleaks` scanne **l'historique complet**, et c'est la seule porte dont l'échec
+# soit irréversible : un secret poussé est un secret publié, même après réécriture.
+# On ne la désarme donc pas. On nomme ce qu'elle a trouvé.
+#
+# Les sept relevés sont des **valeurs de test**, écrites pour ressembler à ce
+# qu'elles ne sont pas : c'est précisément leur raison d'être. `logging-redaction`
+# éprouve qu'un jeton d'apparence réaliste n'atteint jamais le journal — un jeton
+# d'apparence fausse ne prouverait rien de la liste noire. La porte a donc raison
+# sur la forme, et tort sur le fond.
+#
+# **L'exclusion porte sur les valeurs, jamais sur les fichiers.** Écarter
+# `tests/` en bloc serait plus court et beaucoup plus dangereux : un test est
+# exactement l'endroit où l'on colle un vrai jeton « juste pour essayer », et la
+# porte ne le verrait plus jamais. Ici, un secret réel déposé dans le même fichier
+# reste détecté — il ne porterait pas le mot « fictive ».
+#
+# Ajouter une valeur à cette liste, c'est affirmer qu'elle est inventée. Le marqueur
+# doit rester lisible dans la valeur elle-même, pour que l'affirmation se vérifie
+# en la lisant.
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Les valeurs de fixture, reconnaissables à leur marqueur de fiction"
+regexes = [
+  # Les jetons de `apps/game/tests/session.test.ts` et `api.test.ts` : trois
+  # segments, préfixe `eyJ`, et une signature qui dit ce qu'elle est.
+  '''signature-fictive''',
+  '''signature-renouvelee''',
+  # Le même, en base64, dans `apps/api/tests/logging-redaction.test.ts` :
+  # `c2lnbmF0dXJlLWZhY3RpY2U` décode en « signature-factice ».
+  '''c2lnbmF0dXJlLWZhY3RpY2U''',
+  # La fausse clé `service_role` du test de rédaction du journal. Une vraie clé
+  # Supabase est un JWT ; celle-ci annonce en toutes lettres qu'elle n'en est pas une.
+  '''sb-service-role-cle-tres-secrete-0123456789''',
+  # L'UUID de la RFC 4122 — l'exemple canonique de la norme —, employé comme clé
+  # d'idempotence dans les tests. Relevé en « generic-api-key » pour sa forme.
+  '''3f2504e0-4f89-11d3-9a0c-[0-9a-f]{12}''',
+]

@@ -23,3 +23,13 @@ dist/
 build/
 coverage/
 *.log
+
+# Caches d'outillage du monorepo
+.turbo/
+*.tsbuildinfo
+
+# Rapports de test
+playwright-report/
+test-results/
+blob-report/
+.playwright/
