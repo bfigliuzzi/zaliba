@@ -69,9 +69,9 @@ function rich(): PlanetSnapshot {
   return {
     ...fresh(),
     holdings: {
-      camelote: { amount: plenty, lost: grains(0) },
-      jus: { amount: plenty, lost: grains(0) },
-      'bave-etoiles': { amount: plenty, lost: grains(0) },
+      camelote: { amount: plenty, lost: grains(0), saturatedSince: null },
+      jus: { amount: plenty, lost: grains(0), saturatedSince: null },
+      'bave-etoiles': { amount: plenty, lost: grains(0), saturatedSince: null },
     },
   }
 }

@@ -88,6 +88,71 @@ describe('la saturation est annoncée pour ce qu’elle est', () => {
   })
 })
 
+/**
+ * **Depuis combien de temps la saturation dure** (US1/AC5).
+ *
+ * L'exigence demande les deux moitiés : *combien* s'est perdu — c'était déjà là —
+ * et *depuis quand*. La seconde manquait, et elle n'est pas dérivable de la
+ * première : `perdu ÷ taux` serait faux dès que le taux a changé depuis. C'est
+ * l'instant que le domaine projette ; l'écran n'en fait qu'une durée.
+ *
+ * La Camelote part de 400 unités, plafonne à 5 000 et croît de 20 par heure : elle
+ * sature au bout de 230 heures exactement. Toutes les durées ci-dessous se
+ * comptent depuis cet instant-là.
+ */
+describe('depuis combien de temps la saturation dure (US1/AC5)', () => {
+  /** (5 000 − 400) ÷ 20 = 230 heures. */
+  const saturationDelay = 230 * 3_600
+
+  it('ne dit rien tant que la ressource n’est pas saturée', () => {
+    renderPanel(saturationDelay - 3_600)
+    const dd = group(/camelote/i)
+      .getByText(/dans /i)
+      .closest('dd')
+    expect(dd?.getAttribute('data-saturated-for')).toBeNull()
+  })
+
+  it('annonce la durée en clair dès la saturation acquise', () => {
+    renderPanel(saturationDelay + 3 * 86_400)
+    expect(group(/camelote/i).getByText(/saturée depuis 3 j/i)).toBeDefined()
+  })
+
+  it('publie la durée en secondes, pour qui la mesure', () => {
+    renderPanel(saturationDelay + 5 * 3_600)
+    const dd = group(/camelote/i)
+      .getByText(/saturée depuis/i)
+      .closest('dd')
+    expect(dd?.getAttribute('data-saturated-for')).toBe(String(5 * 3_600))
+    expect(dd?.getAttribute('data-resource')).toBe('camelote')
+  })
+
+  /**
+   * **La troncature va vers le bas**, à l'inverse du temps *restant*. Une durée
+   * écoulée arrondie au-dessus surestimerait le dégât : « saturée depuis 4 j »
+   * quand il y en a trois et demi accuse le joueur d'une négligence qu'il n'a pas
+   * eue. Le temps restant, lui, s'arrondit vers le haut — annoncer « dans 0 heure »
+   * quand il reste cinquante minutes serait faux dans le sens qui coûte cher.
+   */
+  it('tronque la durée écoulée vers le bas', () => {
+    renderPanel(saturationDelay + 3 * 86_400 + 43_200)
+    expect(group(/camelote/i).getByText(/saturée depuis 3 j/i)).toBeDefined()
+  })
+
+  it('dit « moins d’une minute » à la seconde même de la saturation', () => {
+    renderPanel(saturationDelay)
+    expect(group(/camelote/i).getByText(/saturée depuis moins d’une minute/i)).toBeDefined()
+  })
+
+  /**
+   * Une ressource à taux nul ne saturera jamais, et l'écran doit le dire ainsi —
+   * pas par une durée écoulée qui n'existe pas.
+   */
+  it('distingue « jamais » d’une saturation acquise', () => {
+    renderPanel()
+    expect(group(/jus/i).getByText(/dans /i)).toBeDefined()
+  })
+})
+
 describe('l’affichage est perceptible sans la couleur (FR-060)', () => {
   it('nomme chaque grandeur en toutes lettres', () => {
     renderPanel()

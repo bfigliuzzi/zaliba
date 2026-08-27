@@ -1,5 +1,5 @@
 import type { BuildingTypeId, FootprintId } from '@zaliba/catalogs'
-import type { Catalogs, PreviewResult } from '@zaliba/domain'
+import type { Catalogs, GridOccupancy, PlacementAvailability, PreviewResult } from '@zaliba/domain'
 import { useId } from 'react'
 import { formatDuration, formatUnits, formatWhole } from '../../lib/format.js'
 import { BUILDING_LABELS, FOOTPRINT_LABELS, RESOURCE_LABELS } from '../../lib/labels.js'
@@ -44,6 +44,17 @@ export interface BuildPanelProps {
   readonly selection: BuildSelection
   /** L'aperçu local, ou `null` tant qu'aucun type n'est choisi. */
   readonly preview: PreviewResult | null
+  /** Ce que la grille contient — de quoi dire qu'elle est pleine, et par où sortir. */
+  readonly occupancy: GridOccupancy
+  /**
+   * L'existence d'un placement pour le type choisi, ou `null` tant qu'aucun ne
+   * l'est.
+   *
+   * Distincte de `preview`, qui répond « ici, oui ou non » à une position donnée.
+   * Celle-ci répond « quelque part, oui ou non » — et c'est la question que pose
+   * un joueur qui a essayé trois cases et n'a pas compris pourquoi.
+   */
+  readonly availability: PlacementAvailability | null
   /** Vrai pendant que la commande est en vol : le bouton ne se clique qu'une fois. */
   readonly pending: boolean
   readonly onSelectType: (typeId: BuildingTypeId) => void
@@ -55,6 +66,8 @@ export function BuildPanel({
   catalogs,
   selection,
   preview,
+  occupancy,
+  availability,
   pending,
   onSelectType,
   onSelectVariant,
@@ -69,6 +82,8 @@ export function BuildPanel({
   return (
     <div>
       <h2>Construire</h2>
+
+      <FullGridNotice occupancy={occupancy} />
 
       <fieldset>
         <legend>Type de bâtiment</legend>
@@ -109,7 +124,7 @@ export function BuildPanel({
         </fieldset>
       )}
 
-      <BuildPreview preview={preview} />
+      <BuildPreview preview={preview} availability={availability} />
 
       {selection.typeId !== null && (
         <button type="button" onClick={onConfirm} disabled={pending} aria-busy={pending}>
@@ -137,7 +152,39 @@ export function BuildPanel({
  * l'aperçu de suivre le curseur à la fréquence d'affichage, ce qu'un endpoint ne
  * permettrait pas.
  */
-function BuildPreview({ preview }: { readonly preview: PreviewResult | null }) {
+function BuildPreview({
+  preview,
+  availability,
+}: {
+  readonly preview: PreviewResult | null
+  readonly availability: PlacementAvailability | null
+}) {
+  /*
+    **L'impossibilité passe avant tout le reste**, et c'est le cas limite de la
+    spécification : « aucune empreinte d'un type donné ne tient nulle part sur la
+    grille : le type reste consultable, son aperçu énonce l'impossibilité et son
+    motif ».
+
+    Elle passe avant parce qu'elle explique les refus au lieu de les répéter. Un
+    joueur qui promène son curseur reçoit case après case « obstruée », « occupée »,
+    « hors de la grille » — trois motifs justes qui ne disent jamais qu'il n'y a
+    rien à trouver. Le dire une fois vaut mieux que le laisser déduire trente-six
+    fois.
+  */
+  if (availability !== null && availability.kind !== 'available') {
+    return (
+      // biome-ignore lint/a11y/useSemanticElements: `group` est le rôle juste pour un ensemble de valeurs liées, comme partout ailleurs dans ce panneau.
+      <div role="group" aria-label="Aperçu de la construction">
+        <p>Aucune empreinte de ce bâtiment ne tient nulle part sur la grille.</p>
+        <p>
+          {availability.kind === 'not-enough-free-cells'
+            ? `Plus assez de cases libres : il en reste ${formatWhole(availability.freeCells)}, et il en faut au moins ${formatWhole(availability.smallestFootprint)}. Démolir ou déblayer en rendra.`
+            : `Il reste ${formatWhole(availability.freeCells)} cases libres — assez en nombre —, mais pas dans cette forme : les ${formatWhole(availability.smallestFootprint)} cases d’une empreinte doivent être libres et contiguës. Une autre empreinte, ou une démolition bien choisie, peut suffire.`}
+        </p>
+      </div>
+    )
+  }
+
   if (preview === null) {
     return (
       // biome-ignore lint/a11y/useSemanticElements: `group` est le rôle juste pour un ensemble de valeurs liées. Une `<section>` étiquetée deviendrait un point de repère `region`, et `<fieldset>` annonce un groupe de champs de saisie : il n'y en a aucun ici.
@@ -287,5 +334,32 @@ function BuildPreview({ preview }: { readonly preview: PreviewResult | null }) {
         )}
       </dl>
     </div>
+  )
+}
+
+/**
+ * **La grille pleine, dite** — le second cas limite de la spécification.
+ *
+ * « La grille est entièrement occupée : seules la démolition et le déblaiement
+ * peuvent libérer de la place, **et le jeu le dit**. »
+ *
+ * Les deux comptes sont donnés séparément parce qu'ils décident : des cases sous
+ * obstacle se déblaient, des cases sous bâtiment se démolissent, et les deux ne se
+ * paient pas le même prix. Un « la grille est pleine » sans chiffres laisserait le
+ * joueur chercher par où sortir.
+ *
+ * `role="status"` et non `alert` : c'est un état de la planète, pas un incident.
+ * Une alerte interromprait le lecteur d'écran pour une situation que le joueur a
+ * lui-même construite, coup par coup.
+ */
+function FullGridNotice({ occupancy }: { readonly occupancy: GridOccupancy }) {
+  if (!occupancy.full) return null
+
+  return (
+    <p role="status">
+      La grille est entièrement occupée : {formatWhole(occupancy.occupied)} cases sous bâtiment,{' '}
+      {formatWhole(occupancy.obstructed)} sous obstacle, aucune libre. Seules la démolition et le
+      déblaiement peuvent libérer de la place.
+    </p>
   )
 }

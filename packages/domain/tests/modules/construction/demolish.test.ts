@@ -172,9 +172,9 @@ describe('decide() retourne des effets, et ne mute rien', () => {
     const broke: PlanetSnapshot = {
       ...withMine(),
       holdings: {
-        camelote: { amount: grains(0), lost: grains(0) },
-        jus: { amount: grains(0), lost: grains(0) },
-        'bave-etoiles': { amount: grains(0), lost: grains(0) },
+        camelote: { amount: grains(0), lost: grains(0), saturatedSince: null },
+        jus: { amount: grains(0), lost: grains(0), saturatedSince: null },
+        'bave-etoiles': { amount: grains(0), lost: grains(0), saturatedSince: null },
       },
     }
     expect(decideDemolish(stateOf(broke), command(), CATALOGS).outcome).toBe('accepted')

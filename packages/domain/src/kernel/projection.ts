@@ -68,6 +68,19 @@ export interface HoldingView {
   readonly nominalRate: RatePerHour
   /** `null` si le taux est nul ou la ressource déjà saturée (FR-027). */
   readonly saturationAt: Instant | null
+  /**
+   * L'instant d'**entrée** en saturation, ou `null` si la ressource ne l'est pas
+   * (US1/AC5).
+   *
+   * L'exigence demande deux choses de la ressource saturée : combien s'est
+   * perdu — c'est `lost` — et depuis quand. La seconde n'est pas dérivable de
+   * la première : `lost ÷ rate` serait faux dès que le taux a changé depuis. La
+   * durée de saturation se lit `at − saturatedSince`.
+   *
+   * `saturationAt` et `saturatedSince` sont exclusifs l'un de l'autre : la
+   * saturation est soit à venir, soit acquise.
+   */
+  readonly saturatedSince: Instant | null
 }
 
 export interface BuildingView extends PlacedBuilding {
@@ -132,7 +145,9 @@ export function project(
 }
 
 interface Accumulated {
-  readonly amounts: Readonly<Record<ResourceId, { amount: number; lost: number }>>
+  readonly amounts: Readonly<
+    Record<ResourceId, { amount: number; lost: number; saturatedSince: Instant | null }>
+  >
 }
 
 /**
@@ -204,7 +219,14 @@ function initial(snapshot: PlanetSnapshot, catalogs: Catalogs): Accumulated {
     amounts: Object.fromEntries(
       catalogs.resourceIds.map((resourceId) => {
         const holding = snapshot.holdings[resourceId]
-        return [resourceId, { amount: holding?.amount ?? 0, lost: holding?.lost ?? 0 }]
+        return [
+          resourceId,
+          {
+            amount: holding?.amount ?? 0,
+            lost: holding?.lost ?? 0,
+            saturatedSince: holding?.saturatedSince ?? null,
+          },
+        ]
       }),
     ) as unknown as Accumulated['amounts'],
   }
@@ -230,10 +252,12 @@ function accumulate(
   return {
     amounts: Object.fromEntries(
       catalogs.resourceIds.map((resourceId) => {
-        const held = carried.amounts[resourceId] ?? { amount: 0, lost: 0 }
+        const held = carried.amounts[resourceId] ?? { amount: 0, lost: 0, saturatedSince: null }
         const advanced = advanceSegment({
+          from,
           amount: grains(held.amount),
           lost: grains(held.lost),
+          saturatedSince: held.saturatedSince,
           rate: rates[resourceId]?.effective ?? (0 as RatePerHour),
           seconds,
           cap: grains(caps[resourceId] ?? 0),
@@ -251,7 +275,11 @@ function withAmounts(snapshot: PlanetSnapshot, state: Accumulated, at: Instant):
     holdings: Object.fromEntries(
       Object.entries(state.amounts).map(([resourceId, held]) => [
         resourceId,
-        { amount: grains(held.amount), lost: grains(held.lost) },
+        {
+          amount: grains(held.amount),
+          lost: grains(held.lost),
+          saturatedSince: held.saturatedSince,
+        },
       ]),
     ) as unknown as PlanetSnapshot['holdings'],
   }
@@ -270,7 +298,7 @@ function render(
 
   const holdings = Object.fromEntries(
     catalogs.resourceIds.map((resourceId) => {
-      const held = state.amounts[resourceId] ?? { amount: 0, lost: 0 }
+      const held = state.amounts[resourceId] ?? { amount: 0, lost: 0, saturatedSince: null }
       const cap = grains(caps[resourceId] ?? 0)
       const rate = rates[resourceId]?.effective ?? (0 as RatePerHour)
       const amount = grains(held.amount)
@@ -284,6 +312,10 @@ function render(
           rate,
           nominalRate: rates[resourceId]?.nominal ?? (0 as RatePerHour),
           saturationAt: saturationAt(at, amount, cap, rate),
+          // La saturation acquise, datée par le segment qui l'a vue survenir —
+          // et non par cette lecture, qui n'apprendrait au joueur que l'heure
+          // qu'il est.
+          saturatedSince: held.saturatedSince,
         },
       ]
     }),

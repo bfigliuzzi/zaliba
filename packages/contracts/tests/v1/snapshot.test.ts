@@ -89,6 +89,27 @@ describe('les valeurs dérivables sont absentes, et le schéma les refuse', () =
     },
   )
 
+  /**
+   * **L'exception qui confirme la règle** (US1/AC5). L'instant d'entrée en
+   * saturation *est* transmis, et ce n'est pas une dérogation au test d'absence
+   * : ce n'est pas une valeur dérivable. Une consolidation efface tout ce qui
+   * précède, et ni la quantité — au plafond, elle ne dit plus depuis quand — ni
+   * la perte — `perdu ÷ taux` est faux dès que le taux a changé — ne permettent
+   * de le retrouver. Le client ne peut donc pas le calculer : il faut le lui
+   * dire.
+   *
+   * Ce qui reste absent, c'est la **durée** : elle vaut `maintenant − instant`,
+   * et le client la recalcule à chaque image.
+   */
+  it('refuse une durée de saturation dans une possession', () => {
+    for (const field of ['saturatedForSeconds', 'saturatedSeconds', 'saturationDuration']) {
+      const payload = base()
+      const holdings = payload['holdings'] as Record<string, unknown>[]
+      holdings[0] = { ...holdings[0], [field]: 1 }
+      expect(() => PlanetSnapshotV1.parse(payload), field).toThrow()
+    }
+  })
+
   it('n’expose ni cases occupées ni gisements par bâtiment', () => {
     const payload = fixture('planet-in-progress.json') as Record<string, unknown>
     const buildings = payload['buildings'] as Record<string, unknown>[]
@@ -112,6 +133,47 @@ describe('les valeurs dérivables sont absentes, et le schéma les refuse', () =
     const payload = fixture('planet-in-progress.json') as Record<string, unknown>
     const work = payload['work'] as Record<string, unknown>
     expect(Object.keys(work)).not.toContain('remaining')
+  })
+})
+
+/**
+ * L'instant d'entrée en saturation, dans le contrat (US1/AC5).
+ *
+ * Il est **obligatoire et annulable** : obligatoire, parce qu'un champ facultatif
+ * laisserait un client ancien croire que la grandeur n'existe pas plutôt que
+ * qu'elle ne s'applique pas ; annulable, parce que « pas saturée » est l'état
+ * courant d'une ressource, pas un cas d'erreur.
+ */
+describe('l’instant d’entrée en saturation est porté par chaque possession', () => {
+  const base = () => structuredClone(fixture('planet-fresh.json')) as Record<string, unknown>
+
+  function withHolding(patch: Record<string, unknown>): unknown {
+    const payload = base()
+    const holdings = payload['holdings'] as Record<string, unknown>[]
+    holdings[0] = { ...holdings[0], ...patch }
+    return payload
+  }
+
+  it('accepte un instant', () => {
+    expect(() =>
+      PlanetSnapshotV1.parse(withHolding({ saturatedSince: 1_787_750_000 })),
+    ).not.toThrow()
+  })
+
+  it('accepte null — la ressource n’est pas saturée', () => {
+    expect(() => PlanetSnapshotV1.parse(withHolding({ saturatedSince: null }))).not.toThrow()
+  })
+
+  it('refuse son absence', () => {
+    const payload = base()
+    const holdings = payload['holdings'] as Record<string, unknown>[]
+    const { saturatedSince: _omis, ...sans } = holdings[0] as Record<string, unknown>
+    holdings[0] = sans
+    expect(() => PlanetSnapshotV1.parse(payload)).toThrow()
+  })
+
+  it.each([-1, 1.5, 'maintenant'])('refuse %s', (value) => {
+    expect(() => PlanetSnapshotV1.parse(withHolding({ saturatedSince: value }))).toThrow()
   })
 })
 

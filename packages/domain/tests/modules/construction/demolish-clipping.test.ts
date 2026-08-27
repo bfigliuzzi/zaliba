@@ -90,9 +90,13 @@ function planetAt(amounts: Readonly<Record<string, number>>, level = 3): PlanetS
     ...base,
     buildings: [{ ...MINE, level }],
     holdings: {
-      camelote: { amount: grains(amounts['camelote'] ?? 0), lost: grains(0) },
-      jus: { amount: grains(amounts['jus'] ?? 0), lost: grains(0) },
-      'bave-etoiles': { amount: grains(amounts['bave-etoiles'] ?? 0), lost: grains(0) },
+      camelote: { amount: grains(amounts['camelote'] ?? 0), lost: grains(0), saturatedSince: null },
+      jus: { amount: grains(amounts['jus'] ?? 0), lost: grains(0), saturatedSince: null },
+      'bave-etoiles': {
+        amount: grains(amounts['bave-etoiles'] ?? 0),
+        lost: grains(0),
+        saturatedSince: null,
+      },
     },
   }
 }
@@ -277,9 +281,17 @@ describe('ce que l’aperçu annonce est exactement ce que l’achèvement créd
       ...base,
       buildings: [store],
       holdings: {
-        camelote: { amount: grains(capWith.camelote - 200_000), lost: grains(0) },
-        jus: { amount: grains(0), lost: grains(0) },
-        'bave-etoiles': { amount: grains(capWith['bave-etoiles'] - 50_000), lost: grains(0) },
+        camelote: {
+          amount: grains(capWith.camelote - 200_000),
+          lost: grains(0),
+          saturatedSince: null,
+        },
+        jus: { amount: grains(0), lost: grains(0), saturatedSince: null },
+        'bave-etoiles': {
+          amount: grains(capWith['bave-etoiles'] - 50_000),
+          lost: grains(0),
+          saturatedSince: null,
+        },
       },
     }
 
@@ -367,9 +379,9 @@ describe('ce que l’aperçu annonce est exactement ce que l’achèvement créd
       buildings: [store],
       holdings: {
         // Saturée : tout ce qui dépasse le plafond d'après retrait sera perdu.
-        camelote: { amount: grains(capWith.camelote), lost: grains(0) },
-        jus: { amount: grains(0), lost: grains(0) },
-        'bave-etoiles': { amount: grains(0), lost: grains(0) },
+        camelote: { amount: grains(capWith.camelote), lost: grains(0), saturatedSince: null },
+        jus: { amount: grains(0), lost: grains(0), saturatedSince: null },
+        'bave-etoiles': { amount: grains(0), lost: grains(0), saturatedSince: null },
       },
     }
 

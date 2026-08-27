@@ -55,7 +55,14 @@ export function toSnapshot(record: PlanetRecord, catalogs: Catalogs): PlanetSnap
       const held = record.holdings.find((h) => h.resourceId === resourceId)
       return [
         resourceId,
-        { amount: grains(held?.amountGrains ?? 0), lost: grains(held?.lostGrains ?? 0) },
+        {
+          amount: grains(held?.amountGrains ?? 0),
+          lost: grains(held?.lostGrains ?? 0),
+          saturatedSince:
+            held?.saturatedSince === undefined || held.saturatedSince === null
+              ? null
+              : instant(held.saturatedSince),
+        },
       ]
     }),
   ) as PlanetSnapshot['holdings']
@@ -162,6 +169,7 @@ export function toWrite(snapshot: PlanetSnapshot, catalogs: Catalogs): PlanetWri
       resourceId,
       amountGrains: holding.amount,
       lostGrains: holding.lost,
+      saturatedSince: holding.saturatedSince,
     })),
     buildings: snapshot.buildings.map((building) => ({
       id: building.id,
@@ -230,6 +238,7 @@ export function toContract(
       resourceId: resourceId as ResourceId,
       amountGrains: holding.amount,
       lostGrains: holding.lost,
+      saturatedSince: holding.saturatedSince,
     })),
     buildings: snapshot.buildings.map((building) => ({
       id: building.id,

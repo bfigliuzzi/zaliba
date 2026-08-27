@@ -10,9 +10,14 @@
     "consolidatedAt": 1787750000
   },
   "holdings": [
-    { "resourceId": "camelote", "amountGrains": 1080000, "lostGrains": 0 },
-    { "resourceId": "jus", "amountGrains": 0, "lostGrains": 0 },
-    { "resourceId": "bave-etoiles", "amountGrains": 360000, "lostGrains": 0 }
+    { "resourceId": "camelote", "amountGrains": 1080000, "lostGrains": 0, "saturatedSince": null },
+    { "resourceId": "jus", "amountGrains": 0, "lostGrains": 0, "saturatedSince": null },
+    {
+      "resourceId": "bave-etoiles",
+      "amountGrains": 360000,
+      "lostGrains": 0,
+      "saturatedSince": null
+    }
   ],
   "buildings": [
     {

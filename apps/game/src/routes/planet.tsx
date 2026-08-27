@@ -12,7 +12,9 @@ import type {
 } from '@zaliba/domain'
 import {
   DEFAULT_CATALOGS,
+  gridOccupancy,
   layoutOf,
+  placementAvailability,
   placementCells,
   previewBuild,
   previewClear,
@@ -175,6 +177,23 @@ export function PlanetScreen({ snapshot, gateway, onSnapshot }: PlanetScreenProp
     if (command === null) return null
     return previewBuild(state, { ...command, workId: 'apercu-local' }, DEFAULT_CATALOGS)
   }, [command, state])
+
+  /**
+   * Ce que la grille contient, et l'existence d'un placement pour le type choisi.
+   *
+   * **Deux questions que l'aperçu ne pose pas.** `previewBuild` répond « ici, oui
+   * ou non » ; celles-ci répondent « quelque part, oui ou non » et « reste-t-il
+   * seulement de la place ». Ce sont les deux cas limites de la spécification, et
+   * ils ont ceci de commun qu'un joueur ne peut pas les déduire d'une suite de
+   * refus case par case : il essaierait trente-six fois sans jamais apprendre
+   * qu'il n'y avait rien à trouver.
+   */
+  const occupancy = useMemo(() => gridOccupancy(state.grid), [state.grid])
+
+  const availability = useMemo(() => {
+    if (selection.typeId === null) return null
+    return placementAvailability(state.grid, selection.typeId, DEFAULT_CATALOGS)
+  }, [selection.typeId, state.grid])
 
   /** Les cases sous l'empreinte, et leur validité. */
   const ghost = useMemo((): GhostState | null => {
@@ -411,6 +430,8 @@ export function PlanetScreen({ snapshot, gateway, onSnapshot }: PlanetScreenProp
         catalogs={DEFAULT_CATALOGS}
         selection={selection}
         preview={preview}
+        occupancy={occupancy}
+        availability={availability}
         pending={pending === 'build'}
         onSelectType={selectType}
         onSelectVariant={selectVariant}

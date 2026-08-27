@@ -93,7 +93,7 @@ function fresh(): PlanetSnapshot {
  * trésorerie : un refus faute de fonds ne dirait rien de I-7.
  */
 function wealthy(building: PlacedBuilding): PlanetSnapshot {
-  const holding = { amount: grains(SPACIOUS), lost: grains(0) }
+  const holding = { amount: grains(SPACIOUS), lost: grains(0), saturatedSince: null }
   return {
     ...fresh(),
     holdings: { camelote: holding, jus: holding, 'bave-etoiles': holding },

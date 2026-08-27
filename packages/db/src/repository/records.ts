@@ -17,6 +17,8 @@ export interface HoldingRecord {
   readonly resourceId: string
   readonly amountGrains: number
   readonly lostGrains: number
+  /** L'instant d'entrée en saturation, en secondes UTC, ou `null` (US1/AC5). */
+  readonly saturatedSince: number | null
 }
 
 export interface BuildingRecord {

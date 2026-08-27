@@ -103,6 +103,7 @@ export function registerPlanetRoutes(app: FastifyInstance, deps: PlanetRouteDepe
           resourceId,
           amountGrains: holding.amount,
           lostGrains: holding.lost,
+          saturatedSince: holding.saturatedSince,
         })),
       })
 

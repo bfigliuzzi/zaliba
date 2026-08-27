@@ -258,6 +258,46 @@ function depositOf(
 }
 
 /**
+ * Ce que la grille contient, compté par état.
+ *
+ * Sert le cas limite que la spécification pose : « la grille est entièrement
+ * occupée : seules la démolition et le déblaiement peuvent libérer de la place,
+ * **et le jeu le dit** ». Le dire suppose de le savoir.
+ *
+ * **Les deux issues sont comptées séparément**, et ce n'est pas du détail : une
+ * planète pleine de bâtiments et une planète pleine d'obstacles appellent des
+ * décisions opposées, et une seule des deux se paie en bâtiment perdu. Un
+ * booléen « pleine » les confondrait, et laisserait le joueur chercher par où
+ * sortir.
+ */
+export interface GridOccupancy {
+  readonly total: number
+  readonly free: number
+  readonly obstructed: number
+  readonly occupied: number
+  /**
+   * Vrai quand **aucune** case n'est libre.
+   *
+   * C'est bien « aucune case libre » et non « toutes bâties » : une grille
+   * couverte d'obstacles est tout aussi impraticable, et se libère par le
+   * déblaiement plutôt que par la démolition.
+   */
+  readonly full: boolean
+}
+
+export function gridOccupancy(grid: readonly CellView[]): GridOccupancy {
+  const free = grid.filter((cell) => cell.state === 'free').length
+
+  return {
+    total: grid.length,
+    free,
+    obstructed: grid.filter((cell) => cell.state === 'obstructed').length,
+    occupied: grid.filter((cell) => cell.state === 'occupied').length,
+    full: free === 0,
+  }
+}
+
+/**
  * Le nombre de gisements de sa ressource qu'un extracteur recouvre (FR-017).
  *
  * La même lecture que `depositsUnder`, sur un bâtiment posé plutôt que sur un

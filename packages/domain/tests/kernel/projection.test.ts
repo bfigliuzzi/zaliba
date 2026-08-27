@@ -375,9 +375,13 @@ describe('un achèvement qui touche les ressources est repris par le second segm
     const saturated: PlanetSnapshot = {
       ...scheduled(),
       holdings: {
-        camelote: { amount: grains(BERCEAU.baseCapacityGrains.camelote), lost: grains(0) },
-        jus: { amount: grains(0), lost: grains(0) },
-        'bave-etoiles': { amount: grains(0), lost: grains(0) },
+        camelote: {
+          amount: grains(BERCEAU.baseCapacityGrains.camelote),
+          lost: grains(0),
+          saturatedSince: null,
+        },
+        jus: { amount: grains(0), lost: grains(0), saturatedSince: null },
+        'bave-etoiles': { amount: grains(0), lost: grains(0), saturatedSince: null },
       },
     }
 

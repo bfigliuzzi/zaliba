@@ -1274,3 +1274,88 @@ elles touchent des modules et des composants distincts.
 - Committer après chaque tâche ou groupe logique, en français.
 - Un écart entre le code et la spécification se résout en corrigeant explicitement **l'un ou l'autre**, jamais en le laissant courir.
 - Les treize invariants de [data-model.md § 1.7](./data-model.md) et les dix-huit contrôles de cohérence de § 1.8 sont la **valeur** de cette tranche, pas son ornement.
+
+---
+
+## Phase 12 : Convergence
+
+Relevé le 2026-08-27 par `/speckit-converge`, sur l'état du code et **par
+exécution** des onze portes. Ce n'est pas un diff : c'est l'écart entre ce que
+`spec.md`, `plan.md` et les tâches ci-dessus appellent, et ce que le dépôt fait
+aujourd'hui.
+
+Ce que la convergence a **fermé** au passage, et qui n'est donc pas repris ici :
+les 1 400 tests unitaires et de contrat, les 150 tests d'intégration — dont les
+trois de T163 —, les seuils de couverture, les parcours des huit tranches sous
+axe-core, et **SC-009 éprouvé sur cinq cas sur cinq** (T160 cesse d'être
+« éprouvée à un cinquième », T142 et T149 sont vérifiées).
+
+- [x] T164 **CRITICAL** — Rétablir la porte 9 : `pnpm audit --audit-level moderate` sort en **code 1** avec deux avis modérés, ce qui interdit toute fusion. `esbuild` ≤ 0.24.2 (GHSA-67mh-4wv8-2f99) par `packages/db > drizzle-kit > @esbuild-kit/esm-loader > @esbuild-kit/core-utils`, et `ts-deepmerge` < 8.0.0 (GHSA-87mf-gv2c-c62c) par `packages/contracts > @ts-rest/open-api > @anatine/zod-openapi`. Les deux sont des dépendances de développement transitives — ce qui borne le risque réel, **non le verdict de la porte**. Résoudre par montée de version ou `pnpm.overrides` épinglé à une version exacte ; à défaut, tracer une dérogation conforme à la règle « Contournement » de la constitution : accord explicite du responsable du dépôt, limitée dans le temps, et rétablissement suivi comme une tâche. Aucune dérogation n'existe à ce jour dans `pnpm-workspace.yaml`. per Constitution § « Portes bloquantes en CI », T012 (contradicts)
+- [x] T165 Rendre la porte 8 franchissable en intégration continue. Le travail `parcours` de `.github/workflows/ci.yml` lance `pnpm -w e2e`, dont le `webServer` démarre `@zaliba/api` ; or `apps/api/src/main.ts` exige `DATABASE_URL`, `SUPABASE_JWKS_URL`, `SUPABASE_JWT_ISSUER` et `SUPABASE_JWT_AUDIENCE`, et `apps/game` exige `VITE_SUPABASE_URL` et `VITE_SUPABASE_ANON_KEY`. **Aucune n'est fournie, et le mot `supabase` n'apparaît pas une fois dans `ci.yml`** : la porte qui porte SC-004, SC-005, SC-009 et FR-058 à FR-061 échoue au démarrage de son propre serveur. Câbler la pile locale dans le travail — ou nommer explicitement le mécanisme qui la remplace — de sorte que la porte échoue sur un défaut du jeu, jamais sur son environnement. Les parcours passent en local : c'est le câblage de CI qui manque, pas les tests. per plan § « Portes de qualité », T012, SC-004, SC-005 (partial)
+- [x] T166 Indiquer **depuis combien de temps la saturation dure**. US1/AC5 l'exige mot pour mot ; la grandeur n'existe nulle part : ni `HoldingView` (`packages/domain/src/kernel/projection.ts`) ni `HoldingV1` (`packages/contracts/src/v1/planet.ts`) ne portent l'instant d'entrée en saturation, et `ResourcePanel.tsx` affiche « saturée : la production se perd » sans dire depuis quand. La déduire de `lost / rate` côté client serait faux dès que le taux a changé depuis la saturation — c'est donc l'instant qu'il faut projeter, à la seconde, puis afficher. La quantité perdue, elle, est déjà là (`data-lost`) : c'est la moitié manquante de l'exigence. per US1/AC5 (missing)
+- [x] T167 Énoncer l'impossibilité de placer un type. Le cas limite dit : « aucune empreinte d'un type donné ne tient nulle part sur la grille : le type reste consultable, **son aperçu énonce l'impossibilité et son motif** ». `previewBuild` exige une position et `validatePlacement` répond case par case ; aucune fonction ne répond de l'existence d'un placement pour un type, et aucun panneau ne l'énonce. Le motif importe autant que le verdict : « plus assez de cases libres contiguës » et « il en reste, mais pas dans cette forme » n'appellent pas la même décision du joueur. per spec § Edge Cases (missing)
+- [x] T168 Dire que la grille est pleine. Le cas limite dit : « la grille est entièrement occupée : seules la démolition et le déblaiement peuvent libérer de la place, **et le jeu le dit** ». Aucun message de ce genre n'existe dans `apps/game/src`. Un joueur qui ne trouve plus où poser doit lire pourquoi et par où sortir, sans le déduire de refus successifs case par case. per spec § Edge Cases (missing)
+- [x] T169 Relever le `GET` de l'état **sous 200 ms au 95ᵉ centile** sur 1 000 requêtes, dernier objectif de performance du plan non mesuré. `quickstart.md` § 5 bis porte déjà la commande et le motif du report — la pile locale ne répondait pas le 2026-08-27. Elle répond aujourd'hui. Consigner le relevé au même endroit que les trois autres, avec la machine et la charge, et retirer la mention « ⚠️ Non relevé ». Cela clôt la part restante de T159 et de T163. per plan § « Performance Goals », T159 (partial)
+- [x] T170 Corriger `CLAUDE.md` § « État du dépôt », qui affirme « **Aucun code applicatif à ce jour. Le dépôt contient sa gouvernance (`.specify/`), sa documentation et sa licence.** » Le dépôt suit 279 fichiers, deux applications et cinq paquets. C'est le premier fichier que lit quiconque — humain ou agent — reprend le projet, et il décrit un dépôt qui n'existe plus. Y porter l'état réel et les repères de navigation qui vont avec. per Constitution § « Guide runtime » (contradicts)
+- [x] T171 Résoudre explicitement l'écart de structure du principe I. `plan.md` § Project Structure place `apps/api/src/repository/ # chargement d'instantané, écriture d'instantané` ; ce dossier **n'existe pas**, et le dépôt d'instantané vit dans `packages/db/src/repository/`, où T071, T098, T132 et T140 l'ont écrit. Le code suit les tâches, et le § 3 du document de stack le confirme — « le schéma de persistance est une préoccupation d'infrastructure ». C'est donc le diagramme du plan qui est en retard. Le principe I interdit de laisser l'écart implicite : amender le diagramme, ou déplacer le code, mais le trancher. per plan § Project Structure, Constitution I (contradicts)
+
+### Ce que la convergence a fermé, et comment
+
+Relevé du **2026-08-27**, après exécution. Les huit tâches ci-dessus sont closes ;
+ce qui suit dit *par quoi*, pour que la prochaine tranche n'ait pas à le
+reconstituer depuis le diff.
+
+**T164 — la porte 9 est verte.** Les deux avis sont résolus par montée de version
+épinglée à l'exact, dans `pnpm-workspace.yaml`, jamais par un abaissement du seuil
+d'audit : `@esbuild-kit/core-utils>esbuild` à `0.25.12` — la version que
+`drizzle-kit` résout déjà par ailleurs, donc l'arbre en perd une au lieu d'en
+gagner — et `@anatine/zod-openapi>ts-deepmerge` à `8.0.0`. La seconde montée
+casse l'export **par défaut** que `@anatine/zod-openapi` consomme, retiré en
+8.0.0 : un correctif de trois lignes (`patches/ts-deepmerge@8.0.0.patch`) le
+rétablit en alias de `merge`. C'est une compatibilité, pas un comportement — et
+l'instantané OpenAPI, inchangé, en est la preuve. `pnpm audit --audit-level
+moderate` sort en **code 0**.
+
+**T165 — la porte 8 porte sa propre pile.** Le travail `parcours` monte désormais
+la pile Supabase locale : CLI épinglée, clé de signature ES256 engendrée par
+`scripts/generate-signing-keys.mjs` — *le même script que le quickstart*, pour que
+deux recettes de clé ne divergent pas —, `supabase start`, migrations appliquées
+dans l'ordre lexical comme le fait le harnais d'intégration, puis un `.env` écrit
+depuis `supabase status` et lu par les **deux** serveurs. Chaque étape vérifie son
+propre effet : le compte de tables du schéma `game` est comparé à sept, et la
+liste des fichiers de migration à zéro. Une porte qui sort en succès sans rien
+avoir appliqué est pire qu'une porte absente.
+
+**T166 — l'instant d'entrée en saturation est porté de bout en bout.** C'est le
+seul état de possession non dérivable du jeu, et la seule colonne du schéma dans
+ce cas : au plafond, la quantité ne dit plus depuis quand, et `perdu ÷ taux` est
+faux dès que le taux a changé depuis. Il traverse donc les six couches —
+`advanceSegment` le calcule segment par segment, `Holding` et `HoldingView` le
+portent, `game.planet_resources.saturated_since` le persiste
+(`0002_saturation_since.sql`), `HoldingV1` le transmet, `ResourcePanel` en fait
+une durée. Un débit l'annule, et la projection le rétablit : c'est ce qui garde
+l'instantané et le plafond d'accord sans que la base ait à connaître les
+catalogues. Éprouvé au grain près par `saturation-since.test.ts` — dont une
+propriété fast-check qui étend l'additivité I-2 au troisième terme — et par un
+aller-retour en PostgreSQL réel.
+
+**T167 et T168 — les deux cas limites sont énoncés.** `placementAvailability`
+répond de l'**existence** d'un placement pour un type, question que ni
+`previewBuild` — qui exige une position — ni `validatePlacement` — qui répond case
+par case — ne savaient poser ; et elle en donne le motif, parce que « plus assez
+de cases libres » et « il en reste, mais pas dans cette forme » n'appellent pas la
+même décision. `gridOccupancy` compte séparément l'obstrué et le bâti, ce qui
+permet de dire par où sortir plutôt que de dire « pleine ». Les deux s'affichent
+dans le panneau de construction, avec leurs chiffres.
+
+**T169 — le quatrième objectif de performance est relevé.** 95ᵉ centile à
+**10,7 ms** sur mille requêtes, contre 200 ms visés. Machine, charge et limites du
+relevé sont consignées dans `quickstart.md` § 5 bis, au même endroit que les trois
+autres.
+
+**T170 et T171 — les deux documents rattrapent le dépôt.** `CLAUDE.md` décrit
+l'arborescence réelle et ce que chaque paquet détient. L'écart de structure du
+principe I est tranché **en faveur du code** : le dépôt d'instantané reste dans
+`packages/db/src/repository/` — le schéma de persistance est une préoccupation
+d'infrastructure —, `apps/api` garde son `mapping/`, et c'est le diagramme de
+`plan.md` qui est amendé. Le dossier vide `apps/api/src/repository/` est supprimé.

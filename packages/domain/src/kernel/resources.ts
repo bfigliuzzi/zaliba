@@ -72,8 +72,18 @@ export function toDisplayUnits(amount: Grains): number {
 }
 
 export interface SegmentInput {
+  /** L'instant d'ouverture du segment. C'est lui qui date la saturation. */
+  readonly from: Instant
   readonly amount: Grains
   readonly lost: Grains
+  /**
+   * L'instant d'entrée en saturation **reporté du segment précédent**, ou `null`.
+   *
+   * Il n'est retenu que si la ressource était déjà saturée à l'ouverture du
+   * segment. Sinon il est périmé — une dépense l'a fait redescendre — et le
+   * laisser courir daterait la saturation d'avant cette dépense.
+   */
+  readonly saturatedSince: Instant | null
   readonly rate: RatePerHour
   readonly seconds: number
   readonly cap: Grains
@@ -82,29 +92,55 @@ export interface SegmentInput {
 export interface SegmentResult {
   readonly amount: number
   readonly lost: number
+  /** `null` si la ressource n'est pas saturée à la fermeture du segment. */
+  readonly saturatedSince: Instant | null
 }
 
 /**
  * Fait avancer une ressource d'un segment, plafond compris (R4) :
  *
  * ```
- * brut   = q₀ + r × s
- * q      = min(brut, P)
- * perdu += max(0, brut − P)
+ * brut    = q₀ + r × s
+ * q       = min(brut, P)
+ * perdu  += max(0, brut − P)
+ * depuis  = q₀ ≥ P ? report ?? t₀ : (brut ≥ P ? t₀ + ⌈(P − q₀) ÷ r⌉ : null)
  * ```
  *
  * **Le cumul de la perte est ce qui rend l'opération additive.** Le
  * plafonnement seul ne l'est pas : deux segments successifs plafonnés
  * donneraient la même quantité qu'un segment unique, mais on aurait perdu la
  * trace de ce qui a débordé. En cumulant, la somme des pertes de deux segments
- * vaut exactement la perte du segment unique équivalent — et l'état complet
- * `(quantité, perte)` devient une fonction du seul temps écoulé.
+ * vaut exactement la perte du segment unique équivalent.
+ *
+ * **L'instant d'entrée en saturation obéit à la même logique, et pour la même
+ * raison** (US1/AC5). Il ne se déduit ni de la quantité — au plafond, elle ne
+ * dit plus depuis quand — ni de la perte : `perdu ÷ taux` serait faux dès que le
+ * taux a changé depuis, ce qu'une pose ou une bascule en déficit d'énergie
+ * suffisent à provoquer. Il faut donc le **reporter**, et c'est ce report qui
+ * fait de l'état complet `(quantité, perte, saturée depuis)` une fonction du
+ * seul temps écoulé.
  */
-export function advanceSegment({ amount, lost, rate, seconds, cap }: SegmentInput): SegmentResult {
+export function advanceSegment({
+  from,
+  amount,
+  lost,
+  saturatedSince,
+  rate,
+  seconds,
+  cap,
+}: SegmentInput): SegmentResult {
   const raw = amount + gainOver(rate, seconds)
+
+  // Déjà saturée à l'ouverture : on garde la date reportée. Son absence — une
+  // planète fondée le réservoir plein, un instantané antérieur à cette
+  // grandeur — se répare en datant de l'ouverture, qui est la borne la plus
+  // récente dont on puisse répondre.
+  const carried = amount >= cap ? (saturatedSince ?? from) : null
+
   return {
     amount: Math.min(raw, cap),
     lost: lost + Math.max(0, raw - cap),
+    saturatedSince: raw < cap ? null : (carried ?? saturationAt(from, amount, cap, rate)),
   }
 }
 

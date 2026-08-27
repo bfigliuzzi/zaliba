@@ -39,7 +39,14 @@ export function snapshotFromContract(
       const held = payload.holdings.find((holding) => holding.resourceId === resourceId)
       return [
         resourceId,
-        { amount: grains(held?.amountGrains ?? 0), lost: grains(held?.lostGrains ?? 0) },
+        {
+          amount: grains(held?.amountGrains ?? 0),
+          lost: grains(held?.lostGrains ?? 0),
+          saturatedSince:
+            held?.saturatedSince === undefined || held.saturatedSince === null
+              ? null
+              : instant(held.saturatedSince),
+        },
       ]
     }),
   ) as PlanetSnapshot['holdings']

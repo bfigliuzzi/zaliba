@@ -13,13 +13,33 @@ d'OGame, modernisé, sans pay2win. Vision produit, personas et périmètre :
 
 ## État du dépôt
 
-Aucun code applicatif à ce jour. Le dépôt contient sa gouvernance
-(`.specify/`), sa documentation et sa licence.
+La tranche **001 — La planète mère** est implémentée : deux applications, quatre
+paquets, la chaîne de portes de CI. Le monorepo pnpm et Turborepo est amorcé.
+
+| Emplacement | Ce qu'on y trouve |
+| --- | --- |
+| `packages/catalogs` | le contenu de jeu, déclaratif et typé. **N'importe rien** |
+| `packages/domain` | les règles, en fonctions pures. `kernel/` (temps, ressources, grille, énergie, taux, projection) et `modules/construction/` (pose, amélioration, démolition, déblaiement, aperçus). N'importe que `catalogs` |
+| `packages/contracts` | les schémas Zod et les routes `/v1` via `ts-rest`. **N'importe pas `domain`** : la duplication est volontaire |
+| `packages/db` | le schéma Drizzle, ses migrations et le dépôt d'instantané. N'importe ni `domain` ni `contracts` |
+| `apps/api` | Fastify, serveur autoritaire : greffons, routes, forme unique de commande, et le `mapping/` qui traduit entre persistance, domaine et contrat |
+| `apps/game` | le client Vite + React : écran de planète, grille au clavier, compteurs extrapolés, page de règles |
+| `supabase/` | la configuration de la pile locale — base et authentification |
+| `scripts/` | l'outillage hors paquet : la clé de signature de la pile locale |
+
+Les commandes du quotidien sont dans
+[`specs/001-la-planete-mere/quickstart.md`](specs/001-la-planete-mere/quickstart.md)
+§ 2, la pile locale au § 1, et ce que chaque porte doit dire au § 3.
 
 La stack est arrêtée depuis le 2026-08-23 : TypeScript partout, React + Vite en
 PWA emballée par Capacitor, Fastify, PostgreSQL via Drizzle, contrats Zod
 versionnés via `ts-rest`, Supabase pour l'authentification et la base, Astro et
 Starlight pour le site public. Monorepo pnpm et Turborepo.
+
+Ce que 001 **n'installe pas** — Capacitor, `vite-plugin-pwa`, `pixi.js`,
+`@dnd-kit/core`, Astro — est différé, jamais remplacé : la table « Étagement de
+la stack » de [`specs/001-la-planete-mere/plan.md`](specs/001-la-planete-mere/plan.md)
+dit à quelle tranche et pourquoi.
 
 **Deux documents à lire avant toute décision. Ils sont la mémoire du projet :**
 

@@ -22,3 +22,27 @@ allowBuilds:
 peerDependencyRules:
   allowedVersions:
     '@ts-rest/fastify>fastify': '5'
+
+# Porte 9 — les deux avis modérés du 2026-08-27, résolus par montée de version
+# **épinglée à l'exact**, jamais par un abaissement du seuil d'audit.
+#
+# Les deux vulnérabilités arrivent par des dépendances de développement
+# transitives, ce qui borne le risque réel — mais pas le verdict de la porte, et
+# c'est bien le verdict qui décide d'une fusion.
+#
+# `esbuild` ≤ 0.24.2 (GHSA-67mh-4wv8-2f99) : le serveur de développement répond à
+# n'importe quelle origine. Il arrive par `@esbuild-kit/core-utils`, que
+# `drizzle-kit` traîne encore alors que le paquet est abandonné — fusionné dans
+# `tsx`, que `drizzle-kit` embarque **déjà**. La version choisie est celle que
+# `drizzle-kit` résout par ailleurs : l'arbre n'en gagne aucune, il en perd une.
+#
+# `ts-deepmerge` < 8.0.0 (GHSA-87mf-gv2c-c62c) : un `__proto__` dans un objet
+# fusionné écrase une méthode de prototype. Il arrive par
+# `@anatine/zod-openapi`, dont aucune version publiée ne dépasse `^6.0.3` — la
+# montée passe donc par ici, et par ici seulement.
+overrides:
+  '@esbuild-kit/core-utils>esbuild': '0.25.12'
+  '@anatine/zod-openapi>ts-deepmerge': '8.0.0'
+
+patchedDependencies:
+  ts-deepmerge@8.0.0: patches/ts-deepmerge@8.0.0.patch

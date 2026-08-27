@@ -1,0 +1,31 @@
+diff --git a/cjs/index.d.ts b/cjs/index.d.ts
+index 0566e1652c815e655d1d8f0370793eca99dd7884..13ff79a56df7dbda6845ffd3e28607191f2ea146 100644
+--- a/cjs/index.d.ts
++++ b/cjs/index.d.ts
+@@ -42,3 +42,4 @@ interface IOptions {
+     uniqueArrayItems: boolean;
+ }
+ export {};
++export default merge;
+diff --git a/cjs/index.js b/cjs/index.js
+index e0ceffbb03d26728fec3bf2db9f3a585bf165181..6c8d05d5daff35911758e5d4fc41f59f3bc2d3e7 100644
+--- a/cjs/index.js
++++ b/cjs/index.js
+@@ -71,3 +71,7 @@ exports.merge.withOptions = (options, ...objects) => {
+     exports.merge.options = defaultOptions;
+     return result;
+ };
++// L'export par défaut, retiré en 8.0.0 et consommé par `@anatine/zod-openapi`
++// (`ts_deepmerge_1.default(...)`). Le rétablir est un alias, pas un
++// comportement : `merge` reste la seule implémentation.
++exports.default = exports.merge;
+diff --git a/esm/index.js b/esm/index.js
+index 34bf94fecd6921b12176ce7ff0e02f117f2c3af9..b459f8b08959f495575799031667c85ca141945f 100644
+--- a/esm/index.js
++++ b/esm/index.js
+@@ -67,3 +67,5 @@ merge.withOptions = (options, ...objects) => {
+     merge.options = defaultOptions;
+     return result;
+ };
++// Voir la note de `cjs/index.js` : un alias, pas un comportement.
++export default merge;

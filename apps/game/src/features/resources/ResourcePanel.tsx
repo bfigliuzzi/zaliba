@@ -1,6 +1,12 @@
 import type { ResourceId } from '@zaliba/catalogs'
 import type { HoldingView, Instant } from '@zaliba/domain'
-import { formatDuration, formatHeld, formatUnits, formatWhole } from '../../lib/format.js'
+import {
+  formatDuration,
+  formatElapsed,
+  formatHeld,
+  formatUnits,
+  formatWhole,
+} from '../../lib/format.js'
 import { RESOURCE_LABELS } from '../../lib/labels.js'
 
 /**
@@ -74,7 +80,12 @@ export function ResourcePanel({ holdings, at }: ResourcePanelProps) {
     <>
       {Object.entries(holdings).map(([resourceId, holding]) => {
         const label = RESOURCE_LABELS[resourceId as ResourceId] ?? resourceId
-        const saturated = holding.saturationAt === null
+        // La saturation **acquise** se lit sur `saturatedSince`, jamais sur
+        // l'absence de `saturationAt` : celle-ci vaut aussi `null` pour une
+        // ressource à taux nul, qui ne sature pas — elle stagne. Confondre les
+        // deux ferait annoncer « la production se perd » là où il n'y a aucune
+        // production.
+        const since = holding.saturatedSince
         const perMille = fillPerMille(holding)
         const lostScale = lostInCaps(holding)
 
@@ -111,14 +122,28 @@ export function ResourcePanel({ holdings, at }: ResourcePanelProps) {
                 {`${formatWhole(Math.floor(perMille / 10))} %`}
               </dd>
 
+              {/*
+                **Les deux moitiés d'US1/AC5.** Combien s'est perdu est plus bas ;
+                depuis quand est ici. La seconde n'est pas dérivable de la
+                première — `perdu ÷ taux` serait faux dès que le taux a changé
+                depuis —, c'est donc l'instant que le domaine projette, et l'écran
+                n'en fait qu'une durée.
+
+                La durée en secondes est dans l'attribut, sa forme lisible dans le
+                texte : le parcours a besoin du chiffre, le joueur de la phrase.
+              */}
               <dt>Saturation</dt>
-              <dd>
-                {saturated
-                  ? holding.rate === 0
+              {since === null ? (
+                <dd>
+                  {holding.rate === 0
                     ? 'jamais — production nulle'
-                    : 'saturée : la production se perd'
-                  : `dans ${formatDuration((holding.saturationAt ?? at) - at)}`}
-              </dd>
+                    : `dans ${formatDuration((holding.saturationAt ?? at) - at)}`}
+                </dd>
+              ) : (
+                <dd data-saturated-for={at - since} data-resource={resourceId}>
+                  {`saturée depuis ${formatElapsed(at - since)} : la production se perd`}
+                </dd>
+              )}
 
               <dt>Perdu</dt>
               {/*

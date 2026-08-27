@@ -271,9 +271,9 @@ describe('l’aperçu annonce le gain exact avant paiement (FR-041, US4-2)', () 
   it('affiche le coût même quand le compte n’y est pas', () => {
     const poor = withMine(1, {
       holdings: {
-        camelote: { amount: grains(0), lost: grains(0) },
-        jus: { amount: grains(0), lost: grains(0) },
-        'bave-etoiles': { amount: grains(0), lost: grains(0) },
+        camelote: { amount: grains(0), lost: grains(0), saturatedSince: null },
+        jus: { amount: grains(0), lost: grains(0), saturatedSince: null },
+        'bave-etoiles': { amount: grains(0), lost: grains(0), saturatedSince: null },
       },
     })
 
@@ -409,9 +409,9 @@ describe('les refus portent leur motif exact', () => {
   it('refuse un compte insuffisant, avec le manque par ressource et le délai', () => {
     const poor = withMine(1, {
       holdings: {
-        camelote: { amount: grains(0), lost: grains(0) },
-        jus: { amount: grains(0), lost: grains(0) },
-        'bave-etoiles': { amount: grains(0), lost: grains(0) },
+        camelote: { amount: grains(0), lost: grains(0), saturatedSince: null },
+        jus: { amount: grains(0), lost: grains(0), saturatedSince: null },
+        'bave-etoiles': { amount: grains(0), lost: grains(0), saturatedSince: null },
       },
     })
 

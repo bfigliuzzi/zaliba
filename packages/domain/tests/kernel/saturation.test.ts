@@ -257,6 +257,7 @@ describe('I-2 — la projection reste additive, plafond et perte compris', () =>
                 {
                   amount: grains(middle.holdings[resourceId].amount),
                   lost: grains(middle.holdings[resourceId].lost),
+                  saturatedSince: null,
                 },
               ]),
             ) as PlanetSnapshot['holdings'],

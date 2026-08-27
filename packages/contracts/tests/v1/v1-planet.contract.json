@@ -129,12 +129,19 @@
                               "bave-etoiles"
                             ],
                             "type": "string"
+                          },
+                          "saturatedSince": {
+                            "maximum": 9007199254740991,
+                            "minimum": 0,
+                            "nullable": true,
+                            "type": "integer"
                           }
                         },
                         "required": [
                           "amountGrains",
                           "lostGrains",
-                          "resourceId"
+                          "resourceId",
+                          "saturatedSince"
                         ],
                         "type": "object"
                       },
@@ -570,12 +577,19 @@
                               "bave-etoiles"
                             ],
                             "type": "string"
+                          },
+                          "saturatedSince": {
+                            "maximum": 9007199254740991,
+                            "minimum": 0,
+                            "nullable": true,
+                            "type": "integer"
                           }
                         },
                         "required": [
                           "amountGrains",
                           "lostGrains",
-                          "resourceId"
+                          "resourceId",
+                          "saturatedSince"
                         ],
                         "type": "object"
                       },
@@ -924,12 +938,19 @@
                               "bave-etoiles"
                             ],
                             "type": "string"
+                          },
+                          "saturatedSince": {
+                            "maximum": 9007199254740991,
+                            "minimum": 0,
+                            "nullable": true,
+                            "type": "integer"
                           }
                         },
                         "required": [
                           "amountGrains",
                           "lostGrains",
-                          "resourceId"
+                          "resourceId",
+                          "saturatedSince"
                         ],
                         "type": "object"
                       },
@@ -1458,12 +1479,19 @@
                               "bave-etoiles"
                             ],
                             "type": "string"
+                          },
+                          "saturatedSince": {
+                            "maximum": 9007199254740991,
+                            "minimum": 0,
+                            "nullable": true,
+                            "type": "integer"
                           }
                         },
                         "required": [
                           "amountGrains",
                           "lostGrains",
-                          "resourceId"
+                          "resourceId",
+                          "saturatedSince"
                         ],
                         "type": "object"
                       },

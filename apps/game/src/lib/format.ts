@@ -64,3 +64,23 @@ export function formatDuration(seconds: number): string {
   if (seconds < 86_400) return `${Math.ceil(seconds / 3_600)} h`
   return `${Math.ceil(seconds / 86_400)} j`
 }
+
+/**
+ * Une durée **écoulée** en clair — « depuis combien de temps » (US1/AC5).
+ *
+ * Elle tronque vers le bas, à l'inverse de `formatDuration`, et ce n'est pas une
+ * incohérence : les deux arrondissent dans le sens qui ne trompe pas. Un temps
+ * *restant* arrondi au-dessous annoncerait « dans 0 heure » alors qu'il reste
+ * cinquante minutes, ce qui coûte cher. Un temps *écoulé* arrondi au-dessus
+ * dirait « saturée depuis 4 j » quand il y en a trois et demi, c'est-à-dire
+ * accuserait le joueur d'une négligence plus longue que la vraie.
+ *
+ * Le plancher est nommé plutôt que chiffré : « depuis 0 s » se lit comme une
+ * panne d'affichage, « depuis moins d'une minute » se lit comme un fait.
+ */
+export function formatElapsed(seconds: number): string {
+  if (seconds < 60) return 'moins d’une minute'
+  if (seconds < 3_600) return `${Math.floor(seconds / 60)} min`
+  if (seconds < 86_400) return `${Math.floor(seconds / 3_600)} h`
+  return `${Math.floor(seconds / 86_400)} j`
+}

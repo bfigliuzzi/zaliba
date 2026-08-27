@@ -213,13 +213,15 @@ describe('ce que l’aperçu annonce est ce que la pose produit (R8, FR-051)', (
         camelote: {
           amount: grains(BERCEAU.baseCapacityGrains.camelote - 720_000),
           lost: grains(0),
+          saturatedSince: null,
         },
-        jus: { amount: grains(0), lost: grains(0) },
+        jus: { amount: grains(0), lost: grains(0), saturatedSince: null },
         // De quoi payer l'entrepôt : l'aperçu informe d'un manque, la décision le
         // refuse (FR-035), et c'est la décision qu'on éprouve ici.
         'bave-etoiles': {
           amount: grains(BERCEAU.startingStockGrains['bave-etoiles']),
           lost: grains(0),
+          saturatedSince: null,
         },
       },
     }

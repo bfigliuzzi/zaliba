@@ -1,6 +1,14 @@
 import { cleanup, render, screen } from '@testing-library/react'
 import { PlanetSnapshotV1 } from '@zaliba/contracts'
-import { DEFAULT_CATALOGS, instant, previewBuild, projectPlanet } from '@zaliba/domain'
+import type { CellView, GridOccupancy, PlacementAvailability } from '@zaliba/domain'
+import {
+  DEFAULT_CATALOGS,
+  gridOccupancy,
+  instant,
+  placementAvailability,
+  previewBuild,
+  projectPlanet,
+} from '@zaliba/domain'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { snapshotFromContract } from '../../../src/features/resources/extrapolation.js'
 import { BuildPanel, type BuildSelection } from '../../../src/features/work/BuildPanel.js'
@@ -51,7 +59,12 @@ function previewOnVein() {
 function renderPanel(
   selection: BuildSelection,
   preview: ReturnType<typeof previewBuild> | null = null,
-  overrides: { pending?: boolean; onConfirm?: () => void } = {},
+  overrides: {
+    pending?: boolean
+    onConfirm?: () => void
+    occupancy?: GridOccupancy
+    availability?: PlacementAvailability | null
+  } = {},
 ) {
   const onSelectType = vi.fn()
   const onSelectVariant = vi.fn()
@@ -62,6 +75,8 @@ function renderPanel(
       catalogs={CATALOGS}
       selection={selection}
       preview={preview}
+      occupancy={overrides.occupancy ?? gridOccupancy(freshState().grid)}
+      availability={overrides.availability ?? null}
       pending={overrides.pending ?? false}
       onSelectType={onSelectType}
       onSelectVariant={onSelectVariant}
@@ -462,5 +477,124 @@ describe('l’aperçu d’un entrepôt annonce ce qu’il stocke (US7-1, US7-2)'
     renderPanel({ typeId: 'mine', variantId: 'square-4' }, preview)
     expect(previewGroup().textContent).not.toMatch(/plafonds après la pose/i)
     expect(previewGroup().querySelector('[data-cap-added]')).toBeNull()
+  })
+})
+
+/**
+ * **L'impossibilité de placer un type, énoncée** (cas limite de la spécification).
+ *
+ * « Aucune empreinte d'un type donné ne tient nulle part sur la grille : le type
+ * reste consultable, **son aperçu énonce l'impossibilité et son motif**. » Les
+ * deux moitiés comptent : le type ne disparaît pas du sélecteur — le joueur doit
+ * pouvoir continuer de le consulter —, et l'aperçu dit *pourquoi*.
+ */
+describe('l’aperçu énonce l’impossibilité et son motif', () => {
+  const notEnough: PlacementAvailability = {
+    kind: 'not-enough-free-cells',
+    freeCells: 3,
+    smallestFootprint: 9,
+  }
+  const noShape: PlacementAvailability = {
+    kind: 'no-shape-fits',
+    freeCells: 17,
+    smallestFootprint: 9,
+  }
+
+  it('dit qu’aucune empreinte ne tient', () => {
+    renderPanel({ typeId: 'racloir', variantId: 'square-9' }, null, { availability: noShape })
+    expect(previewGroup().textContent).toMatch(/ne tient nulle part/i)
+  })
+
+  /**
+   * Les deux motifs n'appellent pas la même décision : libérer *davantage* de
+   * cases, ou libérer *les bonnes*. Les confondre enverrait le joueur démolir au
+   * hasard.
+   */
+  it('distingue « pas dans cette forme » de « plus assez de place »', () => {
+    renderPanel({ typeId: 'racloir', variantId: 'square-9' }, null, { availability: noShape })
+    expect(previewGroup().textContent).toMatch(/pas dans cette forme/i)
+    expect(previewGroup().textContent).not.toMatch(/plus assez/i)
+  })
+
+  it('dit « plus assez de cases » et chiffre le manque', () => {
+    renderPanel({ typeId: 'racloir', variantId: 'square-9' }, null, { availability: notEnough })
+    const text = previewGroup().textContent ?? ''
+    expect(text).toMatch(/plus assez/i)
+    // Les deux nombres qui disent l'ampleur : ce qui reste, ce qu'il faudrait.
+    expect(text).toContain('3')
+    expect(text).toContain('9')
+  })
+
+  it('laisse le type consultable — il reste sélectionné et sélectionnable', () => {
+    renderPanel({ typeId: 'racloir', variantId: 'square-9' }, null, { availability: noShape })
+    const radio = screen.getByRole('radio', { name: /racloir/i }) as HTMLInputElement
+    expect(radio.checked).toBe(true)
+    expect(radio.disabled).toBe(false)
+  })
+
+  it('n’en dit rien quand un placement existe', () => {
+    renderPanel(MINE_SQUARE, previewOnVein(), {
+      availability: {
+        kind: 'available',
+        variantId: 'square-4',
+        orientation: 0,
+        anchor: { x: 3, y: 3 },
+      },
+    })
+    expect(previewGroup().textContent).not.toMatch(/ne tient nulle part/i)
+  })
+})
+
+/**
+ * **La grille pleine, dite** (cas limite de la spécification).
+ *
+ * « La grille est entièrement occupée : seules la démolition et le déblaiement
+ * peuvent libérer de la place, **et le jeu le dit**. » Un joueur qui ne trouve
+ * plus où poser doit lire pourquoi et par où sortir, sans le déduire de refus
+ * successifs case par case.
+ */
+describe('la grille pleine est énoncée, avec ses issues', () => {
+  /** Une grille dont aucune case n'est libre. */
+  function fullGrid(): readonly CellView[] {
+    return freshState().grid.map((cell) =>
+      cell.state === 'free' ? { ...cell, state: 'occupied' as const, buildingId: 'plein' } : cell,
+    )
+  }
+
+  it('ne dit rien tant qu’une case reste libre', () => {
+    renderPanel(NOTHING_SELECTED)
+    expect(screen.queryByText(/entièrement occupée/i)).toBeNull()
+  })
+
+  it('dit que la grille est entièrement occupée', () => {
+    renderPanel(NOTHING_SELECTED, null, { occupancy: gridOccupancy(fullGrid()) })
+    expect(screen.getByText(/entièrement occupée/i)).toBeDefined()
+  })
+
+  it('nomme les deux issues : démolir, déblayer', () => {
+    renderPanel(NOTHING_SELECTED, null, { occupancy: gridOccupancy(fullGrid()) })
+    const text = screen.getByRole('status').textContent ?? ''
+    expect(text).toMatch(/démoli/i)
+    expect(text).toMatch(/déblaiement/i)
+  })
+
+  /**
+   * Les deux comptes, parce qu'ils décident : dix obstacles et vingt-six
+   * bâtiments ne se libèrent pas au même prix.
+   */
+  it('chiffre ce qui est sous obstacle et ce qui est sous bâtiment', () => {
+    renderPanel(NOTHING_SELECTED, null, { occupancy: gridOccupancy(fullGrid()) })
+    const text = screen.getByRole('status').textContent ?? ''
+    expect(text).toContain('26')
+    expect(text).toContain('10')
+  })
+})
+
+/** L'occupation réelle d'une planète neuve, pour ancrer les cas ci-dessus. */
+describe('les deux cas limites se lisent sur la grille réelle', () => {
+  it('une planète neuve n’est ni pleine ni sans placement', () => {
+    const grid = freshState().grid
+    expect(gridOccupancy(grid).full).toBe(false)
+    expect(placementAvailability(grid, 'racloir', CATALOGS).kind).toBe('available')
   })
 })

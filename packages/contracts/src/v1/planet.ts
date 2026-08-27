@@ -66,6 +66,26 @@ export const HoldingV1 = z
     amountGrains: nonNegativeInt,
     /** Perte cumulée par saturation (FR-026). */
     lostGrains: nonNegativeInt,
+    /**
+     * L'instant d'**entrée** en saturation, ou `null` si la ressource ne l'est
+     * pas (US1/AC5).
+     *
+     * **Le seul état de possession qui ne soit ni une quantité ni dérivable.**
+     * Le reste de cette réponse ne porte aucune valeur que le client puisse
+     * recalculer ; celle-ci, il ne peut pas. Une consolidation efface tout ce
+     * qui précède : au plafond, la quantité ne dit plus depuis quand, et
+     * `perdu ÷ taux` serait faux dès que le taux a changé depuis — une pose, une
+     * amélioration ou une bascule en déficit d'énergie y suffisent.
+     *
+     * La **durée** de saturation, elle, reste absente : elle vaut
+     * `serverInstant − saturatedSince`, et le client la recalcule à chaque
+     * image.
+     *
+     * Annulable et non facultatif : « pas saturée » est l'état courant d'une
+     * ressource, et un champ facultatif laisserait croire que la grandeur
+     * n'existe pas plutôt qu'elle ne s'applique pas.
+     */
+    saturatedSince: instantSchema.nullable(),
   })
   .strict()
 

@@ -87,10 +87,13 @@ describe('les constructeurs refusent ce qui n’est pas une grandeur', () => {
 })
 
 describe('advanceSegment — plafond et perte (R4)', () => {
+  /** Le segment s'ouvre à l'instant 0, ce qui rend les dates lisibles à l'œil. */
   const segment = (amount: number, lost: number, rate: number, seconds: number, cap: number) =>
     advanceSegment({
+      from: instant(0),
       amount: grains(amount),
       lost: grains(lost),
+      saturatedSince: null,
       rate: ratePerHour(rate),
       seconds,
       cap: grains(cap),
@@ -98,12 +101,17 @@ describe('advanceSegment — plafond et perte (R4)', () => {
 
   it('accumule sans toucher au plafond quand il reste de la place', () => {
     // brut = 0 + 100 × 10 = 1000, sous le plafond de 5000
-    expect(segment(0, 0, 100, 10, 5000)).toEqual({ amount: 1000, lost: 0 })
+    expect(segment(0, 0, 100, 10, 5000)).toEqual({ amount: 1000, lost: 0, saturatedSince: null })
   })
 
   it('plafonne : q = min(brut, P)', () => {
-    // brut = 0 + 100 × 100 = 10000, plafond 5000
-    expect(segment(0, 0, 100, 100, 5000)).toEqual({ amount: 5000, lost: 5000 })
+    // brut = 0 + 100 × 100 = 10000, plafond 5000 ; le plafond est atteint à
+    // ⌈5000 ÷ 100⌉ = 50 s, et c'est de là que court la saturation.
+    expect(segment(0, 0, 100, 100, 5000)).toEqual({
+      amount: 5000,
+      lost: 5000,
+      saturatedSince: 50,
+    })
   })
 
   it('comptabilise la perte : perdu = max(0, brut − P)', () => {
@@ -115,12 +123,17 @@ describe('advanceSegment — plafond et perte (R4)', () => {
   })
 
   it('ne perd rien quand le plafond est exactement atteint', () => {
-    // brut = 4000 + 100 × 10 = 5000, plafond 5000 : rempli au grain près
-    expect(segment(4000, 0, 100, 10, 5000)).toEqual({ amount: 5000, lost: 0 })
+    // brut = 4000 + 100 × 10 = 5000, plafond 5000 : rempli au grain près, et
+    // saturé à la seconde même où il l'atteint.
+    expect(segment(4000, 0, 100, 10, 5000)).toEqual({ amount: 5000, lost: 0, saturatedSince: 10 })
   })
 
   it('ne fait rien sur une durée nulle', () => {
-    expect(segment(1234, 56, 100, 0, 5000)).toEqual({ amount: 1234, lost: 56 })
+    expect(segment(1234, 56, 100, 0, 5000)).toEqual({
+      amount: 1234,
+      lost: 56,
+      saturatedSince: null,
+    })
   })
 
   it('reste au plafond une fois saturé, et compte tout ce qui arrive ensuite', () => {
@@ -130,18 +143,87 @@ describe('advanceSegment — plafond et perte (R4)', () => {
   })
 })
 
+/**
+ * **L'instant d'entrée en saturation** (US1/AC5), au niveau du segment.
+ *
+ * La règle a deux moitiés, et il faut les deux : ouvrir déjà saturé **reporte**
+ * la date, ouvrir sous le plafond la **recalcule**. Ne garder que la première
+ * ferait dater toute saturation de la dernière consolidation ; ne garder que la
+ * seconde la ferait dater de l'ouverture du segment courant. Les deux fautes se
+ * ressemblent et ont la même conséquence : une ancienneté qui se remet à zéro
+ * quand le joueur agit.
+ */
+describe('advanceSegment — depuis quand la saturation dure (US1/AC5)', () => {
+  const segment = (
+    from: number,
+    amount: number,
+    saturatedSince: number | null,
+    rate: number,
+    seconds: number,
+    cap: number,
+  ) =>
+    advanceSegment({
+      from: instant(from),
+      amount: grains(amount),
+      lost: grains(0),
+      saturatedSince: saturatedSince === null ? null : instant(saturatedSince),
+      rate: ratePerHour(rate),
+      seconds,
+      cap: grains(cap),
+    }).saturatedSince
+
+  it('vaut null tant que le plafond n’est pas atteint', () => {
+    expect(segment(1000, 0, null, 100, 10, 5000)).toBeNull()
+  })
+
+  it('date la saturation de l’instant où elle survient, dans le segment', () => {
+    // (5000 − 0) ÷ 300 = 16,67 → 17 s, comme `saturationAt`.
+    expect(segment(1000, 0, null, 300, 100, 5000)).toBe(1017)
+  })
+
+  it('reporte la date quand le segment ouvre déjà saturé', () => {
+    expect(segment(1000, 5000, 777, 300, 100, 5000)).toBe(777)
+  })
+
+  it('date de l’ouverture quand le segment ouvre saturé sans date reportée', () => {
+    // Le cas d'une planète fondée réservoir plein, ou d'un instantané antérieur
+    // à cette grandeur : l'ouverture est la borne la plus récente dont on
+    // puisse répondre, et elle ne surestime jamais l'ancienneté.
+    expect(segment(1000, 5000, null, 300, 100, 5000)).toBe(1000)
+  })
+
+  it('oublie une date reportée devenue fausse', () => {
+    // Le report ne vaut que si la ressource était encore saturée à l'ouverture.
+    // Ici une dépense l'a fait redescendre : la garder daterait la saturation
+    // d'avant cette dépense.
+    expect(segment(1000, 100, 777, 100, 10, 5000)).toBeNull()
+  })
+
+  it('date de l’ouverture un plafond nul — rien ne peut y tenir', () => {
+    expect(segment(1000, 0, null, 100, 10, 0)).toBe(1000)
+  })
+})
+
 describe('l’additivité — la propriété qui porte SC-003 (I-2)', () => {
   const run = (steps: readonly number[], rate: number, cap: number) => {
-    let state = { amount: grains(0), lost: grains(0) }
+    let state = { amount: grains(0), lost: grains(0), saturatedSince: null as number | null }
+    let from = 0
     for (const seconds of steps) {
       const next = advanceSegment({
+        from: instant(from),
         amount: state.amount,
         lost: state.lost,
+        saturatedSince: state.saturatedSince === null ? null : instant(state.saturatedSince),
         rate: ratePerHour(rate),
         seconds,
         cap: grains(cap),
       })
-      state = { amount: grains(next.amount), lost: grains(next.lost) }
+      state = {
+        amount: grains(next.amount),
+        lost: grains(next.lost),
+        saturatedSince: next.saturatedSince,
+      }
+      from += seconds
     }
     return state
   }
@@ -205,21 +287,29 @@ describe('saturationAt — l’instant où la ressource cesse de croître (FR-02
     const seconds = (saturation as number) - start
 
     const justBefore = advanceSegment({
+      from: instant(start),
       amount: grains(0),
       lost: grains(0),
+      saturatedSince: null,
       rate: ratePerHour(300),
       seconds: seconds - 1,
       cap: grains(5000),
     })
     expect(justBefore.amount).toBeLessThan(5000)
+    expect(justBefore.saturatedSince).toBeNull()
 
     const atSaturation = advanceSegment({
+      from: instant(start),
       amount: grains(0),
       lost: grains(0),
+      saturatedSince: null,
       rate: ratePerHour(300),
       seconds,
       cap: grains(5000),
     })
     expect(atSaturation.amount).toBe(5000)
+    // Les deux moitiés disent la même chose : `saturationAt` l'annonce,
+    // `advanceSegment` la constate, et le même instant sort des deux.
+    expect(atSaturation.saturatedSince).toBe(saturation)
   })
 })

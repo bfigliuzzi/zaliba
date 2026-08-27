@@ -50,19 +50,16 @@ La pile locale suffit : `supabase/config.toml` est dans le dépôt, et
 c'est une clé **privée**, fût-elle de développement.
 
 ```sh
-node --input-type=module -e "
-import { generateKeyPair, exportJWK } from 'jose'
-import { randomUUID } from 'node:crypto'
-import { writeFileSync } from 'node:fs'
-const { privateKey } = await generateKeyPair('ES256', { extractable: true })
-const { crv, x, y, d } = await exportJWK(privateKey)
-writeFileSync('supabase/signing_keys.json', JSON.stringify([{
-  kty: 'EC', kid: randomUUID(), use: 'sig',
-  key_ops: ['sign', 'verify'], alg: 'ES256', ext: true, d, crv, x, y,
-}], null, 2) + '\n')
-"
+node scripts/generate-signing-keys.mjs
 supabase start
 ```
+
+Le script est **le même que celui de la porte 8** (`.github/workflows/ci.yml`, travail
+`parcours`) : deux recettes de clé divergeraient, et la divergence se lirait en
+`no signing key found` sur l'exécutant d'intégration continue seulement. Il refuse
+d'écraser une clé existante — régénérer invalide tous les jetons déjà émis, et le
+symptôme, des 401 soudains, ne nomme pas sa cause. `--force` pour le vouloir
+explicitement.
 
 **`key_ops` n'est pas décoratif.** GoTrue choisit sa clé de signature sur la
 présence de `sign` dans ce tableau — `use: "sig"` seul ne suffit pas. Sans lui,
@@ -367,18 +364,44 @@ chantier échu depuis trois semaines (FR-031).
 
 ### `GET` de l'état — objectif : sous 200 ms au 95ᵉ centile
 
-⚠️ **Non relevé au 2026-08-27.** La mesure demande la pile Supabase locale, dont le
-service d'authentification ne répondait plus à cette date (voir « Environnement » en fin
-de `tasks.md` phase 11). La commande à exécuter, une fois la pile rétablie :
-
 ```sh
-# 1 000 requêtes, l'API et la pile locale démarrées, un compte provisionné
-# La clé du porteur s'obtient comme dans le § 3.
+# 1 000 requêtes, l'API et la pile locale démarrées, un compte provisionné.
+# Le jeton s'obtient de la pile locale, comme le client le fait :
+ANON=$(grep '^VITE_SUPABASE_ANON_KEY=' .env | cut -d= -f2-)
+JETON=$(curl -s -X POST http://127.0.0.1:54321/auth/v1/signup \
+  -H "apikey: $ANON" -H 'Content-Type: application/json' \
+  -d '{"email":"mesure@zaliba.test","password":"MotDePasse-123!"}' \
+  | python3 -c 'import sys,json; print(json.load(sys.stdin)["access_token"])')
+curl -s -o /dev/null -X POST http://127.0.0.1:3000/v1/me/planet \
+  -H "Authorization: Bearer $JETON" -H "Idempotency-Key: $(uuidgen)" \
+  -H 'Content-Type: application/json' -d '{}'
+
 for i in $(seq 1000); do
   curl -s -o /dev/null -w '%{time_total}\n' \
     -H "Authorization: Bearer $JETON" http://127.0.0.1:3000/v1/me/planet
 done | sort -n | awk '{a[NR]=$1} END {printf "95e centile : %.3f s\n", a[int(NR*0.95)]}'
 ```
+
+**La charge.** Une planète neuve — l'état le plus fréquent, et le seul dont on puisse
+garantir la reproductibilité —, mille requêtes séquentielles après cinquante de
+préchauffage, sur la pile Supabase locale du dépôt. Réponse de 600 octets, code 200
+sur les mille.
+
+Relevé du **2026-08-27**, sur la machine de référence ci-dessus :
+
+| Grandeur | Mesure |
+| --- | --- |
+| Minimum | 3,4 ms |
+| Médiane | 6,4 ms |
+| 95ᵉ centile | **10,7 ms** |
+| 99ᵉ centile | 16,6 ms |
+| Maximum | 30,8 ms |
+
+**Objectif atteint**, avec presque deux ordres de grandeur de marge au 95ᵉ centile. Ce
+que la mesure ne dit pas, et qu'il faut savoir en la lisant : la base est locale, donc
+sans latence de réseau, et la planète est neuve, donc sans bâtiment à projeter. Un
+hébergement réel ajoutera l'aller-retour vers la base, qui dominera alors le calcul —
+lequel se mesure, lui, en dixièmes de milliseconde (relevé ci-dessus).
 
 ---
 

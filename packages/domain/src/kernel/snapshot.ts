@@ -51,6 +51,21 @@ export interface Holding {
   readonly amount: Grains
   /** Cumulée, jamais remise à zéro : c'est ce qui rend la projection additive. */
   readonly lost: Grains
+  /**
+   * L'instant d'entrée en saturation, ou `null` si la ressource ne l'est pas
+   * (US1/AC5).
+   *
+   * **Porté, parce qu'il n'est pas dérivable.** Au plafond, la quantité ne dit
+   * plus depuis quand ; et `perdu ÷ taux` serait faux dès que le taux a changé
+   * depuis. Une consolidation efface tout ce qui précède : sans cette
+   * grandeur, l'ancienneté de la saturation se réinitialiserait à chaque
+   * action du joueur.
+   *
+   * Il n'a de sens **que** tant que `amount ≥ plafond`. En dessous, il est
+   * ignoré et la projection le remet à `null` — le plafond n'appartient pas à
+   * l'instantané, donc l'instantané ne peut pas en juger seul.
+   */
+  readonly saturatedSince: Instant | null
 }
 
 export interface PlanetSnapshot {
@@ -93,7 +108,15 @@ export function emptySnapshot(input: EmptySnapshotInput): PlanetSnapshot {
   const holdings = Object.fromEntries(
     input.catalogs.resourceIds.map((resourceId) => [
       resourceId,
-      { amount: grains(layout.startingStockGrains[resourceId] ?? 0), lost: grains(0) },
+      {
+        amount: grains(layout.startingStockGrains[resourceId] ?? 0),
+        lost: grains(0),
+        // `null` et non « l'instant de fondation » : la fondation ne sait pas
+        // si le stock de départ atteint le plafond, faute de connaître les
+        // plafonds. Le premier segment de projection le tranche, et le date de
+        // la fondation s'il le faut.
+        saturatedSince: null,
+      },
     ]),
   ) as Record<ResourceId, Holding>
 
@@ -160,7 +183,12 @@ function creditHolding(holding: Holding, delta: number, resourceId: ResourceId):
         'Le module aurait dû refuser la commande avant d’émettre cet effet.',
     )
   }
-  return { amount: grains(next), lost: holding.lost }
+  // Tout mouvement **périme** la date d'entrée en saturation : un débit fait
+  // nécessairement redescendre sous le plafond — la quantité n'y était au mieux
+  // qu'égale —, et un crédit ne saurait dater une saturation qu'il ignore, la
+  // capacité n'étant pas une donnée de l'instantané. Le prochain segment de
+  // projection la rétablit, et il est le seul à pouvoir le faire.
+  return { amount: grains(next), lost: holding.lost, saturatedSince: null }
 }
 
 function applyOne(snapshot: PlanetSnapshot, effect: Effect): PlanetSnapshot {

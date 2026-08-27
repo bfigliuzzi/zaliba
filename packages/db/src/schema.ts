@@ -85,6 +85,26 @@ export const planetResources = gameSchema
        */
       amountGrains: bigint('amount_grains', { mode: 'bigint' }).notNull(),
       lostGrains: bigint('lost_grains', { mode: 'bigint' }).notNull().default(sql`0`),
+      /**
+       * L'instant d'**entrée** en saturation, ou `null` si la ressource ne
+       * l'est pas (US1/AC5).
+       *
+       * **La seule colonne de ce schéma qui porte un état non dérivable des
+       * autres.** Toutes les autres grandeurs affichées se recalculent — les
+       * plafonds depuis les entrepôts, les taux depuis les courbes, le temps
+       * avant saturation depuis les trois. Celle-ci ne se recalcule pas : une
+       * consolidation efface tout ce qui précède, et ni la quantité — au
+       * plafond, elle ne dit plus depuis quand — ni `lost_grains` — dont la
+       * division par le taux est fausse dès que le taux a changé — ne
+       * permettent de la retrouver.
+       *
+       * Annulable, et sans valeur par défaut : « pas saturée » est l'état
+       * courant d'une ressource. Aucune contrainte ne la lie à
+       * `amount_grains` : le plafond n'est pas une donnée de la base, donc la
+       * base ne saurait pas juger de la cohérence. C'est la projection qui la
+       * rétablit à chaque segment, et elle seule connaît les plafonds.
+       */
+      saturatedSince: timestamp('saturated_since', { withTimezone: true }),
     },
     (t) => [
       primaryKey({ columns: [t.planetId, t.resourceId] }),

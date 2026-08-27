@@ -270,9 +270,9 @@ describe('les refus, en union fermée', () => {
     const snapshot: PlanetSnapshot = {
       ...fresh(),
       holdings: {
-        camelote: { amount: grains(0), lost: grains(0) },
-        jus: { amount: grains(0), lost: grains(0) },
-        'bave-etoiles': { amount: grains(0), lost: grains(0) },
+        camelote: { amount: grains(0), lost: grains(0), saturatedSince: null },
+        jus: { amount: grains(0), lost: grains(0), saturatedSince: null },
+        'bave-etoiles': { amount: grains(0), lost: grains(0), saturatedSince: null },
       },
     }
 
@@ -295,9 +295,9 @@ describe('les refus, en union fermée', () => {
     const snapshot: PlanetSnapshot = {
       ...fresh(),
       holdings: {
-        camelote: { amount: grains(0), lost: grains(0) },
-        jus: { amount: grains(0), lost: grains(0) },
-        'bave-etoiles': { amount: grains(0), lost: grains(0) },
+        camelote: { amount: grains(0), lost: grains(0), saturatedSince: null },
+        jus: { amount: grains(0), lost: grains(0), saturatedSince: null },
+        'bave-etoiles': { amount: grains(0), lost: grains(0), saturatedSince: null },
       },
     }
 

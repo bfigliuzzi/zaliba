@@ -73,3 +73,18 @@ export function instantToDb(seconds: number): Date {
   }
   return new Date(seconds * 1000)
 }
+
+/**
+ * Les deux mêmes conversions, pour une colonne **annulable**.
+ *
+ * Elles vivent ici et non à l'appel : « aucun `timestamptz` ne devient un entier
+ * de secondes ailleurs » est une affirmation qui perd tout son sens si un `null`
+ * suffit à la contourner. Le `null` traverse, et rien d'autre.
+ */
+export function nullableInstantFromDb(value: Date | null): number | null {
+  return value === null ? null : instantFromDb(value)
+}
+
+export function nullableInstantToDb(seconds: number | null): Date | null {
+  return seconds === null ? null : instantToDb(seconds)
+}

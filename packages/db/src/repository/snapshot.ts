@@ -1,5 +1,12 @@
 import type { GameTransaction } from '../client.js'
-import { grainsFromDb, grainsToDb, instantFromDb, instantToDb } from '../conversions.js'
+import {
+  grainsFromDb,
+  grainsToDb,
+  instantFromDb,
+  instantToDb,
+  nullableInstantFromDb,
+  nullableInstantToDb,
+} from '../conversions.js'
 import { type BuildingWrite, syncBuildings } from './buildings.js'
 import { syncClearedCells } from './cells.js'
 import type {
@@ -103,9 +110,16 @@ interface PlanetRow {
 
 async function loadParts(tx: GameTransaction, planet: PlanetRow): Promise<PlanetRecord> {
   const [resourceRows, buildingRows, clearedRows, workRows] = await Promise.all([
-    tx<{ resourceId: string; amountGrains: bigint; lostGrains: bigint }[]>`
+    tx<
+      {
+        resourceId: string
+        amountGrains: bigint
+        lostGrains: bigint
+        saturatedSince: Date | null
+      }[]
+    >`
       select resource_id as "resourceId", amount_grains as "amountGrains",
-             lost_grains as "lostGrains"
+             lost_grains as "lostGrains", saturated_since as "saturatedSince"
       from game.planet_resources where planet_id = ${planet.id}
       order by resource_id
     `,
@@ -164,6 +178,7 @@ async function loadParts(tx: GameTransaction, planet: PlanetRow): Promise<Planet
       resourceId: row.resourceId,
       amountGrains: grainsFromDb(row.amountGrains),
       lostGrains: grainsFromDb(row.lostGrains),
+      saturatedSince: nullableInstantFromDb(row.saturatedSince),
     })),
     buildings: buildingRows.map((row) => ({
       id: row.id,
@@ -229,10 +244,13 @@ export async function insertPlanet(
 
   for (const holding of planet.holdings) {
     await tx`
-      insert into game.planet_resources (planet_id, resource_id, amount_grains, lost_grains)
+      insert into game.planet_resources (
+        planet_id, resource_id, amount_grains, lost_grains, saturated_since
+      )
       values (
         ${planet.id}, ${holding.resourceId},
-        ${grainsToDb(holding.amountGrains)}, ${grainsToDb(holding.lostGrains)}
+        ${grainsToDb(holding.amountGrains)}, ${grainsToDb(holding.lostGrains)},
+        ${nullableInstantToDb(holding.saturatedSince)}
       )
     `
   }
@@ -283,13 +301,18 @@ export async function writePlanet(tx: GameTransaction, write: PlanetWrite): Prom
 
   for (const holding of write.holdings) {
     await tx`
-      insert into game.planet_resources (planet_id, resource_id, amount_grains, lost_grains)
+      insert into game.planet_resources (
+        planet_id, resource_id, amount_grains, lost_grains, saturated_since
+      )
       values (
         ${write.id}, ${holding.resourceId},
-        ${grainsToDb(holding.amountGrains)}, ${grainsToDb(holding.lostGrains)}
+        ${grainsToDb(holding.amountGrains)}, ${grainsToDb(holding.lostGrains)},
+        ${nullableInstantToDb(holding.saturatedSince)}
       )
       on conflict (planet_id, resource_id) do update
-      set amount_grains = excluded.amount_grains, lost_grains = excluded.lost_grains
+      set amount_grains = excluded.amount_grains,
+          lost_grains = excluded.lost_grains,
+          saturated_since = excluded.saturated_since
     `
   }
 
