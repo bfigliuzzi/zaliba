@@ -191,15 +191,16 @@ export type CellV1 = z.infer<typeof CellV1>
  *
  * Le sens de l'élargissement est celui que le versionnement autorise : élargir
  * une entrée est **compatible** (README § 2), la resserrer ne l'est pas. Déclarer
- * les quatre natures d'avance nous interdirait d'en retirer une ; les déclarer au
- * fur et à mesure ne coûte rien. `upgrade` est arrivée avec US4, `clear` avec
- * US5 ; `demolish` arrive avec US6.
+ * les quatre natures d'avance nous aurait interdit d'en retirer une ; les déclarer
+ * au fur et à mesure n'a rien coûté. `upgrade` est arrivée avec US4, `clear` avec
+ * US5, `demolish` avec US6.
  *
- * **Pourquoi trois natures ici, alors que le serveur en honore trois aussi.** La
- * règle est celle-là : une nature n'entre dans cette liste que quand une route
- * sait l'exécuter. C'est ce qui distingue un contrat d'une intention de contrat.
+ * **L'union est désormais complète**, et la règle qui l'a construite cesse d'avoir
+ * un effet visible — une nature n'entrait dans cette liste que quand une route
+ * savait l'exécuter. C'est précisément pourquoi il faut le dire : la liste ne doit
+ * plus jamais rétrécir.
  */
-export const WORK_INTENT_NATURES_V1 = ['build', 'upgrade', 'clear'] as const
+export const WORK_INTENT_NATURES_V1 = ['build', 'upgrade', 'clear', 'demolish'] as const
 
 export const WorkIntentV1 = z.discriminatedUnion('nature', [
   z
@@ -248,6 +249,20 @@ export const WorkIntentV1 = z.discriminatedUnion('nature', [
    * s'applique où.
    */
   z.object({ nature: z.literal('clear'), x: coordinate, y: coordinate }).strict(),
+
+  /**
+   * **Une cible, et rien d'autre** — la forme mécanique de FR-046 et FR-049.
+   *
+   * Ni `refund`, ni `clippedAmount`, ni `level`, ni `cumulativeCost`. Le
+   * remboursement vaut `fraction × Σ(k=1..N) coût(k)` et il est **dérivé** de la
+   * courbe du catalogue (R9) ; le montant écrêté se déduit de la place disponible à
+   * l'échéance. Les laisser proposer, c'est laisser se rembourser soi-même — et
+   * aucune vérification n'est aussi solide qu'un champ absent.
+   *
+   * Aucune géométrie non plus : les cases libérées se redérivent de la variante, de
+   * l'orientation et de l'ancre du bâtiment, toutes figées à la pose (FR-010).
+   */
+  z.object({ nature: z.literal('demolish'), buildingId: uuid }).strict(),
 ])
 
 export type WorkIntentV1 = z.infer<typeof WorkIntentV1>

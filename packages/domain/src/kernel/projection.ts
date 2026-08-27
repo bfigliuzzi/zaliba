@@ -177,8 +177,24 @@ function advance(
   const completed = applyEffects(atDue, resolveCompletion(due, atDue, catalogs), due.dueAt)
   const resolved: PlanetSnapshot = { ...completed, work: null }
 
-  // Segment 2 — de l'échéance à `at`, aux **nouveaux** taux.
-  const second = accumulate(resolved, catalogs, due.dueAt, at, first)
+  // Segment 2 — de l'échéance à `at`, aux **nouveaux** taux, **et sur les
+  // quantités que l'achèvement laisse derrière lui**.
+  //
+  // Le report part de `resolved` et non de `first`, et la nuance est tout sauf
+  // cosmétique : un achèvement peut *toucher les ressources*. Le remboursement
+  // d'une démolition est crédité à l'échéance (FR-046), et repartir des quantités
+  // d'avant les effets l'effacerait — le joueur verrait son bâtiment disparaître
+  // sans rien recevoir, et le défaut serait silencieux.
+  //
+  // `initial` relit `amount` et `lost` de l'instantané résolu : `amount` porte les
+  // effets, `lost` porte la perte cumulée du premier segment, que `creditHolding`
+  // préserve. Aucune des deux grandeurs n'est perdue en route.
+  //
+  // Le cas n'était pas atteignable avant US6 : la pose et l'amélioration
+  // n'émettent aucun effet de ressource à l'échéance, et le débit du lancement
+  // passe par une mutation, pas par la projection. C'est un test de domaine de la
+  // démolition qui l'a trouvé.
+  const second = accumulate(resolved, catalogs, due.dueAt, at, initial(resolved, catalogs))
 
   return { snapshot: withAmounts(resolved, second, at), state: second }
 }

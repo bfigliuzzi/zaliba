@@ -3,7 +3,7 @@ import fc from 'fast-check'
 import { describe, expect, it } from 'vitest'
 import { DEFAULT_CATALOGS } from '../../src/kernel/catalogs.js'
 import { evaluateCurve } from '../../src/kernel/curves.js'
-import { applyEnergyRatio, energyReport } from '../../src/kernel/energy.js'
+import { applyEnergyRatio, energyAfterRemoval, energyReport } from '../../src/kernel/energy.js'
 import { productionRates } from '../../src/kernel/rates.js'
 import {
   emptySnapshot,
@@ -310,4 +310,73 @@ describe('la production de base du Berceau n’est jamais touchée (FR-018)', ()
       expect(rates[resourceId].effective).toBeGreaterThan(0)
     },
   )
+})
+
+/**
+ * Le rapport **après retrait** d'un bâtiment posé (US6).
+ *
+ * L'information est utile dans les deux sens, et c'est ce qui la rend nécessaire :
+ * démolir un extracteur soulage le déficit et fait remonter la production des
+ * autres, tandis que démolir une centrale l'aggrave. Un joueur qui ne verrait que la
+ * production perdue par le bâtiment démoli manquerait la moitié du calcul — celle
+ * qui peut rendre la démolition rentable.
+ */
+describe('energyAfterRemoval — le rapport après une démolition', () => {
+  const Cat = CATALOGS
+  const Plant = 'centrale-1'
+  const Racloir = 'racloir-1'
+
+  /**
+   * Une centrale de niveau 1 et un racloir de niveau 8 : la planète est en déficit.
+   *
+   * Les vingt de base plus les trente de la centrale font cinquante ; le racloir en
+   * consomme `14 + 7 × 7 = 63`. C'est la boucle que US3 rend lisible — monter ses
+   * extracteurs finit toujours par exiger de monter sa centrale.
+   */
+  const RacloirLevel = 8
+
+  function deficient(): PlanetSnapshot {
+    return withBuildings(
+      { ...placed('centrale', { x: 3, y: 5 }), id: Plant },
+      { ...placed('racloir', { x: 3, y: 3 }, RacloirLevel), id: Racloir },
+    )
+  }
+
+  it('retirer un consommateur réduit E₋ et peut lever le déficit', () => {
+    const before = energyReport(deficient(), Cat)
+    expect(before.deficit).toBe(true)
+
+    const after = energyAfterRemoval(before, Racloir, 'racloir', RacloirLevel, Cat)
+
+    expect(after.consumed).toBe(0)
+    expect(after.produced).toBe(before.produced)
+    expect(after.deficit).toBe(false)
+    // Le bâtiment est **retiré** du détail, et non laissé à zéro : une ligne
+    // « racloir, 0 » ferait chercher un consommateur qui n'existe plus.
+    expect(after.consumers.some((one) => one.buildingId === Racloir)).toBe(false)
+  })
+
+  it('retirer une centrale réduit E₊ et peut créer le déficit', () => {
+    const before = energyReport(deficient(), Cat)
+    const after = energyAfterRemoval(before, Plant, 'centrale', 1, Cat)
+
+    expect(after.fromPlants).toBe(0)
+    expect(after.produced).toBe(before.base)
+    // La consommation est intacte : la centrale ne consommait rien (R20).
+    expect(after.consumed).toBe(before.consumed)
+    expect(after.deficit).toBe(true)
+    // Et le déficit est **pire** qu'avant : le rapport a baissé.
+    expect(after.ratio.numerator / after.ratio.denominator).toBeLessThan(
+      before.ratio.numerator / before.ratio.denominator,
+    )
+  })
+
+  it('retirer un bâtiment absent ne change rien', () => {
+    const before = energyReport(deficient(), Cat)
+    const after = energyAfterRemoval(before, 'inconnu', 'entrepot', 1, Cat)
+
+    expect(after.consumed).toBe(before.consumed)
+    expect(after.produced).toBe(before.produced)
+    expect(after.consumers).toEqual(before.consumers)
+  })
 })

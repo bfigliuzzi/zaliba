@@ -6,6 +6,7 @@ import type {
   BuildingView,
   CellView,
   ClearPreviewResult,
+  DemolishPreviewResult,
   PreviewResult,
   UpgradePreviewResult,
 } from '@zaliba/domain'
@@ -15,6 +16,7 @@ import {
   placementCells,
   previewBuild,
   previewClear,
+  previewDemolish,
   previewUpgrade,
   validatePlacement,
 } from '@zaliba/domain'
@@ -32,6 +34,7 @@ import { useExtrapolatedState } from '../features/resources/useExtrapolatedState
 import { BuildPanel, type BuildSelection } from '../features/work/BuildPanel.js'
 import { ClearPanel } from '../features/work/ClearPanel.js'
 import { CurrentWork } from '../features/work/CurrentWork.js'
+import { DemolishPanel } from '../features/work/DemolishPanel.js'
 import { RefusalNotice } from '../features/work/RefusalNotice.js'
 import { UpgradePanel } from '../features/work/UpgradePanel.js'
 import { createClock } from '../lib/clock.js'
@@ -62,11 +65,12 @@ import { rootRoute } from './root.js'
  * grille. Une grille qui détiendrait son curseur obligerait chacune à en tenir une
  * copie, c'est-à-dire à afficher un fantôme à un endroit et à poser à un autre.
  *
- * **Le curseur sert les trois mécaniques, et c'est ce qui rend US4 et US5
+ * **Le curseur sert les quatre mécaniques, et c'est ce qui rend US4 à US6
  * accessibles sans rien ajouter** (FR-058, SC-004) : une case libre arme une pose,
- * une case occupée désigne son bâtiment, une case obstruée arme un déblaiement.
- * Le joueur apprend un seul modèle de navigation, et les trois ne se disputent
- * jamais — une case ne peut être à la fois obstruée et occupée.
+ * une case occupée désigne son bâtiment — pour l'améliorer ou le démolir —, une case
+ * obstruée arme un déblaiement. Le joueur apprend un seul modèle de navigation, et
+ * les panneaux ne se disputent jamais : une case ne peut être à la fois obstruée et
+ * occupée.
  */
 export const planetRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -126,7 +130,7 @@ export function PlanetScreen({ snapshot, gateway, onSnapshot }: PlanetScreenProp
    * joueur a besoin de savoir lequel des deux il a engagé — et `aria-busy` sur un
    * bouton qu'on n'a pas pressé est une information fausse.
    */
-  const [pending, setPending] = useState<'build' | 'upgrade' | 'clear' | null>(null)
+  const [pending, setPending] = useState<'build' | 'upgrade' | 'clear' | 'demolish' | null>(null)
 
   /**
    * Choisir un type **présélectionne sa première variante**.
@@ -235,6 +239,23 @@ export function PlanetScreen({ snapshot, gateway, onSnapshot }: PlanetScreenProp
     )
   }, [cell, state])
 
+  /**
+   * L'aperçu de démolition, calculé **localement** par le code du serveur (R8).
+   *
+   * La même cible que l'amélioration — le bâtiment sous le curseur —, et les deux
+   * panneaux se lisent ensemble : améliorer ou démolir sont les deux décisions qu'on
+   * prend devant un bâtiment posé, et les mettre côte à côte est ce qui rend le choix
+   * lisible plutôt que caché derrière un menu.
+   */
+  const demolishPreview = useMemo((): DemolishPreviewResult | null => {
+    if (upgradeTarget === null) return null
+    return previewDemolish(
+      state,
+      { kind: 'demolish', workId: 'apercu-local', buildingId: upgradeTarget.id },
+      DEFAULT_CATALOGS,
+    )
+  }, [upgradeTarget, state])
+
   const announcement = useMemo(() => {
     if (cell === undefined) return null
     return {
@@ -268,7 +289,7 @@ export function PlanetScreen({ snapshot, gateway, onSnapshot }: PlanetScreenProp
    */
   const launch = useCallback(
     async (
-      kind: 'build' | 'upgrade' | 'clear',
+      kind: 'build' | 'upgrade' | 'clear' | 'demolish',
       intent: Parameters<PlanetGateway['startWork']>[0],
     ) => {
       setPending(kind)
@@ -347,6 +368,25 @@ export function PlanetScreen({ snapshot, gateway, onSnapshot }: PlanetScreenProp
     await launch('clear', { nature: 'clear', x: cell.x, y: cell.y })
   }, [cell, pending, clearPreview, launch])
 
+  /**
+   * Le lancement d'une démolition.
+   *
+   * Même discipline que les trois autres : un **refus local** est traité sans appel
+   * réseau (R8). La sélection de construction n'est pas remise à zéro — une
+   * démolition ne la consomme pas.
+   */
+  const confirmDemolish = useCallback(async () => {
+    if (upgradeTarget === null || pending !== null) return
+
+    if (demolishPreview !== null && demolishPreview.outcome === 'refused') {
+      const { code, ...details } = demolishPreview.refusal
+      setRefusal(new PlanetRefusal(409, code, 'Cette démolition est refusée.', details))
+      return
+    }
+
+    await launch('demolish', { nature: 'demolish', buildingId: upgradeTarget.id })
+  }, [upgradeTarget, pending, demolishPreview, launch])
+
   const handleConfirm = useCallback(
     (_cell: CellView) => {
       void confirm()
@@ -395,9 +435,21 @@ export function PlanetScreen({ snapshot, gateway, onSnapshot }: PlanetScreenProp
       />
 
       {/*
-        Le déblaiement après l'amélioration, et pour la même raison qu'elle suit la
-        grille : sa cible est la case du curseur. Les deux panneaux sont armés par
-        la même position et ne se disputent jamais — une case porte un obstacle ou
+        La démolition juste après l'amélioration, parce que ce sont les deux décisions
+        qu'on prend devant un bâtiment posé. Les mettre côte à côte rend le choix
+        lisible ; les séparer le cacherait derrière une navigation.
+      */}
+      <DemolishPanel
+        building={upgradeTarget}
+        preview={demolishPreview}
+        pending={pending === 'demolish'}
+        onConfirm={() => void confirmDemolish()}
+      />
+
+      {/*
+        Le déblaiement après, et pour la même raison qu'ils suivent tous la
+        grille : leur cible est la case du curseur. Les panneaux sont armés par la
+        même position et ne se disputent jamais — une case porte un obstacle ou
         un bâtiment, jamais les deux.
       */}
       <ClearPanel

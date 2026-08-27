@@ -39,6 +39,12 @@ const WELL_FORMED: Readonly<Record<(typeof WORK_INTENT_NATURES_V1)[number], obje
    * de formulaire.
    */
   clear: { nature: 'clear', x: 3, y: 2 },
+  /**
+   * Une cible, et rien d'autre (FR-046, FR-049). Ni remboursement, ni montant
+   * écrêté : les deux sont dérivés de la courbe de coût et de la place disponible à
+   * l'échéance, et les laisser proposer serait laisser se rembourser soi-même.
+   */
+  demolish: { nature: 'demolish', buildingId: '88888888-8888-4888-8888-888888888888' },
 }
 
 /**

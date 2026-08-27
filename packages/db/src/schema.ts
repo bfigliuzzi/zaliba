@@ -195,9 +195,30 @@ export const works = gameSchema
        * d'unicité soit *partiel*.
        */
       resolvedAt: timestamp('resolved_at', { withTimezone: true }),
-      targetBuildingId: uuid('target_building_id').references(() => buildings.id, {
-        onDelete: 'cascade',
-      }),
+      /**
+       * La cible d'une amélioration ou d'une démolition, **sans clé étrangère**.
+       *
+       * L'absence est le sujet, et elle a été gagnée par un test d'intégration
+       * d'US6. Une contrainte `references(buildings.id) on delete cascade`
+       * paraissait plus rigoureuse et détruisait exactement ce qu'elle prétendait
+       * protéger : à l'achèvement d'une démolition, le bâtiment disparaît, et la
+       * cascade emportait avec lui la **ligne de chantier résolue** — c'est-à-dire
+       * l'histoire de la planète, au moment précis où elle devient intéressante.
+       * Plus personne n'aurait pu enquêter sur ce qui avait été démoli.
+       *
+       * Les autres réponses possibles étaient pires. `on delete set null` aurait
+       * gardé la ligne en effaçant *quel* bâtiment, ce qui vide la trace de son
+       * intérêt. `on delete no action` aurait fait échouer la démolition
+       * elle-même — la seule mécanique censée garantir qu'aucun état n'est
+       * définitivement bloquant.
+       *
+       * Ce que la démolition rend structurellement vrai, c'est qu'un chantier
+       * résolu peut légitimement désigner un bâtiment qui n'existe plus. Une clé
+       * étrangère ne sait pas exprimer cela ; l'intégrité d'un chantier **en cours**
+       * est donc tenue par le domaine, qui refuse `building-not-found` sur l'état
+       * verrouillé, dans la transaction de mutation.
+       */
+      targetBuildingId: uuid('target_building_id'),
       targetX: smallint('target_x'),
       targetY: smallint('target_y'),
       typeId: text('type_id'),

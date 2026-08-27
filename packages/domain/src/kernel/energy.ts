@@ -219,7 +219,37 @@ export function energyAfterUpgrade(
   return report(current.base, current.fromPlants + gained, consumers)
 }
 
-/** La formule, en un seul endroit : les trois constructeurs ci-dessus y passent. */
+/**
+ * Le rapport tel qu'il serait **après** le retrait d'un bâtiment posé (US6).
+ *
+ * Même promesse que pour la pose et l'amélioration, et même raison de la tenir :
+ * entre le lancement d'un chantier et son échéance, aucune autre transition ne peut
+ * survenir (FR-033, R3), donc l'état énergétique à l'échéance est connu dès le
+ * lancement.
+ *
+ * L'information est utile dans les deux sens, et c'est ce qui la rend nécessaire :
+ * démolir un extracteur **soulage** le déficit et fait remonter la production des
+ * autres, tandis que démolir une centrale l'aggrave. Un joueur qui ne verrait que la
+ * production perdue par le bâtiment démoli manquerait la moitié du calcul — celle
+ * qui peut rendre la démolition rentable.
+ *
+ * Le bâtiment est **retiré** du détail, jamais laissé avec un montant nul : une
+ * ligne « mine, 0 » ferait chercher un consommateur qui n'existe plus.
+ */
+export function energyAfterRemoval(
+  current: EnergyReport,
+  buildingId: BuildingId,
+  typeId: BuildingTypeId,
+  level: number,
+  catalogs: Catalogs,
+): EnergyReport {
+  const lost = energyProduction(typeId, level, catalogs)
+  const consumers = current.consumers.filter((one) => one.buildingId !== buildingId)
+
+  return report(current.base, current.fromPlants - lost, consumers)
+}
+
+/** La formule, en un seul endroit : les quatre constructeurs ci-dessus y passent. */
 function report(
   base: number,
   fromPlants: number,

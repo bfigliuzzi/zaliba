@@ -1,10 +1,11 @@
 import type { ObstacleId } from '@zaliba/catalogs'
 import type { Catalogs } from '../../kernel/catalogs.js'
-import type { BuildingId, ResourceAmount } from '../../kernel/effects.js'
+import type { BuildingId, Cell, ResourceAmount } from '../../kernel/effects.js'
 import {
   applyEnergyRatio,
   type EnergyReport,
   energyAfterBuilding,
+  energyAfterRemoval,
   energyAfterUpgrade,
 } from '../../kernel/energy.js'
 import { depositsUnder, placementCells, validatePlacement } from '../../kernel/grid.js'
@@ -32,6 +33,19 @@ import {
   clearReveals,
   clearTargetOf,
 } from './clear.js'
+import {
+  clipRefund,
+  type DemolishCommand,
+  type DemolishRefusal,
+  demolishDuration,
+  demolishRefusalOf,
+  demolishTargetOf,
+  freedCells,
+  grossRefund,
+  type PreservedDeposit,
+  preservedDeposits,
+  type Room,
+} from './demolish.js'
 import { workInProgress } from './refusals.js'
 import {
   type UpgradeCommand,
@@ -185,6 +199,138 @@ export interface UpgradePreview extends PreviewTerms {
 export type UpgradePreviewResult =
   | { readonly outcome: 'accepted'; readonly preview: UpgradePreview }
   | { readonly outcome: 'refused'; readonly refusal: UpgradeRefusal }
+
+/**
+ * Ce qu'une démolition changerait, une fois achevée (FR-046, FR-047, FR-049).
+ *
+ * **Quatre grandeurs, et aucune n'est décorative.** Le remboursement est ce que le
+ * joueur achète ; le montant écrêté est ce qu'il perdrait à démolir maintenant
+ * plutôt que plus tard ; les cases libérées sont ce qu'il récupère ; et les
+ * gisements préservés sont la seule des quatre qu'il ne peut pas deviner — rien ne
+ * dit *a priori* que démolir une mine ne détruit pas la veine qu'elle recouvrait.
+ * Sans cette annonce, un joueur hésiterait à corriger son erreur de peur d'aggraver
+ * la situation, c'est-à-dire renoncerait à la mécanique même qui la rend réparable.
+ */
+export interface DemolishPreviewEffect {
+  readonly kind: 'demolish'
+  readonly buildingId: BuildingId
+  readonly level: number
+  /** Ce que le joueur recevra réellement, écrêtement appliqué. */
+  readonly refund: readonly ResourceAmount[]
+  /**
+   * Ce qu'un plafond retiendrait (FR-049). **Vide** quand rien n'est écrêté — une
+   * entrée « 0 Camelote » ferait chercher une perte qui n'existe pas.
+   *
+   * Le montant est exact, et pas une estimation : entre le lancement et l'échéance,
+   * aucune autre transition ne peut survenir (FR-033, R3, R4), donc la quantité
+   * détenue à l'échéance est calculable dès maintenant — production de la durée
+   * comprise, puisque le bâtiment démoli produit jusqu'à son dernier instant
+   * (FR-048).
+   */
+  readonly clippedAmount: readonly ResourceAmount[]
+  readonly cellsFreed: readonly Cell[]
+  /** Les gisements que les cases portent, et qui survivront (FR-020, FR-047). */
+  readonly depositsPreserved: readonly PreservedDeposit[]
+  /** La production que la planète perdra à l'échéance, et pas avant (FR-048). */
+  readonly rateLost: RatePerHour
+  /** Le rapport d'énergie **après** la démolition : un bâtiment de moins consomme. */
+  readonly energyAfter: EnergyReport
+}
+
+export interface DemolishPreview extends PreviewTerms {
+  readonly effect: DemolishPreviewEffect
+}
+
+export type DemolishPreviewResult =
+  | { readonly outcome: 'accepted'; readonly preview: DemolishPreview }
+  | { readonly outcome: 'refused'; readonly refusal: DemolishRefusal }
+
+/**
+ * La place disponible par ressource **à l'échéance**, depuis l'état projeté.
+ *
+ * C'est la moitié la plus subtile de FR-049. La place d'aujourd'hui n'est pas celle
+ * de l'échéance : la production court pendant la démolition, donc la place se
+ * réduit, donc l'écrêtement sera **plus grand** que ce qu'un calcul à l'instant du
+ * lancement annoncerait. Annoncer la place d'aujourd'hui promettrait un
+ * remboursement que le joueur ne recevrait pas.
+ *
+ * Le plafond, lui, est celui de l'état projeté. En 001 il ne dépend d'aucun
+ * bâtiment — la contribution de l'entrepôt arrive avec US7 —, et c'est
+ * `effectsOnCompletion` qui porte déjà la règle générale : le plafond retenu est
+ * celui **d'après retrait**, parce que démolir un entrepôt réduit la capacité à
+ * l'instant même où il rembourse. Le jour où le plafond dépendra des bâtiments,
+ * l'accord entre cet aperçu et cet achèvement cessera de tenir de lui-même : c'est
+ * ce que `demolish-clipping.test.ts` garde, en éprouvant l'égalité sur une planète
+ * qui porte un entrepôt.
+ */
+function roomAtDue(state: ProjectedState, seconds: number): Readonly<Record<string, Room>> {
+  return Object.fromEntries(
+    Object.entries(state.holdings).map(([resourceId, holding]) => {
+      const cap = holding.cap
+      // Le même plafonnement que le noyau applique par segment (R4) : la quantité
+      // ne peut pas dépasser le plafond, même en attendant.
+      const amount = Math.min(cap, holding.amount + holding.rate * seconds)
+      return [resourceId, { amount, cap }]
+    }),
+  )
+}
+
+/**
+ * L'aperçu d'une démolition.
+ *
+ * Refuse pour les mêmes motifs que `decideDemolish` — il n'y en a que deux, et
+ * aucun n'est une question d'argent : la démolition ne coûte rien. Les contrôles ne
+ * sont pas réécrits ici, ils sont **le même code** que l'arbitrage (R8).
+ */
+export function previewDemolish(
+  state: ProjectedState,
+  command: DemolishCommand,
+  catalogs: Catalogs,
+): DemolishPreviewResult {
+  const refusal = demolishRefusalOf(state, command)
+  if (refusal !== null) return { outcome: 'refused', refusal }
+
+  const building = demolishTargetOf(state, command.buildingId)
+  const duration = demolishDuration(building.typeId, catalogs)
+
+  const { refund, clipped } = clipRefund(
+    grossRefund(building.typeId, building.level, catalogs),
+    roomAtDue(state, duration),
+  )
+
+  return {
+    outcome: 'accepted',
+    preview: {
+      // **La démolition ne coûte rien**, et les termes communs le disent en toutes
+      // lettres plutôt que par omission : une liste vide se lit, un champ absent se
+      // devine. Il n'y a donc jamais de manque à combler.
+      cost: [],
+      duration,
+      dueAt: addDuration(state.at, duration),
+      shortfall: null,
+      secondsUntilAffordable: null,
+      effect: {
+        kind: 'demolish',
+        buildingId: building.id,
+        level: building.level,
+        refund,
+        clippedAmount: clipped,
+        cellsFreed: freedCells(building),
+        depositsPreserved: preservedDeposits(state, building),
+        // La production **effective** et non la nominale : c'est celle que la
+        // planète perd réellement, rapport d'énergie appliqué.
+        rateLost: building.effectiveRate,
+        energyAfter: energyAfterRemoval(
+          state.energy,
+          building.id,
+          building.typeId,
+          building.level,
+          catalogs,
+        ),
+      },
+    },
+  }
+}
 
 /**
  * Ce qu'un déblaiement changerait, une fois achevé (FR-042, FR-043).

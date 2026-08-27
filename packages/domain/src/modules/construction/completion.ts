@@ -1,8 +1,9 @@
 import type { ResourceId } from '@zaliba/catalogs'
 import type { Catalogs } from '../../kernel/catalogs.js'
-import { cumulativeCost } from '../../kernel/curves.js'
-import type { Effect, ResourceAmount } from '../../kernel/effects.js'
+import type { Effect } from '../../kernel/effects.js'
+import { storageCaps } from '../../kernel/rates.js'
 import type { PlanetSnapshot, ScheduledWork } from '../../kernel/snapshot.js'
+import { clipRefund, grossRefund, type Room } from './demolish.js'
 
 /**
  * Les effets d'un chantier **à son achèvement** — redérivés, jamais stockés.
@@ -55,8 +56,18 @@ export function effectsOnCompletion(
       const building = snapshotAtDue.buildings.find((b) => b.id === target.buildingId)
       if (building === undefined) return []
 
-      const refunded = refundOf(building.typeId, building.level, catalogs)
       const effects: Effect[] = [{ kind: 'remove-building', buildingId: building.id }]
+
+      // **L'écrêtement porte sur le plafond d'après retrait**, et l'ordre des
+      // effets le dit : retirer, puis rembourser. La distinction compte dès qu'on
+      // démolit un entrepôt — le plafond baisse à l'instant du retrait, et
+      // rembourser contre l'ancien créerait de la ressource au-delà de la capacité
+      // que le joueur vient lui-même de supprimer.
+      const refunded = clipRefund(
+        grossRefund(building.typeId, building.level, catalogs),
+        roomAfterRemoval(snapshotAtDue, building.id, catalogs),
+      ).refund
+
       // Le remboursement **avant** le retrait serait faux d'un cheveu : c'est la
       // même transaction, mais l'ordre est ce qu'un lecteur de journal voit.
       if (refunded.length > 0) effects.push({ kind: 'credit-resources', amounts: refunded })
@@ -69,22 +80,31 @@ export function effectsOnCompletion(
 }
 
 /**
- * La part remboursée d'un bâtiment démoli (FR-046).
+ * La place disponible par ressource, **le bâtiment retiré**.
  *
- * Le coût cumulé est **dérivé** du niveau et de la courbe (R9), jamais stocké :
- * le stocker le rendrait faux au premier rééquilibrage, et faux en silence.
- * La fraction est appliquée en entiers, avec une troncature vers le bas — le
- * joueur ne peut pas récupérer plus qu'il n'a dépensé.
+ * Le retrait est simulé plutôt que déduit, parce que le plafond dépend des
+ * bâtiments posés : c'est vrai de l'entrepôt depuis US7, et l'écrire ainsi dès
+ * maintenant évite que la démolition d'un entrepôt plein ne rembourse contre une
+ * capacité qui n'existe plus.
+ *
+ * Aucun instantané n'est muté : `storageCaps` reçoit une copie sans le bâtiment,
+ * et c'est tout ce dont elle a besoin pour calculer un plafond.
  */
-function refundOf(typeId: string, level: number, catalogs: Catalogs): readonly ResourceAmount[] {
-  const type = catalogs.buildings[typeId as keyof typeof catalogs.buildings]
-  if (type === undefined) return []
-
-  const amounts: ResourceAmount[] = []
-  for (const [resourceId, curve] of Object.entries(type.cost)) {
-    const spent = cumulativeCost(curve, level)
-    const refunded = Math.floor((spent * type.refund.num) / type.refund.den)
-    if (refunded > 0) amounts.push({ resourceId: resourceId as ResourceId, grains: refunded })
+function roomAfterRemoval(
+  snapshotAtDue: PlanetSnapshot,
+  buildingId: string,
+  catalogs: Catalogs,
+): Readonly<Partial<Record<ResourceId, Room>>> {
+  const without: PlanetSnapshot = {
+    ...snapshotAtDue,
+    buildings: snapshotAtDue.buildings.filter((one) => one.id !== buildingId),
   }
-  return amounts
+  const caps = storageCaps(without, catalogs)
+
+  return Object.fromEntries(
+    catalogs.resourceIds.map((resourceId) => [
+      resourceId,
+      { amount: snapshotAtDue.holdings[resourceId]?.amount ?? 0, cap: caps[resourceId] ?? 0 },
+    ]),
+  ) as Readonly<Partial<Record<ResourceId, Room>>>
 }

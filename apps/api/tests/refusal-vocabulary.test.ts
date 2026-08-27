@@ -7,6 +7,7 @@ import {
   DEFAULT_CATALOGS,
   decideBuild,
   decideClear,
+  decideDemolish,
   decideUpgrade,
   emptySnapshot,
   grains,
@@ -122,6 +123,9 @@ const upgrade = (snapshot: PlanetSnapshot, buildingId = BUILDING_ID) =>
 const clear = (snapshot: PlanetSnapshot, cell: { x: number; y: number }) =>
   decideClear(state(snapshot), { kind: 'clear', workId: WORK_ID, cell }, CATALOGS)
 
+const demolish = (snapshot: PlanetSnapshot, buildingId = BUILDING_ID) =>
+  decideDemolish(state(snapshot), { kind: 'demolish', workId: WORK_ID, buildingId }, CATALOGS)
+
 /**
  * Un refus **réel** par code publié.
  *
@@ -141,6 +145,22 @@ const PROVOCATIONS = {
     upgrade({ ...fresh(), buildings: [{ ...MINE, level: BUILDINGS.mine.maxLevel }] }),
   /** (5,5) est libre dans la disposition du Berceau : rien à déblayer. */
   'cell-not-obstructed': () => clear(fresh(), { x: 5, y: 5 }),
+  /**
+   * Le chantier en cours porte **sur la mine elle-même** : c'est ce qui distingue
+   * ce motif de `work-in-progress`, qui n'aurait pas dit lequel.
+   */
+  'building-is-work-target': () =>
+    demolish({
+      ...fresh(),
+      buildings: [MINE],
+      work: {
+        id: WORK_ID,
+        nature: 'upgrade',
+        target: { kind: 'building', buildingId: BUILDING_ID },
+        startedAt: T0,
+        dueAt: instant(T0 + 168),
+      },
+    }),
 } as const satisfies Record<(typeof REFUSAL_CODES_V1)[number], () => unknown>
 
 describe('le domaine et le contrat nomment les mêmes motifs', () => {

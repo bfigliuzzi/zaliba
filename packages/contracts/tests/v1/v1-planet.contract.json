@@ -1310,6 +1310,26 @@
                       "y"
                     ],
                     "type": "object"
+                  },
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "buildingId": {
+                        "format": "uuid",
+                        "type": "string"
+                      },
+                      "nature": {
+                        "enum": [
+                          "demolish"
+                        ],
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "buildingId",
+                      "nature"
+                    ],
+                    "type": "object"
                   }
                 ]
               }

@@ -9,6 +9,8 @@ import type {
   Catalogs,
   ClearCommand,
   ClearRefusal,
+  DemolishCommand,
+  DemolishRefusal,
   PlanetSnapshot,
   UpgradeCommand,
   UpgradeRefusal,
@@ -18,6 +20,7 @@ import {
   consolidatePlanet,
   decideBuild,
   decideClear,
+  decideDemolish,
   decideUpgrade,
   type ProjectedState,
   projectPlanet,
@@ -48,11 +51,12 @@ import { AppError } from '../../plugins/errors.js'
  * échouer la compilation.
  *
  * **Le client n'envoie qu'une intention** : un type, une variante, une
- * orientation, une position pour une pose ; une cible pour une amélioration ; une
- * case pour un déblaiement. Le coût, la durée, l'échéance et — depuis US5 — le
- * **résultat** ne sont pas seulement recalculés : ils sont **absents du contrat**,
- * donc impossibles à annoncer (FR-055, FR-056, FR-044). Et l'instant de référence
- * est le `now()` de la transaction, donc antidater est hors d'atteinte (FR-057).
+ * orientation, une position pour une pose ; une cible pour une amélioration ou une
+ * démolition ; une case pour un déblaiement. Le coût, la durée, l'échéance, le
+ * **résultat** d'un déblaiement et le **remboursement** d'une démolition ne sont pas
+ * seulement recalculés : ils sont **absents du contrat**, donc impossibles à
+ * annoncer (FR-044, FR-046, FR-049, FR-055, FR-056). Et l'instant de référence est
+ * le `now()` de la transaction, donc antidater est hors d'atteinte (FR-057).
  *
  * **Le `201` porte l'instantané d'après débit et planification.** Le client n'a
  * ainsi aucun `GET` à enchaîner, et son extrapolation locale reprend
@@ -79,8 +83,8 @@ type WorkResponse = ReturnType<typeof toContract>
  * route est le seul endroit qui les voit ensemble. Le domaine, lui, garde ses
  * mécaniques séparées — `build.ts` ne sait rien de `upgrade.ts`.
  */
-type WorkCommand = BuildCommand | UpgradeCommand | ClearCommand
-type WorkRefusal = BuildRefusal | UpgradeRefusal | ClearRefusal
+type WorkCommand = BuildCommand | UpgradeCommand | ClearCommand | DemolishCommand
+type WorkRefusal = BuildRefusal | UpgradeRefusal | ClearRefusal | DemolishRefusal
 type WorkEffect = Parameters<typeof applyEffects>[1][number]
 
 function playerOf(request: FastifyRequest): string {
@@ -153,6 +157,7 @@ export const REFUSAL_MESSAGES: Readonly<Record<WorkRefusal['code'], string>> = {
   'building-not-found': 'Ce bâtiment n’est pas sur cette planète.',
   'max-level-reached': 'Ce bâtiment est au niveau maximal du catalogue.',
   'cell-not-obstructed': 'Cette case ne porte aucun obstacle à déblayer.',
+  'building-is-work-target': 'Ce bâtiment est la cible du chantier en cours.',
 }
 
 /**
@@ -183,6 +188,11 @@ function commandOf(intent: WorkIntent, workId: string): WorkCommand {
       // type d'obstacle est lu de la disposition, et ce qu'il révèle du catalogue.
       // C'est FR-044 dans la forme du contrat (voir `clear-absence.test.ts`).
       return { kind: 'clear', workId, cell: { x: intent.x, y: intent.y } }
+    case 'demolish':
+      // Aucun montant n'est transmis : le remboursement est dérivé de la courbe de
+      // coût (R9) et l'écrêtement de la place disponible à l'échéance. C'est FR-046
+      // et FR-049 dans la forme du contrat (voir `demolish-absence.test.ts`).
+      return { kind: 'demolish', workId, buildingId: intent.buildingId }
   }
 }
 
@@ -204,6 +214,8 @@ function decideWork(
       return decideUpgrade(state, command, catalogs)
     case 'clear':
       return decideClear(state, command, catalogs)
+    case 'demolish':
+      return decideDemolish(state, command, catalogs)
   }
 }
 

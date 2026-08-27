@@ -80,8 +80,8 @@ export function categoryOfStatus(status: number): ErrorCategory | null {
  * L'union **fermée** des motifs de refus de règle de jeu.
  *
  * Elle s'enrichit tranche par tranche : US2 a apporté les six premiers, US4
- * `building-not-found` et `max-level-reached`, US5 `cell-not-obstructed` ; US6
- * apportera `building-is-work-target`.
+ * `building-not-found` et `max-level-reached`, US5 `cell-not-obstructed`, US6
+ * `building-is-work-target`.
  *
  * Le caractère **fermé** est ce qui satisfait FR-013, FR-034 et SC-007 : ces
  * exigences demandent le *motif exact*, qu'un booléen ou un message libre ne
@@ -123,6 +123,15 @@ export const REFUSAL_CODES_V1 = [
    * lui ne peut dire ce qu'une case porte.
    */
   'cell-not-obstructed',
+  /**
+   * La cible d'une démolition **est** celle du chantier en cours.
+   *
+   * Plus précis que `work-in-progress`, et c'est pourquoi ce motif existe : les deux
+   * nomment la même cause, mais celui-ci dit *pourquoi ce bâtiment-là*. Un joueur
+   * qui améliore sa mine et tente de la démolir entendrait sinon « un chantier est
+   * en cours » et pourrait croire qu'un autre bâtiment est concerné.
+   */
+  'building-is-work-target',
 ] as const satisfies readonly string[]
 
 export type RefusalCodeV1 = (typeof REFUSAL_CODES_V1)[number]
@@ -225,6 +234,16 @@ export const RefusalDetailsV1 = {
       y: z.number().int().min(0).max(15),
     })
     .strict(),
+
+  /**
+   * L'identifiant du **chantier**, et non celui du bâtiment.
+   *
+   * Le client connaît déjà le bâtiment — c'est lui qui l'a désigné. Ce qu'il ignore,
+   * c'est quel chantier le retient, et c'est de ce chantier que vient l'échéance :
+   * elle dit *quand revenir*, ce que SC-006 exige de tout refus d'occupation.
+   * Renvoyer le bâtiment aurait répété la question au lieu d'y répondre.
+   */
+  'building-is-work-target': z.object({ workId: z.string().uuid() }).strict(),
 } as const satisfies Record<RefusalCodeV1, z.ZodTypeAny>
 
 /**

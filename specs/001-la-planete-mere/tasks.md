@@ -683,16 +683,98 @@ connaître **avant confirmation** le montant qui serait écrêté par un plafond
 **Test indépendant** : démolir un bâtiment et vérifier le remboursement, la
 libération des cases et la disparition de sa production.
 
-- [ ] T134 [US6] Écrire le parcours Playwright dans `apps/game/tests/e2e/us6-demolish.spec.ts` : démolir un bâtiment de niveau 3 **au clavier seul, sans aucun dispositif de pointage** (FR-058, SC-004), vérifier que le remboursement vaut la fraction publiée du coût cumulé des **trois** niveaux, que les cases redeviennent libres et les gisements intacts ; provoquer un écrêtement et vérifier qu'il est annoncé avant confirmation ; passer `axe-core` sans écart. Observer l'échec.
-- [ ] T135 [P] [US6] Écrire les tests de démolition dans `packages/domain/tests/modules/construction/demolish.test.ts` : remboursement = `fraction × Σ(k=1..N) coût(k)`, **dérivé de la courbe et non stocké** (R9, FR-046) ; durée lue du catalogue ; à l'achèvement les cases redeviennent libres et **les gisements qu'elles portaient sont intacts** (FR-047) ; la production cesse à l'instant exact de l'échéance, pas à celui de la constatation (FR-048) ; refus `building-is-work-target` sur la cible du chantier en cours. Observer l'échec.
-- [ ] T136 [P] [US6] Écrire le test d'écrêtement dans `packages/domain/tests/modules/construction/demolish-clipping.test.ts` : un remboursement dépassant un plafond est écrêté et **le montant écrêté est annoncé avant confirmation** (FR-049). C'est calculable exactement parce qu'aucune autre transition ne peut survenir entre le lancement et l'échéance (R3, R4). Observer l'échec.
-- [ ] T137 [US6] Implémenter `packages/domain/src/modules/construction/demolish.ts` : effet `schedule-work` au lancement, `remove-building` et `credit-resources` à l'échéance.
-- [ ] T138 [US6] Étendre `packages/domain/src/modules/construction/preview.ts` avec la variante `demolish` : `refund`, `clippedAmount`, `cellsFreed`, `depositsPreserved`.
-- [ ] T139 [US6] Étendre `packages/contracts/src/v1/planet.ts` avec `{ nature: 'demolish', buildingId }` et `packages/contracts/src/v1/errors.ts` avec `building-is-work-target` (`{ workId }`).
-- [ ] T140 [US6] Implémenter la suppression en cascade de `game.building_cells` à la démolition dans `packages/db/src/repository/buildings.ts`, dans la même transaction.
-- [ ] T141 [US6] Implémenter `apps/game/src/features/work/DemolishPanel.tsx` : remboursement annoncé, montant écrêté le cas échéant, durée, et confirmation explicite.
+- [x] T134 [US6] Écrire le parcours Playwright dans `apps/game/tests/e2e/us6-demolish.spec.ts` : démolir un bâtiment de niveau 3 **au clavier seul, sans aucun dispositif de pointage** (FR-058, SC-004), vérifier que le remboursement vaut la fraction publiée du coût cumulé des **trois** niveaux, que les cases redeviennent libres et les gisements intacts ; provoquer un écrêtement et vérifier qu'il est annoncé avant confirmation ; passer `axe-core` sans écart. Observer l'échec.
+- [x] T135 [P] [US6] Écrire les tests de démolition dans `packages/domain/tests/modules/construction/demolish.test.ts` : remboursement = `fraction × Σ(k=1..N) coût(k)`, **dérivé de la courbe et non stocké** (R9, FR-046) ; durée lue du catalogue ; à l'achèvement les cases redeviennent libres et **les gisements qu'elles portaient sont intacts** (FR-047) ; la production cesse à l'instant exact de l'échéance, pas à celui de la constatation (FR-048) ; refus `building-is-work-target` sur la cible du chantier en cours. Observer l'échec.
+- [x] T136 [P] [US6] Écrire le test d'écrêtement dans `packages/domain/tests/modules/construction/demolish-clipping.test.ts` : un remboursement dépassant un plafond est écrêté et **le montant écrêté est annoncé avant confirmation** (FR-049). C'est calculable exactement parce qu'aucune autre transition ne peut survenir entre le lancement et l'échéance (R3, R4). Observer l'échec.
+- [x] T137 [US6] Implémenter `packages/domain/src/modules/construction/demolish.ts` : effet `schedule-work` au lancement, `remove-building` et `credit-resources` à l'échéance.
+- [x] T138 [US6] Étendre `packages/domain/src/modules/construction/preview.ts` avec la variante `demolish` : `refund`, `clippedAmount`, `cellsFreed`, `depositsPreserved`.
+- [x] T139 [US6] Étendre `packages/contracts/src/v1/planet.ts` avec `{ nature: 'demolish', buildingId }` et `packages/contracts/src/v1/errors.ts` avec `building-is-work-target` (`{ workId }`).
+- [x] T140 [US6] Implémenter la suppression en cascade de `game.building_cells` à la démolition dans `packages/db/src/repository/buildings.ts`, dans la même transaction.
+- [x] T141 [US6] Implémenter `apps/game/src/features/work/DemolishPanel.tsx` : remboursement annoncé, montant écrêté le cas échéant, durée, et confirmation explicite.
 
 **Point de contrôle** : le second antidote à la grille figée est livré. Une erreur de placement n'est plus définitive.
+✅ **Franchi le 2026-08-27.**
+
+### Divergences constatées à l'exécution
+
+1. **Un défaut réel du noyau, que seule la démolition pouvait révéler.** Le second
+   segment de la projection repartait des quantités *d'avant* les effets
+   d'achèvement : tout crédit émis à l'échéance était effacé. Le joueur aurait vu
+   son bâtiment disparaître sans rien recevoir, en silence. Le cas n'était pas
+   atteignable avant US6 — la pose et l'amélioration n'émettent aucun effet de
+   ressource à l'échéance, et le débit du lancement passe par une mutation, pas par
+   la projection. Corrigé dans `projection.ts`, et gardé par un test **indépendant
+   de toute mécanique** : un résolveur d'achèvement synthétique crédite un montant
+   connu, et la projection doit le rendre. Un test écrit contre la démolition
+   aurait gardé la démolition ; celui-là garde la règle.
+2. **Une clé étrangère détruisait l'histoire qu'elle prétendait protéger.**
+   `works.target_building_id` référençait `buildings.id` en `on delete cascade` : à
+   l'achèvement d'une démolition, la cascade emportait la **ligne de chantier
+   résolue**, c'est-à-dire la trace de ce qui avait été démoli — au moment précis où
+   elle devient intéressante. `syncWork` promettait pourtant que les lignes résolues
+   ne sont jamais supprimées. La contrainte a été retirée (migration
+   `0001_works_target_keeps_history.sql`). Les deux autres réponses étaient pires :
+   `set null` aurait gardé la ligne en effaçant *quel* bâtiment, et `no action`
+   aurait fait échouer la démolition elle-même. Ce que la démolition rend
+   structurellement vrai, c'est qu'un chantier résolu peut légitimement désigner un
+   bâtiment disparu ; une clé étrangère ne sait pas l'exprimer. Trouvé par le test
+   d'intégration, invisible partout ailleurs.
+3. **`building-is-work-target` n'était atteignable que par un ordre précis.** Avec
+   « chantier en cours » d'abord, le motif serait resté mort. Il est donc devenu une
+   **précision** de `work-in-progress` : quand le chantier porte sur la cible visée,
+   le refus dit *pourquoi ce bâtiment-là*. C'est la leçon de la phase 6 poussée d'un
+   cran — la plus précise des deux causes vraies est celle qui permet d'agir.
+4. **L'écrêtement porte sur le plafond d'après retrait**, et cela n'était nommé
+   nulle part. Démolir un entrepôt réduit la capacité à l'instant même où il
+   rembourse ; rembourser contre l'ancien plafond créerait de la ressource au-delà
+   de la capacité que le joueur vient de supprimer. `effectsOnCompletion` calcule
+   donc les plafonds sur l'instantané **privé du bâtiment**. L'aperçu, lui, prend le
+   plafond de l'état projeté — exact en 001, où aucun bâtiment n'y contribue. Un
+   test de `demolish-clipping.test.ts` démolit un entrepôt et exige l'égalité entre
+   l'annonce et le crédit : **il tombera quand US7 câblera la capacité**, ce qui est
+   exactement la porte qu'il faut.
+5. **Le montant écrêté ne rejoint pas la perte cumulée**, et c'est une décision.
+   `lost` mesure la production perdue par saturation (FR-026) — le chiffre qui doit
+   faire désirer un entrepôt (US7-3). Y verser un remboursement écrêté mêlerait deux
+   grandeurs de natures différentes : l'une est une conséquence du temps qui passe,
+   l'autre d'une décision ponctuelle que le joueur a **vue venir**, précisément
+   parce que FR-049 exige l'annonce avant confirmation.
+6. **La démolition ne coûte rien, donc `insufficient-resources` n'existe pas ici.**
+   Déclarer un motif que le module ne peut pas produire serait une promesse vide.
+   Et le choix se défend au-delà de l'équilibrage : une planète saturée d'erreurs
+   doit pouvoir se corriger même sans trésorerie, sinon la seule mécanique censée
+   garantir qu'aucun état n'est bloquant serait bloquée par le blocage.
+7. **T134 demandait un niveau 3 ; le parcours démolit un niveau 2**, et c'est
+   l'équilibrage qui le décide, non l'outil. Le Berceau démarre avec quatre cents
+   Camelote ; la pose en coûte cent, le niveau 2 cent cinquante, le niveau 3 deux
+   cent vingt-cinq — soit soixante-douze de plus que la trésorerie, c'est-à-dire
+   **trois heures** de production de base. Le niveau 2 démontre exactement la même
+   chose : le remboursement est un *cumul*, et non la dernière marche. Les niveaux 1
+   à 30 sont couverts par `demolish.test.ts`. Le diagnostic est venu d'une capture
+   d'écran du parcours en échec, qui affichait « Il manque 72 Camelote ».
+8. **T134 demandait aussi de provoquer un écrêtement dans le parcours ; c'est
+   infaisable.** L'écrêtement dépend de la quantité *stockée*, que seul le serveur
+   écrit, et l'approcher du plafond de cinq mille unités prend des heures à vingt
+   unités par heure. Aucun raccourci n'existe côté client. Il est donc éprouvé là où
+   il est vérifiable exactement : `demolish-clipping.test.ts` pour le calcul,
+   `demolish-panel.test.tsx` pour l'annonce, sur un état forgé.
+9. **L'horloge du navigateur ne raccourcit que les échéances terminales.** US5 s'en
+   sert pour sa poche scellée de quarante-cinq minutes ; ici elle ne peut pas
+   servir, parce que chaque échéance intermédiaire est suivie d'une **commande**
+   que le serveur arbitre contre sa propre horloge. Une horloge de navigateur
+   avancée le trouverait avec un chantier toujours en cours, et il refuserait en
+   409. La règle est donc : le raccourci est ouvert au dernier achèvement d'un
+   parcours, jamais aux précédents.
+10. **`energyAfterRemoval` manquait, et aucune tâche ne la nommait.** L'aperçu de
+    démolition doit dire l'effet énergétique dans les **deux** sens : démolir un
+    extracteur soulage le déficit et fait remonter la production des autres, tandis
+    que démolir une centrale l'aggrave. Un joueur qui ne verrait que la production
+    perdue manquerait la moitié du calcul — celle qui peut rendre la démolition
+    rentable. Écrite dans le noyau, avec ses trois cas.
+11. **Le câblage manquait une troisième fois**, à l'identique des phases 6 et 7 :
+    deux `switch` de `POST /works`, la table de libellés de refus, le panneau et son
+    branchement dans l'écran. Le motif est désormais établi — une tranche de chantier
+    demande cinq câblages qu'aucune tâche ne nomme.
 
 ---
 
