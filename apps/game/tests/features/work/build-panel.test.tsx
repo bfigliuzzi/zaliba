@@ -71,6 +71,9 @@ function renderPanel(
   return { onSelectType, onSelectVariant, onConfirm }
 }
 
+/** L'aperçu de construction, nommé en entier — jamais `/aperçu/i` seul (leçon d'US2). */
+const previewGroup = () => screen.getByRole('group', { name: /aperçu de la construction/i })
+
 const NOTHING_SELECTED: BuildSelection = { typeId: null, variantId: null }
 const MINE_SQUARE: BuildSelection = { typeId: 'mine', variantId: 'square-4' }
 
@@ -380,5 +383,84 @@ describe('l’aperçu annonce l’effet énergétique avant paiement (US3-3)', (
     const shown = screen.getByRole('group', { name: /aperçu/i }).textContent ?? ''
     expect(shown).toMatch(/énergie/i)
     expect(shown).not.toMatch(/déficit/i)
+  })
+})
+
+/**
+ * **L'effet d'un entrepôt sur les plafonds, annoncé avant la pose** (US7-1, T147).
+ *
+ * L'entrepôt est le seul des cinq types dont la vertu ne soit ni une production ni
+ * une énergie. Un aperçu qui n'aurait su parler que de production l'aurait présenté
+ * comme un bâtiment inutile qui consomme de l'énergie — ce qui est vrai et trompeur
+ * à la fois.
+ */
+describe('l’aperçu d’un entrepôt annonce ce qu’il stocke (US7-1, US7-2)', () => {
+  function previewOfWarehouse() {
+    const snapshot = snapshotFromContract(payload, CATALOGS)
+    const state = projectPlanet(snapshot, CATALOGS, instant(payload.planet.consolidatedAt))
+    return previewBuild(
+      state,
+      {
+        kind: 'build',
+        workId: 'apercu-local',
+        typeId: 'entrepot',
+        variantId: 'single',
+        orientation: 0,
+        anchor: { x: 5, y: 5 },
+      },
+      CATALOGS,
+    )
+  }
+
+  it('publie les plafonds résultants et l’ajout', () => {
+    renderPanel({ typeId: 'entrepot', variantId: 'single' }, previewOfWarehouse())
+    const text = previewGroup().textContent ?? ''
+
+    expect(text).toMatch(/plafonds après la pose/i)
+    // L'ajout **et** le résultat : un joueur qui ne verrait que « +2 000 » devrait
+    // connaître son plafond de tête pour savoir ce qu'il achète.
+    expect(text).toMatch(/\+\s*2[\s ]?000/)
+  })
+
+  it('publie l’ajout en grains, comparable', () => {
+    renderPanel({ typeId: 'entrepot', variantId: 'single' }, previewOfWarehouse())
+    const node = previewGroup().querySelector('[data-cap-added]')
+    expect(node?.getAttribute('data-cap-added')).toMatch(/^camelote:\d+/)
+  })
+
+  /**
+   * Le temps gagné, et c'est la grandeur qui décide : « votre Camelote saturera dans
+   * quatre jours au lieu de deux » est une raison de payer, « votre plafond passera
+   * de 5 000 à 7 000 » demande au joueur de faire lui-même la division.
+   */
+  it('publie le temps de saturation gagné, par ressource', () => {
+    renderPanel({ typeId: 'entrepot', variantId: 'single' }, previewOfWarehouse())
+    expect(previewGroup().textContent).toMatch(/saturation repoussée de/i)
+  })
+
+  /**
+   * **Rien n'est dit quand rien ne change.** Quatre des cinq types ne stockent rien,
+   * et une ligne « +0 » sur l'aperçu d'une mine ferait chercher au joueur un effet
+   * qui n'existe pas.
+   */
+  it('une mine n’annonce aucun plafond', () => {
+    const snapshot = snapshotFromContract(payload, CATALOGS)
+    const state = projectPlanet(snapshot, CATALOGS, instant(payload.planet.consolidatedAt))
+    const preview = previewBuild(
+      state,
+      {
+        kind: 'build',
+        workId: 'apercu-local',
+        typeId: 'mine',
+        variantId: 'square-4',
+        orientation: 0,
+        anchor: { x: 0, y: 4 },
+      },
+      CATALOGS,
+    )
+
+    renderPanel({ typeId: 'mine', variantId: 'square-4' }, preview)
+    expect(previewGroup().textContent).not.toMatch(/plafonds après la pose/i)
+    expect(previewGroup().querySelector('[data-cap-added]')).toBeNull()
   })
 })

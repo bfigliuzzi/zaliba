@@ -24,6 +24,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { PlanetGateway } from '../features/auth/gateway.js'
 import { PlanetLoader } from '../features/auth/PlanetLoader.js'
 import { SessionGate } from '../features/auth/SessionGate.js'
+import { CatalogNotice } from '../features/catalog/CatalogNotice.js'
 import type { GhostState } from '../features/grid/FootprintGhost.js'
 import { GridLiveRegion } from '../features/grid/GridLiveRegion.js'
 import { GridView } from '../features/grid/GridView.js'
@@ -395,7 +396,15 @@ export function PlanetScreen({ snapshot, gateway, onSnapshot }: PlanetScreenProp
   )
 
   return (
-    <>
+    /*
+      **La divergence de catalogue enveloppe tout l'écran**, et ce n'est pas un excès
+      de prudence (R15). Chaque chiffre visible ici — coûts, durées, productions,
+      plafonds, temps avant saturation — est calculé *localement* depuis le catalogue
+      embarqué, par le même code que le serveur (R8). Si les deux catalogues
+      divergent, il n'y a pas un chiffre à sauver : ils sont tous faux ensemble, et un
+      avertissement placé à côté d'eux laisserait le joueur décider lesquels croire.
+    */
+    <CatalogNotice fromServer={snapshot.catalogVersion}>
       <h1>Ma planète</h1>
 
       <BuildPanel
@@ -468,6 +477,6 @@ export function PlanetScreen({ snapshot, gateway, onSnapshot }: PlanetScreenProp
       */}
       <EnergyPanel energy={state.energy} buildings={state.buildings} />
       <CurrentWork work={state.work} buildings={state.buildings} />
-    </>
+    </CatalogNotice>
   )
 }

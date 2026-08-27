@@ -1,0 +1,1896 @@
+{
+  "openapi": "3.0.2",
+  "paths": {
+    "/v1/me/planet": {
+      "post": {
+        "summary": "Installe le joueur sur son Berceau. Idempotente.",
+        "tags": [],
+        "parameters": [],
+        "operationId": "provisionPlanet",
+        "requestBody": {
+          "description": "Body",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {},
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "200",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "serverInstant": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991
+                    },
+                    "catalogVersion": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 64
+                    },
+                    "planet": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "archetypeId": {
+                          "type": "string",
+                          "enum": [
+                            "berceau"
+                          ]
+                        },
+                        "layoutId": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 64
+                        },
+                        "ownerId": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "occupantId": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "consolidatedAt": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 9007199254740991
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "archetypeId",
+                        "layoutId",
+                        "ownerId",
+                        "occupantId",
+                        "consolidatedAt"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "holdings": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "resourceId": {
+                            "type": "string",
+                            "enum": [
+                              "camelote",
+                              "jus",
+                              "bave-etoiles"
+                            ]
+                          },
+                          "amountGrains": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991
+                          },
+                          "lostGrains": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991
+                          }
+                        },
+                        "required": [
+                          "resourceId",
+                          "amountGrains",
+                          "lostGrains"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "minItems": 3,
+                      "maxItems": 3
+                    },
+                    "buildings": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "typeId": {
+                            "type": "string",
+                            "enum": [
+                              "mine",
+                              "puits",
+                              "racloir",
+                              "centrale",
+                              "entrepot"
+                            ]
+                          },
+                          "variantId": {
+                            "type": "string",
+                            "enum": [
+                              "single",
+                              "line-2",
+                              "square-4",
+                              "l-4",
+                              "t-4",
+                              "rect-6",
+                              "square-9"
+                            ]
+                          },
+                          "orientation": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 3
+                          },
+                          "anchorX": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 15
+                          },
+                          "anchorY": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 15
+                          },
+                          "level": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 30
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "typeId",
+                          "variantId",
+                          "orientation",
+                          "anchorX",
+                          "anchorY",
+                          "level"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "maxItems": 36
+                    },
+                    "clearedCells": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "x": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 15
+                          },
+                          "y": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 15
+                          }
+                        },
+                        "required": [
+                          "x",
+                          "y"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "maxItems": 36
+                    },
+                    "work": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "startedAt": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        "dueAt": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        "target": {
+                          "discriminator": {
+                            "propertyName": "nature"
+                          },
+                          "oneOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "nature": {
+                                  "type": "string",
+                                  "enum": [
+                                    "build"
+                                  ]
+                                },
+                                "typeId": {
+                                  "type": "string",
+                                  "enum": [
+                                    "mine",
+                                    "puits",
+                                    "racloir",
+                                    "centrale",
+                                    "entrepot"
+                                  ]
+                                },
+                                "variantId": {
+                                  "type": "string",
+                                  "enum": [
+                                    "single",
+                                    "line-2",
+                                    "square-4",
+                                    "l-4",
+                                    "t-4",
+                                    "rect-6",
+                                    "square-9"
+                                  ]
+                                },
+                                "orientation": {
+                                  "type": "integer",
+                                  "minimum": 0,
+                                  "maximum": 3
+                                },
+                                "anchorX": {
+                                  "type": "integer",
+                                  "minimum": 0,
+                                  "maximum": 15
+                                },
+                                "anchorY": {
+                                  "type": "integer",
+                                  "minimum": 0,
+                                  "maximum": 15
+                                }
+                              },
+                              "required": [
+                                "nature",
+                                "typeId",
+                                "variantId",
+                                "orientation",
+                                "anchorX",
+                                "anchorY"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "nature": {
+                                  "type": "string",
+                                  "enum": [
+                                    "upgrade"
+                                  ]
+                                },
+                                "buildingId": {
+                                  "type": "string",
+                                  "format": "uuid"
+                                }
+                              },
+                              "required": [
+                                "nature",
+                                "buildingId"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "nature": {
+                                  "type": "string",
+                                  "enum": [
+                                    "demolish"
+                                  ]
+                                },
+                                "buildingId": {
+                                  "type": "string",
+                                  "format": "uuid"
+                                }
+                              },
+                              "required": [
+                                "nature",
+                                "buildingId"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "nature": {
+                                  "type": "string",
+                                  "enum": [
+                                    "clear"
+                                  ]
+                                },
+                                "x": {
+                                  "type": "integer",
+                                  "minimum": 0,
+                                  "maximum": 15
+                                },
+                                "y": {
+                                  "type": "integer",
+                                  "minimum": 0,
+                                  "maximum": 15
+                                }
+                              },
+                              "required": [
+                                "nature",
+                                "x",
+                                "y"
+                              ],
+                              "additionalProperties": false
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "startedAt",
+                        "dueAt",
+                        "target"
+                      ],
+                      "additionalProperties": false,
+                      "nullable": true
+                    }
+                  },
+                  "required": [
+                    "serverInstant",
+                    "catalogVersion",
+                    "planet",
+                    "holdings",
+                    "buildings",
+                    "clearedCells",
+                    "work"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "201",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "serverInstant": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991
+                    },
+                    "catalogVersion": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 64
+                    },
+                    "planet": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "archetypeId": {
+                          "type": "string",
+                          "enum": [
+                            "berceau"
+                          ]
+                        },
+                        "layoutId": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 64
+                        },
+                        "ownerId": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "occupantId": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "consolidatedAt": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 9007199254740991
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "archetypeId",
+                        "layoutId",
+                        "ownerId",
+                        "occupantId",
+                        "consolidatedAt"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "holdings": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "resourceId": {
+                            "type": "string",
+                            "enum": [
+                              "camelote",
+                              "jus",
+                              "bave-etoiles"
+                            ]
+                          },
+                          "amountGrains": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991
+                          },
+                          "lostGrains": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991
+                          }
+                        },
+                        "required": [
+                          "resourceId",
+                          "amountGrains",
+                          "lostGrains"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "minItems": 3,
+                      "maxItems": 3
+                    },
+                    "buildings": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "typeId": {
+                            "type": "string",
+                            "enum": [
+                              "mine",
+                              "puits",
+                              "racloir",
+                              "centrale",
+                              "entrepot"
+                            ]
+                          },
+                          "variantId": {
+                            "type": "string",
+                            "enum": [
+                              "single",
+                              "line-2",
+                              "square-4",
+                              "l-4",
+                              "t-4",
+                              "rect-6",
+                              "square-9"
+                            ]
+                          },
+                          "orientation": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 3
+                          },
+                          "anchorX": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 15
+                          },
+                          "anchorY": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 15
+                          },
+                          "level": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 30
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "typeId",
+                          "variantId",
+                          "orientation",
+                          "anchorX",
+                          "anchorY",
+                          "level"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "maxItems": 36
+                    },
+                    "clearedCells": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "x": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 15
+                          },
+                          "y": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 15
+                          }
+                        },
+                        "required": [
+                          "x",
+                          "y"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "maxItems": 36
+                    },
+                    "work": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "startedAt": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        "dueAt": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        "target": {
+                          "discriminator": {
+                            "propertyName": "nature"
+                          },
+                          "oneOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "nature": {
+                                  "type": "string",
+                                  "enum": [
+                                    "build"
+                                  ]
+                                },
+                                "typeId": {
+                                  "type": "string",
+                                  "enum": [
+                                    "mine",
+                                    "puits",
+                                    "racloir",
+                                    "centrale",
+                                    "entrepot"
+                                  ]
+                                },
+                                "variantId": {
+                                  "type": "string",
+                                  "enum": [
+                                    "single",
+                                    "line-2",
+                                    "square-4",
+                                    "l-4",
+                                    "t-4",
+                                    "rect-6",
+                                    "square-9"
+                                  ]
+                                },
+                                "orientation": {
+                                  "type": "integer",
+                                  "minimum": 0,
+                                  "maximum": 3
+                                },
+                                "anchorX": {
+                                  "type": "integer",
+                                  "minimum": 0,
+                                  "maximum": 15
+                                },
+                                "anchorY": {
+                                  "type": "integer",
+                                  "minimum": 0,
+                                  "maximum": 15
+                                }
+                              },
+                              "required": [
+                                "nature",
+                                "typeId",
+                                "variantId",
+                                "orientation",
+                                "anchorX",
+                                "anchorY"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "nature": {
+                                  "type": "string",
+                                  "enum": [
+                                    "upgrade"
+                                  ]
+                                },
+                                "buildingId": {
+                                  "type": "string",
+                                  "format": "uuid"
+                                }
+                              },
+                              "required": [
+                                "nature",
+                                "buildingId"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "nature": {
+                                  "type": "string",
+                                  "enum": [
+                                    "demolish"
+                                  ]
+                                },
+                                "buildingId": {
+                                  "type": "string",
+                                  "format": "uuid"
+                                }
+                              },
+                              "required": [
+                                "nature",
+                                "buildingId"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "nature": {
+                                  "type": "string",
+                                  "enum": [
+                                    "clear"
+                                  ]
+                                },
+                                "x": {
+                                  "type": "integer",
+                                  "minimum": 0,
+                                  "maximum": 15
+                                },
+                                "y": {
+                                  "type": "integer",
+                                  "minimum": 0,
+                                  "maximum": 15
+                                }
+                              },
+                              "required": [
+                                "nature",
+                                "x",
+                                "y"
+                              ],
+                              "additionalProperties": false
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "startedAt",
+                        "dueAt",
+                        "target"
+                      ],
+                      "additionalProperties": false,
+                      "nullable": true
+                    }
+                  },
+                  "required": [
+                    "serverInstant",
+                    "catalogVersion",
+                    "planet",
+                    "holdings",
+                    "buildings",
+                    "clearedCells",
+                    "work"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "401",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "message": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "nullable": true
+                      }
+                    },
+                    "requestId": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "requestId"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "Lit l’instantané daté. Fonction pure : n’écrit rien (FR-031).",
+        "tags": [],
+        "parameters": [],
+        "operationId": "readPlanet",
+        "responses": {
+          "200": {
+            "description": "200",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "serverInstant": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991
+                    },
+                    "catalogVersion": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 64
+                    },
+                    "planet": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "archetypeId": {
+                          "type": "string",
+                          "enum": [
+                            "berceau"
+                          ]
+                        },
+                        "layoutId": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 64
+                        },
+                        "ownerId": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "occupantId": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "consolidatedAt": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 9007199254740991
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "archetypeId",
+                        "layoutId",
+                        "ownerId",
+                        "occupantId",
+                        "consolidatedAt"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "holdings": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "resourceId": {
+                            "type": "string",
+                            "enum": [
+                              "camelote",
+                              "jus",
+                              "bave-etoiles"
+                            ]
+                          },
+                          "amountGrains": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991
+                          },
+                          "lostGrains": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991
+                          }
+                        },
+                        "required": [
+                          "resourceId",
+                          "amountGrains",
+                          "lostGrains"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "minItems": 3,
+                      "maxItems": 3
+                    },
+                    "buildings": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "typeId": {
+                            "type": "string",
+                            "enum": [
+                              "mine",
+                              "puits",
+                              "racloir",
+                              "centrale",
+                              "entrepot"
+                            ]
+                          },
+                          "variantId": {
+                            "type": "string",
+                            "enum": [
+                              "single",
+                              "line-2",
+                              "square-4",
+                              "l-4",
+                              "t-4",
+                              "rect-6",
+                              "square-9"
+                            ]
+                          },
+                          "orientation": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 3
+                          },
+                          "anchorX": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 15
+                          },
+                          "anchorY": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 15
+                          },
+                          "level": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 30
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "typeId",
+                          "variantId",
+                          "orientation",
+                          "anchorX",
+                          "anchorY",
+                          "level"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "maxItems": 36
+                    },
+                    "clearedCells": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "x": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 15
+                          },
+                          "y": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 15
+                          }
+                        },
+                        "required": [
+                          "x",
+                          "y"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "maxItems": 36
+                    },
+                    "work": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "startedAt": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        "dueAt": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        "target": {
+                          "discriminator": {
+                            "propertyName": "nature"
+                          },
+                          "oneOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "nature": {
+                                  "type": "string",
+                                  "enum": [
+                                    "build"
+                                  ]
+                                },
+                                "typeId": {
+                                  "type": "string",
+                                  "enum": [
+                                    "mine",
+                                    "puits",
+                                    "racloir",
+                                    "centrale",
+                                    "entrepot"
+                                  ]
+                                },
+                                "variantId": {
+                                  "type": "string",
+                                  "enum": [
+                                    "single",
+                                    "line-2",
+                                    "square-4",
+                                    "l-4",
+                                    "t-4",
+                                    "rect-6",
+                                    "square-9"
+                                  ]
+                                },
+                                "orientation": {
+                                  "type": "integer",
+                                  "minimum": 0,
+                                  "maximum": 3
+                                },
+                                "anchorX": {
+                                  "type": "integer",
+                                  "minimum": 0,
+                                  "maximum": 15
+                                },
+                                "anchorY": {
+                                  "type": "integer",
+                                  "minimum": 0,
+                                  "maximum": 15
+                                }
+                              },
+                              "required": [
+                                "nature",
+                                "typeId",
+                                "variantId",
+                                "orientation",
+                                "anchorX",
+                                "anchorY"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "nature": {
+                                  "type": "string",
+                                  "enum": [
+                                    "upgrade"
+                                  ]
+                                },
+                                "buildingId": {
+                                  "type": "string",
+                                  "format": "uuid"
+                                }
+                              },
+                              "required": [
+                                "nature",
+                                "buildingId"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "nature": {
+                                  "type": "string",
+                                  "enum": [
+                                    "demolish"
+                                  ]
+                                },
+                                "buildingId": {
+                                  "type": "string",
+                                  "format": "uuid"
+                                }
+                              },
+                              "required": [
+                                "nature",
+                                "buildingId"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "nature": {
+                                  "type": "string",
+                                  "enum": [
+                                    "clear"
+                                  ]
+                                },
+                                "x": {
+                                  "type": "integer",
+                                  "minimum": 0,
+                                  "maximum": 15
+                                },
+                                "y": {
+                                  "type": "integer",
+                                  "minimum": 0,
+                                  "maximum": 15
+                                }
+                              },
+                              "required": [
+                                "nature",
+                                "x",
+                                "y"
+                              ],
+                              "additionalProperties": false
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "startedAt",
+                        "dueAt",
+                        "target"
+                      ],
+                      "additionalProperties": false,
+                      "nullable": true
+                    }
+                  },
+                  "required": [
+                    "serverInstant",
+                    "catalogVersion",
+                    "planet",
+                    "holdings",
+                    "buildings",
+                    "clearedCells",
+                    "work"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "401",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "message": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "nullable": true
+                      }
+                    },
+                    "requestId": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "requestId"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "404",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "message": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "nullable": true
+                      }
+                    },
+                    "requestId": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "requestId"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/me/planet/works": {
+      "post": {
+        "summary": "Lance un chantier. Le coût est débité au lancement (FR-036).",
+        "tags": [],
+        "parameters": [],
+        "operationId": "startWork",
+        "requestBody": {
+          "description": "Body",
+          "content": {
+            "application/json": {
+              "schema": {
+                "discriminator": {
+                  "propertyName": "nature"
+                },
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "nature": {
+                        "type": "string",
+                        "enum": [
+                          "build"
+                        ]
+                      },
+                      "typeId": {
+                        "type": "string",
+                        "enum": [
+                          "mine",
+                          "puits",
+                          "racloir",
+                          "centrale",
+                          "entrepot"
+                        ]
+                      },
+                      "variantId": {
+                        "type": "string",
+                        "enum": [
+                          "single",
+                          "line-2",
+                          "square-4",
+                          "l-4",
+                          "t-4",
+                          "rect-6",
+                          "square-9"
+                        ]
+                      },
+                      "orientation": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 3
+                      },
+                      "anchorX": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 15
+                      },
+                      "anchorY": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 15
+                      }
+                    },
+                    "required": [
+                      "nature",
+                      "typeId",
+                      "variantId",
+                      "orientation",
+                      "anchorX",
+                      "anchorY"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "nature": {
+                        "type": "string",
+                        "enum": [
+                          "upgrade"
+                        ]
+                      },
+                      "buildingId": {
+                        "type": "string",
+                        "format": "uuid"
+                      }
+                    },
+                    "required": [
+                      "nature",
+                      "buildingId"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "nature": {
+                        "type": "string",
+                        "enum": [
+                          "clear"
+                        ]
+                      },
+                      "x": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 15
+                      },
+                      "y": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 15
+                      }
+                    },
+                    "required": [
+                      "nature",
+                      "x",
+                      "y"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "nature": {
+                        "type": "string",
+                        "enum": [
+                          "demolish"
+                        ]
+                      },
+                      "buildingId": {
+                        "type": "string",
+                        "format": "uuid"
+                      }
+                    },
+                    "required": [
+                      "nature",
+                      "buildingId"
+                    ],
+                    "additionalProperties": false
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "201",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "serverInstant": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991
+                    },
+                    "catalogVersion": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 64
+                    },
+                    "planet": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "archetypeId": {
+                          "type": "string",
+                          "enum": [
+                            "berceau"
+                          ]
+                        },
+                        "layoutId": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 64
+                        },
+                        "ownerId": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "occupantId": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "consolidatedAt": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 9007199254740991
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "archetypeId",
+                        "layoutId",
+                        "ownerId",
+                        "occupantId",
+                        "consolidatedAt"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "holdings": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "resourceId": {
+                            "type": "string",
+                            "enum": [
+                              "camelote",
+                              "jus",
+                              "bave-etoiles"
+                            ]
+                          },
+                          "amountGrains": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991
+                          },
+                          "lostGrains": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991
+                          }
+                        },
+                        "required": [
+                          "resourceId",
+                          "amountGrains",
+                          "lostGrains"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "minItems": 3,
+                      "maxItems": 3
+                    },
+                    "buildings": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "typeId": {
+                            "type": "string",
+                            "enum": [
+                              "mine",
+                              "puits",
+                              "racloir",
+                              "centrale",
+                              "entrepot"
+                            ]
+                          },
+                          "variantId": {
+                            "type": "string",
+                            "enum": [
+                              "single",
+                              "line-2",
+                              "square-4",
+                              "l-4",
+                              "t-4",
+                              "rect-6",
+                              "square-9"
+                            ]
+                          },
+                          "orientation": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 3
+                          },
+                          "anchorX": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 15
+                          },
+                          "anchorY": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 15
+                          },
+                          "level": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 30
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "typeId",
+                          "variantId",
+                          "orientation",
+                          "anchorX",
+                          "anchorY",
+                          "level"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "maxItems": 36
+                    },
+                    "clearedCells": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "x": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 15
+                          },
+                          "y": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 15
+                          }
+                        },
+                        "required": [
+                          "x",
+                          "y"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "maxItems": 36
+                    },
+                    "work": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "startedAt": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        "dueAt": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        "target": {
+                          "discriminator": {
+                            "propertyName": "nature"
+                          },
+                          "oneOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "nature": {
+                                  "type": "string",
+                                  "enum": [
+                                    "build"
+                                  ]
+                                },
+                                "typeId": {
+                                  "type": "string",
+                                  "enum": [
+                                    "mine",
+                                    "puits",
+                                    "racloir",
+                                    "centrale",
+                                    "entrepot"
+                                  ]
+                                },
+                                "variantId": {
+                                  "type": "string",
+                                  "enum": [
+                                    "single",
+                                    "line-2",
+                                    "square-4",
+                                    "l-4",
+                                    "t-4",
+                                    "rect-6",
+                                    "square-9"
+                                  ]
+                                },
+                                "orientation": {
+                                  "type": "integer",
+                                  "minimum": 0,
+                                  "maximum": 3
+                                },
+                                "anchorX": {
+                                  "type": "integer",
+                                  "minimum": 0,
+                                  "maximum": 15
+                                },
+                                "anchorY": {
+                                  "type": "integer",
+                                  "minimum": 0,
+                                  "maximum": 15
+                                }
+                              },
+                              "required": [
+                                "nature",
+                                "typeId",
+                                "variantId",
+                                "orientation",
+                                "anchorX",
+                                "anchorY"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "nature": {
+                                  "type": "string",
+                                  "enum": [
+                                    "upgrade"
+                                  ]
+                                },
+                                "buildingId": {
+                                  "type": "string",
+                                  "format": "uuid"
+                                }
+                              },
+                              "required": [
+                                "nature",
+                                "buildingId"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "nature": {
+                                  "type": "string",
+                                  "enum": [
+                                    "demolish"
+                                  ]
+                                },
+                                "buildingId": {
+                                  "type": "string",
+                                  "format": "uuid"
+                                }
+                              },
+                              "required": [
+                                "nature",
+                                "buildingId"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "nature": {
+                                  "type": "string",
+                                  "enum": [
+                                    "clear"
+                                  ]
+                                },
+                                "x": {
+                                  "type": "integer",
+                                  "minimum": 0,
+                                  "maximum": 15
+                                },
+                                "y": {
+                                  "type": "integer",
+                                  "minimum": 0,
+                                  "maximum": 15
+                                }
+                              },
+                              "required": [
+                                "nature",
+                                "x",
+                                "y"
+                              ],
+                              "additionalProperties": false
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "startedAt",
+                        "dueAt",
+                        "target"
+                      ],
+                      "additionalProperties": false,
+                      "nullable": true
+                    }
+                  },
+                  "required": [
+                    "serverInstant",
+                    "catalogVersion",
+                    "planet",
+                    "holdings",
+                    "buildings",
+                    "clearedCells",
+                    "work"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "400",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "message": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "nullable": true
+                      }
+                    },
+                    "requestId": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "requestId"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "401",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "message": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "nullable": true
+                      }
+                    },
+                    "requestId": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "requestId"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "403",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "message": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "nullable": true
+                      }
+                    },
+                    "requestId": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "requestId"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "404",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "message": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "nullable": true
+                      }
+                    },
+                    "requestId": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "requestId"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "409",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "message": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "nullable": true
+                      }
+                    },
+                    "requestId": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "requestId"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "info": {
+    "title": "Zaliba — API de planète, version 1",
+    "version": "1",
+    "description": "Le contrat de la planète mère.\n\n**Ce que ce contrat ne peut pas porter, et c'est délibéré** : aucun coût, aucune\ndurée, aucune échéance, aucune production, aucun remboursement, aucun résultat de\ndéblaiement, aucun horodatage fourni par le client. Ce ne sont pas des champs\nvalidés — ce sont des champs qui **n'existent pas**. Un champ qu'on ne peut pas\nenvoyer est un champ qu'on ne peut pas exploiter.\n\nLe client n'envoie qu'une **intention** : un type, une variante, une orientation,\nune position pour une pose ; une cible pour une amélioration ou une démolition ;\nune case pour un déblaiement. Tout le reste est dérivé par le serveur, à partir du\ncatalogue et de l'instant de sa propre transaction.\n\n**Le 409 est la porte de toutes les règles de jeu.** Un refus du jeu n'est pas une\nerreur technique : la requête était parfaitement formée, et c'est le jeu qui répond\nnon. Un client qui traiterait les 409 comme des bogues afficherait le mauvais écran.\n\n**Toute commande exige une clé d'idempotence** (`Idempotency-Key`). La cible est une\napplication mobile sur réseau instable : une requête réémise ne doit pas débiter\ndeux fois."
+  }
+}

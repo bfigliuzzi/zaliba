@@ -103,6 +103,19 @@ jobs:
       - name: Porte — client (chemin clavier)
         run: pnpm vitest run --project game --project api
 
+      # La transparence promise à P4, publiée en artefact : le document est
+      # **engendré** depuis les schémas Zod, jamais rédigé, et attaché à la
+      # vérification qui l'a produit — donc au commit exact du contrat qu'il décrit.
+      - name: Export OpenAPI de la version 1
+        run: pnpm --filter @zaliba/contracts openapi openapi/v1.json
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: openapi-v1
+          path: packages/contracts/openapi/v1.json
+          retention-days: 30
+
       # Porte 11. Mesurée sur `packages/domain` **uniquement** : un chiffre
       # mêlant interface et domaine ne veut rien dire (quickstart § 6).
       - name: Porte — seuil de couverture domaine

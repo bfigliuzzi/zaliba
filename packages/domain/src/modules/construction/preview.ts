@@ -1,5 +1,6 @@
-import type { ObstacleId } from '@zaliba/catalogs'
+import type { ObstacleId, ResourceId } from '@zaliba/catalogs'
 import type { Catalogs } from '../../kernel/catalogs.js'
+import { evaluateCurve } from '../../kernel/curves.js'
 import type { BuildingId, Cell, ResourceAmount } from '../../kernel/effects.js'
 import {
   applyEnergyRatio,
@@ -10,7 +11,7 @@ import {
 } from '../../kernel/energy.js'
 import { depositsUnder, placementCells, validatePlacement } from '../../kernel/grid.js'
 import type { ProjectedState } from '../../kernel/projection.js'
-import { extractorRate } from '../../kernel/rates.js'
+import { extractorRate, storageContribution } from '../../kernel/rates.js'
 import type { RatePerHour } from '../../kernel/resources.js'
 import { addDuration, type Duration, type Instant } from '../../kernel/time.js'
 import {
@@ -112,6 +113,44 @@ export interface BuildPreviewEffect {
    * un chiffre que la pose rendrait faux à l'instant même où elle l'atteint.
    */
   readonly effectiveRateAfter: RatePerHour
+  /**
+   * La capacité que la pose **ajouterait**, par ressource (US7-1, FR-025).
+   *
+   * Vide pour les quatre types qui ne stockent rien, plutôt que remplie de zéros :
+   * une ligne « +0 Camelote » sur l'aperçu d'une mine ferait chercher au joueur un
+   * effet qui n'existe pas.
+   *
+   * L'entrepôt est le seul des cinq types dont la vertu ne soit ni une production ni
+   * une énergie. Un aperçu qui n'aurait su parler que de production l'aurait présenté
+   * comme un bâtiment inutile qui consomme de l'énergie — ce qui est vrai et trompeur
+   * à la fois.
+   */
+  readonly capacityAdded: readonly ResourceAmount[]
+  /**
+   * Le plafond **résultant**, par ressource. Vide quand la pose n'y change rien.
+   *
+   * Les deux, et pas seulement l'ajout : un joueur qui ne verrait que « +2 000 »
+   * devrait connaître son plafond de tête pour savoir ce qu'il achète.
+   */
+  readonly capAfter: readonly ResourceAmount[]
+  /**
+   * Le temps que la pose **gagnerait** avant saturation, en secondes (US7-2).
+   *
+   * C'est la grandeur qui décide : « votre Camelote saturera dans quatre jours au
+   * lieu de deux » est une raison de payer, « votre plafond passera de 5 000 à
+   * 7 000 » demande au joueur de faire lui-même la division.
+   *
+   * Une ressource dont le taux est nul est **absente** de la liste, et non portée à
+   * zéro ou à l'infini : elle ne saturera jamais, donc il n'y a aucun temps à gagner
+   * — et le dire par un chiffre serait dire quelque chose de faux.
+   */
+  readonly saturationDelayed: readonly SaturationDelay[]
+}
+
+/** Le temps gagné avant saturation, pour une ressource. */
+export interface SaturationDelay {
+  readonly resourceId: ResourceId
+  readonly seconds: number
 }
 
 /**
@@ -231,6 +270,22 @@ export interface DemolishPreviewEffect {
   readonly cellsFreed: readonly Cell[]
   /** Les gisements que les cases portent, et qui survivront (FR-020, FR-047). */
   readonly depositsPreserved: readonly PreservedDeposit[]
+  /**
+   * La baisse de plafond, par ressource. Vide pour tout bâtiment qui ne stocke rien.
+   *
+   * Publiée parce que démolir un entrepôt est la seule action du jeu qui *réduit*
+   * une capacité, et qu'un plafond qui baisse sans avertissement transformerait une
+   * réorganisation en confiscation (FR-051).
+   */
+  readonly capacityLost: readonly ResourceAmount[]
+  /**
+   * Le surplus qui sera **perdu** parce que le plafond baisse sous la quantité
+   * détenue. Vide quand rien ne dépasse.
+   *
+   * Distinct de `clippedAmount` : celui-ci retient un remboursement qui n'a jamais
+   * été détenu, celui-là jette une ressource que le joueur possède déjà.
+   */
+  readonly overflowLost: readonly ResourceAmount[]
   /** La production que la planète perdra à l'échéance, et pas avant (FR-048). */
   readonly rateLost: RatePerHour
   /** Le rapport d'énergie **après** la démolition : un bâtiment de moins consomme. */
@@ -246,33 +301,61 @@ export type DemolishPreviewResult =
   | { readonly outcome: 'refused'; readonly refusal: DemolishRefusal }
 
 /**
- * La place disponible par ressource **à l'échéance**, depuis l'état projeté.
+ * La place disponible par ressource **à l'échéance, le bâtiment retiré**.
  *
- * C'est la moitié la plus subtile de FR-049. La place d'aujourd'hui n'est pas celle
- * de l'échéance : la production court pendant la démolition, donc la place se
- * réduit, donc l'écrêtement sera **plus grand** que ce qu'un calcul à l'instant du
- * lancement annoncerait. Annoncer la place d'aujourd'hui promettrait un
- * remboursement que le joueur ne recevrait pas.
+ * Deux subtilités, et les deux ont été gagnées par un test.
  *
- * Le plafond, lui, est celui de l'état projeté. En 001 il ne dépend d'aucun
- * bâtiment — la contribution de l'entrepôt arrive avec US7 —, et c'est
- * `effectsOnCompletion` qui porte déjà la règle générale : le plafond retenu est
- * celui **d'après retrait**, parce que démolir un entrepôt réduit la capacité à
- * l'instant même où il rembourse. Le jour où le plafond dépendra des bâtiments,
- * l'accord entre cet aperçu et cet achèvement cessera de tenir de lui-même : c'est
- * ce que `demolish-clipping.test.ts` garde, en éprouvant l'égalité sur une planète
- * qui porte un entrepôt.
+ * **La place d'aujourd'hui n'est pas celle de l'échéance.** La production court
+ * pendant la démolition — le bâtiment démoli produit jusqu'à son dernier instant
+ * (FR-048) —, donc la place se réduit, donc l'écrêtement sera *plus grand* que ce
+ * qu'un calcul à l'instant du lancement annoncerait. Annoncer la place d'aujourd'hui
+ * promettrait un remboursement que le joueur ne recevrait pas.
+ *
+ * **Le plafond est celui d'après retrait.** Démolir un entrepôt réduit la capacité à
+ * l'instant même où il rembourse (US7) : rembourser contre l'ancien plafond créerait
+ * de la ressource au-delà de la capacité que le joueur vient lui-même de supprimer.
+ * C'est ce que `effectsOnCompletion` fait depuis US6 ; l'aperçu l'ignorait, et la
+ * porte écrite alors — l'égalité entre l'annonce et le crédit sur une planète qui
+ * porte un entrepôt — est tombée dès que la capacité a été câblée. Exactement ce
+ * qu'on attendait d'elle.
  */
-function roomAtDue(state: ProjectedState, seconds: number): Readonly<Record<string, Room>> {
+function roomAtDue(
+  state: ProjectedState,
+  seconds: number,
+  capacityLost: Readonly<Record<string, number>>,
+): Readonly<Record<string, Room>> {
   return Object.fromEntries(
     Object.entries(state.holdings).map(([resourceId, holding]) => {
-      const cap = holding.cap
-      // Le même plafonnement que le noyau applique par segment (R4) : la quantité
-      // ne peut pas dépasser le plafond, même en attendant.
-      const amount = Math.min(cap, holding.amount + holding.rate * seconds)
+      const cap = Math.max(0, holding.cap - (capacityLost[resourceId] ?? 0))
+      // Le même plafonnement que le noyau applique par segment (R4) : la quantité ne
+      // peut pas dépasser le plafond **courant**, même en attendant. L'écrêtement du
+      // plafond *futur*, lui, est le surplus que `overflowOf` publie.
+      const amount = Math.min(holding.cap, holding.amount + holding.rate * seconds)
       return [resourceId, { amount, cap }]
     }),
   )
+}
+
+/**
+ * Le surplus qui sera **perdu** parce que le plafond baisse (FR-051).
+ *
+ * Démolir un entrepôt plein fait passer la quantité détenue au-dessus du nouveau
+ * plafond : le noyau l'écrête au segment suivant et compte la différence en perte
+ * (R4). C'est le comportement le moins mauvais — l'alternative serait de tolérer un
+ * état que l'invariant I-1 interdit —, mais il serait intolérable qu'il soit
+ * *découvert après l'action*. Le joueur doit savoir avant de confirmer qu'il va
+ * jeter ce qu'il ne pourra plus garder.
+ *
+ * Vide quand rien ne dépasse, comme `clippedAmount` : l'absence se dit par
+ * l'absence.
+ */
+function overflowOf(room: Readonly<Record<string, Room>>): readonly ResourceAmount[] {
+  return Object.entries(room)
+    .filter(([, one]) => one.amount > one.cap)
+    .map(([resourceId, one]) => ({
+      resourceId: resourceId as ResourceId,
+      grains: one.amount - one.cap,
+    }))
 }
 
 /**
@@ -293,9 +376,13 @@ export function previewDemolish(
   const building = demolishTargetOf(state, command.buildingId)
   const duration = demolishDuration(building.typeId, catalogs)
 
+  // Ce que le retrait enlèvera au plafond : rien pour tout type qui ne stocke pas.
+  const capacityLost = storageContribution(building, catalogs)
+  const room = roomAtDue(state, duration, capacityLost)
+
   const { refund, clipped } = clipRefund(
     grossRefund(building.typeId, building.level, catalogs),
-    roomAtDue(state, duration),
+    room,
   )
 
   return {
@@ -317,6 +404,13 @@ export function previewDemolish(
         clippedAmount: clipped,
         cellsFreed: freedCells(building),
         depositsPreserved: preservedDeposits(state, building),
+        capacityLost: Object.entries(capacityLost)
+          .filter(([, amount]) => amount > 0)
+          .map(([resourceId, amount]) => ({
+            resourceId: resourceId as ResourceId,
+            grains: amount,
+          })),
+        overflowLost: overflowOf(room),
         // La production **effective** et non la nominale : c'est celle que la
         // planète perd réellement, rapport d'énergie appliqué.
         rateLost: building.effectiveRate,
@@ -469,6 +563,39 @@ export function previewBuild(
   // peut survenir d'ici l'échéance (FR-033, R3).
   const energyAfter = energyAfterBuilding(state.energy, command.typeId, INITIAL_LEVEL, catalogs)
 
+  // L'effet sur les plafonds (US7-1). Nul pour les quatre types qui ne stockent
+  // rien, et la liste est alors **vide** plutôt que remplie de zéros.
+  const capacityCurve = type.capacity
+  const added = capacityCurve === null ? 0 : evaluateCurve(capacityCurve, INITIAL_LEVEL)
+
+  const capacityAdded: readonly ResourceAmount[] =
+    added === 0 ? [] : catalogs.resourceIds.map((resourceId) => ({ resourceId, grains: added }))
+
+  const capAfter: readonly ResourceAmount[] =
+    added === 0
+      ? []
+      : catalogs.resourceIds.map((resourceId) => ({
+          resourceId,
+          grains: (state.holdings[resourceId]?.cap ?? 0) + added,
+        }))
+
+  // Le temps gagné avant saturation : `capacité ajoutée ÷ taux`, arrondi **vers le
+  // haut** comme l'instant de saturation lui-même — elle survient à la seconde où
+  // elle est atteinte, pas à celle qui la précède.
+  const saturationDelayed: readonly SaturationDelay[] =
+    added === 0
+      ? []
+      : catalogs.resourceIds
+          .map((resourceId) => ({
+            resourceId,
+            rate: state.holdings[resourceId]?.rate ?? 0,
+          }))
+          // Une ressource qui ne progresse pas ne saturera jamais : il n'y a aucun
+          // temps à gagner, et le dire par un chiffre serait dire quelque chose de
+          // faux.
+          .filter((one) => one.rate > 0)
+          .map((one) => ({ resourceId: one.resourceId, seconds: Math.ceil(added / one.rate) }))
+
   return {
     outcome: 'accepted',
     preview: {
@@ -486,6 +613,9 @@ export function previewBuild(
         effectiveRate: applyEnergyRatio(nominal, state.energy.ratio) as RatePerHour,
         energyAfter,
         effectiveRateAfter: applyEnergyRatio(nominal, energyAfter.ratio) as RatePerHour,
+        capacityAdded,
+        capAfter,
+        saturationDelayed,
       },
     },
   }

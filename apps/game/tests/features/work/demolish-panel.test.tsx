@@ -230,3 +230,116 @@ describe('un refus d’aperçu est énoncé, et non résumé', () => {
     expect(confirmButton()).toBeNull()
   })
 })
+
+/**
+ * **Démolir un entrepôt : la seule action du jeu qui réduit une capacité** (US7).
+ *
+ * Le plafond baisse à l'instant du retrait, et la quantité détenue peut se retrouver
+ * au-dessus : le noyau l'écrête et compte la différence en perte. C'est le
+ * comportement le moins mauvais — l'alternative serait de tolérer un état que
+ * l'invariant I-1 interdit —, mais il serait intolérable qu'il soit *découvert après
+ * l'action* (FR-051). Le joueur doit savoir avant de confirmer qu'il va jeter ce
+ * qu'il ne pourra plus garder.
+ */
+describe('démolir un entrepôt annonce la baisse de plafond', () => {
+  const Warehouse = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc'
+
+  /** Un état projeté portant un entrepôt de niveau 4, et lui seul. */
+  function stateWithWarehouse(fill: 'empty' | 'full'): ProjectedState {
+    const snapshot = snapshotFromContract(payload, CATALOGS)
+    const withStore = {
+      ...snapshot,
+      buildings: [
+        {
+          id: Warehouse,
+          typeId: 'entrepot' as const,
+          variantId: 'single' as const,
+          orientation: 0,
+          anchor: { x: 5, y: 5 },
+          level: 4,
+        },
+      ],
+    }
+    const state = projectPlanet(withStore, CATALOGS, instant(payload.planet.consolidatedAt))
+    if (fill === 'empty') return state
+
+    return {
+      ...state,
+      holdings: Object.fromEntries(
+        Object.entries(state.holdings).map(([id, holding]) => [
+          id,
+          { ...holding, amount: holding.cap },
+        ]),
+      ),
+    } as ProjectedState
+  }
+
+  function warehouseView(state: ProjectedState) {
+    const building = state.buildings.find((one) => one.id === Warehouse)
+    if (building === undefined) throw new Error('l’entrepôt manque')
+    return building
+  }
+
+  it('publie la baisse de plafond, en unités et en grains', () => {
+    const state = stateWithWarehouse('empty')
+    renderPanel(
+      warehouseView(state),
+      previewDemolish(
+        state,
+        { kind: 'demolish', workId: 'apercu-local', buildingId: Warehouse },
+        CATALOGS,
+      ),
+    )
+
+    expect(previewGroup().textContent).toMatch(/plafonds abaissés de/i)
+    expect(
+      previewGroup().querySelector('[data-capacity-lost]')?.getAttribute('data-capacity-lost'),
+    ).toMatch(/^camelote:\d+/)
+  })
+
+  /**
+   * **Le surplus jeté, annoncé.** Distinct du remboursement écrêté : celui-ci retient
+   * une ressource jamais détenue, celui-là jette une ressource que le joueur possède
+   * déjà. Les confondre dans une seule ligne ferait croire à une seule perte.
+   */
+  it('annonce le surplus perdu quand l’entrepôt est plein', () => {
+    const state = stateWithWarehouse('full')
+    renderPanel(
+      warehouseView(state),
+      previewDemolish(
+        state,
+        { kind: 'demolish', workId: 'apercu-local', buildingId: Warehouse },
+        CATALOGS,
+      ),
+    )
+
+    const text = previewGroup().textContent ?? ''
+    expect(text).toMatch(/perdu par le plafond abaissé/i)
+    expect(text).toMatch(/ne peut plus être gardé/i)
+    expect(
+      previewGroup().querySelector('[data-overflow-lost]')?.getAttribute('data-overflow-lost'),
+    ).toMatch(/^camelote:\d+/)
+  })
+
+  it('ne dit rien du surplus quand l’entrepôt est vide', () => {
+    const state = stateWithWarehouse('empty')
+    renderPanel(
+      warehouseView(state),
+      previewDemolish(
+        state,
+        { kind: 'demolish', workId: 'apercu-local', buildingId: Warehouse },
+        CATALOGS,
+      ),
+    )
+
+    expect(previewGroup().textContent).not.toMatch(/perdu par le plafond/i)
+    expect(previewGroup().querySelector('[data-overflow-lost]')).toBeNull()
+  })
+
+  /** Une mine ne stocke rien : ni baisse de plafond, ni surplus. */
+  it('démolir une mine n’annonce aucune baisse de plafond', () => {
+    renderPanel(mineView(), previewOf())
+    expect(previewGroup().textContent).not.toMatch(/plafonds abaissés/i)
+    expect(previewGroup().querySelector('[data-capacity-lost]')).toBeNull()
+  })
+})

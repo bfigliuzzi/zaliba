@@ -146,7 +146,10 @@ describe('la quantité détenue progresse de façon continue (US1, critère 3)',
     // Le plafond ne bouge jamais et la perte se compte en milliers : les
     // décimales n'y apporteraient que du bruit.
     expect(camelote.getByText('5 000')).toBeDefined()
-    expect(camelote.getByText('5 480')).toBeDefined()
+    // La perte porte depuis US7 une phrase qui la **situe** : le nombre n'est donc
+    // plus le texte entier de sa cellule, et c'est un progrès — un chiffre nu ne
+    // disait pas ce qu'il valait.
+    expect(camelote.getByText(/^5[\s ]480 —/)).toBeDefined()
   })
 
   it('reste exact au grain près', () => {
@@ -184,5 +187,80 @@ describe('le plafond est comparable, pas seulement lisible', () => {
       expect(row, `${resourceId} n’expose pas son plafond`).not.toBeNull()
       expect(row?.getAttribute('data-cap')).toBe(String(holding.cap))
     }
+  })
+})
+
+/**
+ * **Le remplissage** — la cinquième grandeur, arrivée avec US7 (T148).
+ *
+ * La quantité et le plafond sont là depuis US1, et pourtant le joueur devait faire
+ * la division lui-même pour répondre à la seule question qui compte : *suis-je
+ * près de perdre ?* Un pourcentage y répond d'un coup d'œil, et il le fait pour les
+ * trois ressources à la fois — ce qu'aucune paire de nombres à échelles différentes
+ * ne permet de comparer.
+ */
+describe('le remplissage est publié, et non laissé à calculer', () => {
+  it.each([/camelote/i, /jus/i, /bave d’étoiles/i])('affiche le remplissage de %s', (name) => {
+    renderPanel()
+    expect(group(name).getByText(/remplissage/i)).toBeDefined()
+  })
+
+  it('donne le pourcentage exact, tronqué vers le bas', () => {
+    renderPanel()
+    // 1 440 000 sur 18 000 000 grains = 8 % exactement.
+    expect(group(/camelote/i).getByText(/8[\s ]*%/)).toBeDefined()
+  })
+
+  /**
+   * La troncature va vers le bas, comme partout ailleurs : annoncer « 100 % » à
+   * 99,7 % dirait au joueur qu'il perd déjà alors qu'il lui reste du temps — et le
+   * ferait dépenser dans un entrepôt une seconde trop tôt plutôt qu'une trop tard.
+   */
+  it('n’annonce 100 % qu’à la saturation réelle', () => {
+    renderPanel(21 * 86_400)
+    expect(group(/camelote/i).getByText(/100[\s ]*%/)).toBeDefined()
+  })
+
+  /**
+   * La valeur exacte dans un attribut, comme le plafond : le parcours de bout en
+   * bout d'US7 compare deux remplissages pour établir qu'un entrepôt les fait
+   * baisser sans rien retirer au stock.
+   */
+  it('porte le remplissage en millièmes, comparable', () => {
+    renderPanel()
+    const node = document.querySelector('[data-fill][data-resource="camelote"]')
+    expect(node?.getAttribute('data-fill')).toBe('80')
+  })
+})
+
+/**
+ * **La perte cumulée, consultable et située** (FR-026, US7-3).
+ *
+ * Le nombre nu ne disait pas ce qu'il valait : cinq mille quatre cent quatre-vingts
+ * unités perdues sont-elles beaucoup ? La réponse est dans la comparaison avec le
+ * plafond — c'est *plus d'une planète pleine* —, et c'est cette phrase qui rend un
+ * entrepôt désirable pour une raison chiffrée plutôt que par intuition.
+ */
+describe('la perte cumulée est située, pas seulement affichée', () => {
+  it('reste à zéro tant que rien n’a débordé', () => {
+    renderPanel()
+    const node = document.querySelector('[data-lost][data-resource="camelote"]')
+    expect(node?.getAttribute('data-lost')).toBe('0')
+  })
+
+  it('porte la perte en grains, comparable', () => {
+    renderPanel(21 * 86_400)
+    const node = document.querySelector('[data-lost][data-resource="camelote"]')
+    // 19 728 000 grains : le parcours en a besoin en valeur, pas en apparence.
+    expect(node?.getAttribute('data-lost')).toBe('19728000')
+  })
+
+  it('dit ce que la perte représente une fois qu’il y en a une', () => {
+    renderPanel(21 * 86_400)
+    // « l'équivalent de N fois votre plafond » : la seule formulation qui donne
+    // l'échelle sans demander au joueur de diviser. Le localisateur nomme la phrase
+    // en entier — `/plafond/i` seul trouverait aussi l'étiquette « Plafond », et un
+    // localisateur qui accepte deux repères n'éprouve ni l'un ni l'autre.
+    expect(group(/camelote/i).getByText(/fois votre plafond/i)).toBeDefined()
   })
 })

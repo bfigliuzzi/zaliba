@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { projectPlanet } from '../../../src/game.js'
 import { DEFAULT_CATALOGS } from '../../../src/kernel/catalogs.js'
 import type { CreditResources } from '../../../src/kernel/effects.js'
+import { storageCaps } from '../../../src/kernel/rates.js'
 import { grains } from '../../../src/kernel/resources.js'
 import {
   applyEffects,
@@ -246,6 +247,7 @@ describe('ce que l’aperçu annonce est exactement ce que l’achèvement créd
    */
   it('l’annonce vaut le crédit, même en démolissant un entrepôt', () => {
     const Warehouse = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'
+    const Level = 4
     const base = emptySnapshot({
       planetId: '11111111-1111-4111-8111-111111111111',
       ownerId: '22222222-2222-4222-8222-222222222222',
@@ -256,31 +258,32 @@ describe('ce que l’aperçu annonce est exactement ce que l’achèvement créd
       catalogs: CATALOGS,
     })
 
+    const store: PlacedBuilding = {
+      id: Warehouse,
+      typeId: 'entrepot',
+      variantId: 'single',
+      orientation: 0,
+      anchor: { x: 5, y: 5 },
+      level: Level,
+    }
+
+    // La planète est **presque pleine pour son plafond courant**, entrepôt compris.
+    // C'est le seul état qui éprouve quelque chose : avec la seule base, l'entrepôt
+    // laisse tant de place que ni l'aperçu ni l'achèvement n'écrêtent, et l'égalité
+    // serait vraie sans rien dire.
+    const capWith = storageCaps({ ...base, buildings: [store] }, CATALOGS)
+
     const snapshot: PlanetSnapshot = {
       ...base,
-      buildings: [
-        {
-          id: Warehouse,
-          typeId: 'entrepot',
-          variantId: 'single',
-          orientation: 0,
-          anchor: { x: 5, y: 5 },
-          level: 4,
-        },
-      ],
+      buildings: [store],
       holdings: {
-        // Presque pleine, pour que l'écrêtement soit effectivement en jeu.
-        camelote: { amount: grains(CAP.camelote - 200_000), lost: grains(0) },
+        camelote: { amount: grains(capWith.camelote - 200_000), lost: grains(0) },
         jus: { amount: grains(0), lost: grains(0) },
-        'bave-etoiles': { amount: grains(CAP['bave-etoiles'] - 50_000), lost: grains(0) },
+        'bave-etoiles': { amount: grains(capWith['bave-etoiles'] - 50_000), lost: grains(0) },
       },
     }
 
-    const target: DemolishCommand = {
-      kind: 'demolish',
-      workId: WORK_ID,
-      buildingId: Warehouse,
-    }
+    const target: DemolishCommand = { kind: 'demolish', workId: WORK_ID, buildingId: Warehouse }
 
     const state = projectPlanet(snapshot, CATALOGS, T0)
     const preview = previewDemolish(state, target, CATALOGS)
@@ -289,32 +292,119 @@ describe('ce que l’aperçu annonce est exactement ce que l’achèvement créd
       throw new Error('l’aperçu et la décision devaient concorder')
     }
 
-    const seconds = BUILDINGS.entrepot.demolitionSeconds
     const launched = applyEffects(snapshot, decision.effects, T0)
+    const work = launched.work
+    if (work === null) throw new Error('le chantier manque')
 
-    // Le parcours **complet**, par la projection : c'est elle qui construit
-    // l'instantané à l'échéance et qui applique les effets d'achèvement. Le
-    // reconstruire à la main ici recopierait la segmentation, donc la mettrait hors
-    // de portée du test.
-    const after = projectPlanet(launched, CATALOGS, instant(T0 + seconds))
-    const before = projectPlanet(launched, CATALOGS, instant(T0 + seconds - 1))
+    const seconds = BUILDINGS.entrepot.demolitionSeconds
 
-    for (const amount of preview.preview.effect.refund) {
-      const gained =
-        after.holdings[amount.resourceId].amount - before.holdings[amount.resourceId].amount
-      const oneSecond = LAYOUT.baseProductionPerHour[amount.resourceId]
-      expect(gained, `${amount.resourceId} crédité`).toBe(
-        Math.min(
-          amount.grains + oneSecond,
-          after.holdings[amount.resourceId].cap - before.holdings[amount.resourceId].amount,
-        ),
-      )
+    // L'instantané **tel que la projection le construit à l'échéance**, puis les
+    // effets d'achèvement tels qu'elle les demande.
+    const atDue = projectPlanet(launched, CATALOGS, instant(T0 + seconds - 1))
+    const snapshotAtDue: PlanetSnapshot = {
+      ...launched,
+      consolidatedAt: instant(T0 + seconds),
+      holdings: Object.fromEntries(
+        Object.entries(launched.holdings).map(([resourceId, holding]) => {
+          const view = atDue.holdings[resourceId as keyof typeof atDue.holdings]
+          return [
+            resourceId,
+            {
+              amount: grains(Math.min(view.cap, holding.amount + view.rate * seconds)),
+              lost: holding.lost,
+            },
+          ]
+        }),
+      ) as PlanetSnapshot['holdings'],
     }
 
-    // Et le plafond est **tenu** dans tous les cas (I-1).
-    for (const holding of Object.values(after.holdings)) {
-      expect(holding.amount).toBeLessThanOrEqual(holding.cap)
+    const credited = effectsOnCompletion(work, snapshotAtDue, CATALOGS).find(
+      (one) => one.kind === 'credit-resources',
+    ) as CreditResources | undefined
+
+    // **L'égalité, sans correctif.** Un `Math.min` appliqué ici masquerait
+    // exactement la divergence qu'on cherche : l'aperçu doit annoncer le montant que
+    // l'achèvement crédite, plafond d'après retrait compris.
+    expect(amountsOf(credited?.amounts ?? [])).toEqual(amountsOf(preview.preview.effect.refund))
+  })
+
+  /**
+   * **Démolir un entrepôt plein fait perdre le surplus, et cela doit être annoncé.**
+   *
+   * Le plafond baisse à l'instant du retrait, et la quantité détenue peut se
+   * retrouver au-dessus : le noyau l'écrête au segment suivant et compte la
+   * différence en perte (R4). C'est le comportement le moins mauvais — l'alternative
+   * serait de tolérer un état que l'invariant I-1 interdit —, mais il serait
+   * intolérable qu'il soit **découvert après l'action** (FR-051). L'aperçu publie donc
+   * la baisse de plafond et le surplus qui sera perdu.
+   */
+  it('annonce la baisse de plafond et le surplus perdu d’un entrepôt plein', () => {
+    const Warehouse = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'
+    const base = emptySnapshot({
+      planetId: '11111111-1111-4111-8111-111111111111',
+      ownerId: '22222222-2222-4222-8222-222222222222',
+      occupantId: '22222222-2222-4222-8222-222222222222',
+      archetypeId: 'berceau',
+      layoutId: 'berceau-v1',
+      consolidatedAt: T0,
+      catalogs: CATALOGS,
+    })
+
+    const store: PlacedBuilding = {
+      id: Warehouse,
+      typeId: 'entrepot',
+      variantId: 'single',
+      orientation: 0,
+      anchor: { x: 5, y: 5 },
+      level: 4,
     }
+
+    const capWith = storageCaps({ ...base, buildings: [store] }, CATALOGS)
+    const capWithout = storageCaps({ ...base, buildings: [] }, CATALOGS)
+
+    const snapshot: PlanetSnapshot = {
+      ...base,
+      buildings: [store],
+      holdings: {
+        // Saturée : tout ce qui dépasse le plafond d'après retrait sera perdu.
+        camelote: { amount: grains(capWith.camelote), lost: grains(0) },
+        jus: { amount: grains(0), lost: grains(0) },
+        'bave-etoiles': { amount: grains(0), lost: grains(0) },
+      },
+    }
+
+    const target: DemolishCommand = { kind: 'demolish', workId: WORK_ID, buildingId: Warehouse }
+    const state = projectPlanet(snapshot, CATALOGS, T0)
+    const preview = previewDemolish(state, target, CATALOGS)
+    if (preview.outcome !== 'accepted') throw new Error('refus inattendu')
+
+    const effect = preview.preview.effect
+
+    // La baisse de plafond, par ressource.
+    expect(amountsOf(effect.capacityLost)).toEqual({
+      camelote: capWith.camelote - capWithout.camelote,
+      jus: capWith.jus - capWithout.jus,
+      'bave-etoiles': capWith['bave-etoiles'] - capWithout['bave-etoiles'],
+    })
+
+    // Le surplus qui sera perdu : la Camelote est saturée, donc tout l'écart.
+    expect(amountsOf(effect.overflowLost)['camelote']).toBe(capWith.camelote - capWithout.camelote)
+    // Les deux autres sont vides : rien à perdre quand rien n'est stocké.
+    expect(amountsOf(effect.overflowLost)['jus']).toBeUndefined()
+
+    // Et le constat après achèvement le confirme, au grain près.
+    const decision = decideDemolish(state, target, CATALOGS)
+    if (decision.outcome !== 'accepted') throw new Error('refus inattendu')
+
+    const after = projectPlanet(
+      applyEffects(snapshot, decision.effects, T0),
+      CATALOGS,
+      instant(T0 + BUILDINGS.entrepot.demolitionSeconds),
+    )
+    expect(after.holdings.camelote.amount).toBe(capWithout.camelote)
+    expect(after.holdings.camelote.lost).toBeGreaterThanOrEqual(
+      capWith.camelote - capWithout.camelote,
+    )
   })
 
   /**

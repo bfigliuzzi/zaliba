@@ -144,4 +144,28 @@ describe('la planète est derrière la session, les règles ne le sont pas', () 
     renderAt('/rules', null)
     expect(await screen.findByRole('heading', { name: /règles/i })).toBeDefined()
   })
+
+  /**
+   * **Et elles sont pleines**, pas seulement présentes.
+   *
+   * Le titre seul était satisfait par la page provisoire d'US1 — « les formules seront
+   * générées depuis le catalogue » —, qui promettait au lieu de tenir. La vérification
+   * porte donc sur un chiffre du catalogue, atteint **sans session** : c'est
+   * l'engagement à n'avoir aucune formule cachée, éprouvé au seul endroit qui le voit
+   * de bout en bout.
+   */
+  it('publie les formules et les valeurs, sans session', async () => {
+    renderAt('/rules', null)
+    await screen.findByRole('heading', { name: /règles/i })
+
+    const text = document.body.textContent ?? ''
+    // La formule de production, et le grain qui donne son unité à tout le reste.
+    expect(text).toMatch(/gisements recouverts/i)
+    // Le séparateur de milliers français est un espace **insécable** : chercher un
+    // espace ordinaire ferait échouer un test que rien ne rend faux. Le formateur du
+    // navigateur décide, et le test le laisse décider.
+    expect(text).toMatch(/3[\s\u00a0\u202f]600/)
+    // Un repère par type de bâtiment : une page de référence se parcourt.
+    expect(screen.getAllByRole('region').length).toBeGreaterThanOrEqual(5)
+  })
 })

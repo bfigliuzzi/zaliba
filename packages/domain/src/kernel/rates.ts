@@ -38,6 +38,7 @@ import type { PlacedBuilding, PlanetSnapshot } from './snapshot.js'
  * taux nominal d'un extracteur = courbeProduction(niveau) × gisements recouverts
  * taux effectif                = ⌊ nominal × E₊ ÷ E₋ ⌋ en déficit, nominal sinon
  * taux de la planète           = Σ extracteurs (effectifs) + production de base
+ * plafond                       = capacité de base + Σ entrepôts posés
  * ```
  */
 
@@ -139,22 +140,59 @@ export function productionRates(
   ) as Record<ResourceId, ResourceRate>
 }
 
-/** Le plafond de stockage par ressource, en grains (FR-025). */
+/**
+ * Ce qu'un bâtiment **posé** ajoute au plafond, par ressource, en grains (FR-025).
+ *
+ * Zéro pour tout type qui ne stocke rien. L'entrepôt est le seul à porter une courbe
+ * de capacité, et il relève **les trois** plafonds du même montant : c'est la
+ * spécification qui le tranche — un type unique plutôt que trois entrepôts
+ * spécialisés.
+ *
+ * La fonction est publique parce que la démolition en a besoin : démolir un entrepôt
+ * réduit la capacité à l'instant même où il rembourse, et l'aperçu doit annoncer
+ * l'écrêtement contre le plafond **d'après retrait** (FR-049).
+ */
+export function storageContribution(
+  building: PlacedBuilding,
+  catalogs: Catalogs,
+): Readonly<Record<ResourceId, number>> {
+  const curve = catalogs.buildings[building.typeId]?.capacity ?? null
+  const amount = curve === null ? 0 : evaluateCurve(curve, building.level)
+
+  return Object.fromEntries(
+    catalogs.resourceIds.map((resourceId) => [resourceId, amount]),
+  ) as Record<ResourceId, number>
+}
+
+/**
+ * Le plafond de stockage par ressource, en grains (FR-025) :
+ *
+ * ```
+ * plafond = capacité de base de la disposition + Σ entrepôts posés
+ * ```
+ *
+ * **Le rapport d'énergie n'est pas un argument de cette fonction**, et c'est la
+ * forme qui tient FR-023b : ce qu'on ne reçoit pas, on ne peut pas l'appliquer par
+ * mégarde. La capacité d'un entrepôt reste entière en déficit (R21) — un plafond qui
+ * rétrécit pourrait passer sous la quantité détenue, ce que l'invariant I-1
+ * interdit, et il faudrait alors choisir entre confisquer le surplus et tolérer
+ * l'interdit.
+ */
 export function storageCaps(
   snapshot: PlanetSnapshot,
   catalogs: Catalogs,
 ): Readonly<Record<ResourceId, number>> {
   const layout = layoutOf(catalogs, snapshot.layoutId)
 
-  // La capacité des entrepôts s'ajoute avec US7 — et **n'est pas** dégradée par
-  // le déficit d'énergie (R21) : un plafond qui rétrécit pourrait passer sous la
-  // quantité détenue, ce que l'invariant I-1 interdit. Le rapport n'est donc pas
-  // un argument de cette fonction, et c'est la forme qui tient FR-023b : ce
-  // qu'on ne reçoit pas, on ne peut pas l'appliquer par mégarde.
+  const added = snapshot.buildings.map((building) => storageContribution(building, catalogs))
+
   return Object.fromEntries(
     catalogs.resourceIds.map((resourceId) => [
       resourceId,
-      layout.baseCapacityGrains[resourceId] ?? 0,
+      added.reduce(
+        (total, one) => total + (one[resourceId] ?? 0),
+        layout.baseCapacityGrains[resourceId] ?? 0,
+      ),
     ]),
   ) as Record<ResourceId, number>
 }

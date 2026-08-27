@@ -6,6 +6,7 @@
  * rendu physique, et `dependency-cruiser` le vérifie à chaque poussée.
  */
 export * from './game.js'
+export * from './kernel/breakdown.js'
 export * from './kernel/catalogs.js'
 export * from './kernel/curves.js'
 export * from './kernel/effects.js'

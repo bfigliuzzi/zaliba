@@ -16,9 +16,9 @@ import { GRAINS_PER_UNIT } from './units.js'
  * **Aucun coût n'est libellé en Jus** (FR-062, R22) : il n'a aucun débouché en
  * 001, et l'exiger serait un blocage définitif déguisé en contenu.
  *
- * La courbe de **capacité** de l'entrepôt arrive avec US7, la tranche qui la
- * consomme : aucun test de cette itération ne la contraint, et une donnée
- * d'équilibrage qu'aucun test ne tient est une valeur qui dérive en silence.
+ * La courbe de **capacité** de l'entrepôt est arrivée avec US7, la tranche qui la
+ * consomme. Elle n'était pas là avant, et c'était voulu : une donnée d'équilibrage
+ * qu'aucun test ne tient est une valeur qui dérive en silence.
  *
  * **Les deux colonnes d'énergie sont exclusives** : la centrale produit et ne
  * consomme pas, tout le reste consomme et ne produit pas (FR-022, R20). Aucun
@@ -86,6 +86,26 @@ export interface Building {
    * ligne de garantie.
    */
   readonly energyProduction: LinearCurve | null
+  /**
+   * Capacité de stockage ajoutée par niveau, en **grains**, ou `null` pour tout
+   * type qui ne stocke rien (FR-025).
+   *
+   * **Un seul nombre pour les trois ressources**, et c'est la spécification qui le
+   * tranche : un entrepôt d'un type unique plutôt que trois entrepôts spécialisés.
+   * La conséquence est voulue — la Bave d'étoiles, dont la base est la plus faible,
+   * progresse relativement plus vite. Un joueur peut le calculer, et c'est tout ce
+   * qu'on lui demande de pouvoir faire (SC-002).
+   *
+   * Géométrique en `3/2`, **comme les coûts** : payer une fois et demie pour stocker
+   * une fois et demie de plus est une progression neutre, donc lisible. Un facteur
+   * plus doux ferait de l'entrepôt un mauvais investissement à haut niveau sans que
+   * rien ne l'annonce ; un facteur plus raide en ferait le seul achat rationnel.
+   *
+   * La capacité n'est **jamais** dégradée par le déficit d'énergie (FR-023b, R21),
+   * et cela ne se lit pas ici : c'est `storageCaps` qui ne reçoit pas le rapport.
+   * Ce qu'on ne reçoit pas, on ne peut pas l'appliquer par mégarde.
+   */
+  readonly capacity: GeometricCurve | null
 }
 
 /** Le facteur de croissance commun : chaque niveau coûte une fois et demie. */
@@ -136,6 +156,18 @@ function producing(base: number, step: number): LinearCurve {
   return { kind: 'linear', base, step }
 }
 
+/**
+ * La capacité, en **grains** — comme les coûts, et non comme les taux.
+ *
+ * L'unité est dans le nom parce que la confusion est facile et silencieuse : un
+ * plafond se compare à une quantité, donc il est en grains ; un taux se multiplie
+ * par des secondes. Les deux sont des entiers, et rien dans le type ne les
+ * distingue.
+ */
+function holding(baseUnits: number): GeometricCurve {
+  return { kind: 'geometric', base: baseUnits * GRAINS_PER_UNIT, num: 3, den: 2 }
+}
+
 /** La moitié, remboursée à la démolition. Énonçable en une phrase (SC-002). */
 const HALF: Fraction = { num: 1, den: 2 }
 
@@ -152,6 +184,7 @@ const TYPES = {
     production: yielding(15),
     energyConsumption: drawing(8, 4),
     energyProduction: null,
+    capacity: null,
   },
   puits: {
     id: 'puits',
@@ -165,6 +198,7 @@ const TYPES = {
     production: yielding(8),
     energyConsumption: drawing(10, 5),
     energyProduction: null,
+    capacity: null,
   },
   /** L'extracteur de Bave d'étoiles. Nommé le 2026-08-23 (T014). */
   racloir: {
@@ -179,6 +213,7 @@ const TYPES = {
     production: yielding(4),
     energyConsumption: drawing(14, 7),
     energyProduction: null,
+    capacity: null,
   },
   /** Le **seul** type qui ne consomme pas d'énergie (R20). */
   centrale: {
@@ -196,6 +231,7 @@ const TYPES = {
     // Et le seul type qui produise. Les deux `null` se répondent : la colonne
     // qu'un type ne remplit pas est celle que l'autre remplit.
     energyProduction: producing(30, 15),
+    capacity: null,
   },
   /**
    * Relève le plafond des trois ressources. Il consomme de l'énergie sans que
@@ -217,6 +253,16 @@ const TYPES = {
     // centrale se paie — le prix étant payé par les extracteurs (R21).
     energyConsumption: drawing(2, 1),
     energyProduction: null,
+    /**
+     * **Deux mille unités au niveau 1**, sur une base de cinq mille pour la Camelote
+     * et de deux mille pour la Bave d'étoiles.
+     *
+     * Le choix porte l'équilibrage de la tranche : un premier entrepôt relève la
+     * Camelote de deux cinquièmes et **double** la Bave d'étoiles — donc il vaut la
+     * peine tout de suite, sans être indispensable. La saturation reste ce qui
+     * pousse à en poser, pas une falaise qui l'exige.
+     */
+    capacity: holding(2_000),
   },
 } as const satisfies Record<string, Omit<Building, 'id'> & { id: string }>
 

@@ -208,6 +208,58 @@ function BuildPreview({ preview }: { readonly preview: PreviewResult | null }) {
             : ' — aucun rendement réduit'}
         </dd>
 
+        {/*
+          **L'effet sur les plafonds** (US7-1), et il n'est publié que quand il
+          existe : quatre des cinq types ne stockent rien, et une ligne « +0 » sur
+          l'aperçu d'une mine ferait chercher un effet inexistant.
+
+          L'entrepôt est le seul des cinq dont la vertu ne soit ni une production ni
+          une énergie. Un aperçu qui n'aurait su parler que de production l'aurait
+          présenté comme un bâtiment inutile qui consomme de l'énergie — ce qui est
+          vrai et trompeur à la fois.
+        */}
+        {effect.capacityAdded.length > 0 && (
+          <>
+            <dt>Plafonds après la pose</dt>
+            <dd
+              data-cap-added={effect.capacityAdded
+                .map((a) => `${a.resourceId}:${a.grains}`)
+                .join(',')}
+            >
+              {effect.capAfter
+                .map(
+                  (amount) => `${formatUnits(amount.grains)} ${RESOURCE_LABELS[amount.resourceId]}`,
+                )
+                .join(', ')}
+              {` (+${formatUnits(effect.capacityAdded[0]?.grains ?? 0)} chacun)`}
+            </dd>
+
+            {/*
+              Le temps gagné, et c'est la grandeur qui décide : « votre Camelote
+              saturera dans quatre jours au lieu de deux » est une raison de payer,
+              « votre plafond passera de 5 000 à 7 000 » demande au joueur de faire
+              lui-même la division.
+
+              Une ressource dont le taux est nul est **absente** de la liste : elle
+              ne saturera jamais, donc il n'y a aucun temps à gagner — et le dire par
+              un chiffre serait dire quelque chose de faux.
+            */}
+            {effect.saturationDelayed.length > 0 && (
+              <>
+                <dt>Saturation repoussée de</dt>
+                <dd>
+                  {effect.saturationDelayed
+                    .map(
+                      (delay) =>
+                        `${formatDuration(delay.seconds)} pour la ${RESOURCE_LABELS[delay.resourceId]}`,
+                    )
+                    .join(', ')}
+                </dd>
+              </>
+            )}
+          </>
+        )}
+
         {shortfall !== null && (
           <>
             <dt>Il manque</dt>

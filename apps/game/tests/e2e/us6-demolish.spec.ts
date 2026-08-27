@@ -66,7 +66,8 @@ const UPGRADE_SECONDS = 168
 /** `demolitionSeconds` de la mine, indépendant du niveau. */
 const DEMOLITION_SECONDS = 300
 
-const demolishPreview = (page: Page) => page.getByRole('group', { name: /aperçu de la démolition/i })
+const demolishPreview = (page: Page) =>
+  page.getByRole('group', { name: /aperçu de la démolition/i })
 const currentWork = (page: Page) => page.getByRole('group', { name: /^chantier$/i })
 const energyPanel = (page: Page) => page.getByRole('group', { name: /^énergie$/i })
 const cellAt = (page: Page, index: string) =>
@@ -145,7 +146,9 @@ async function upgradeMine(page: Page, levelAfter: number, seconds: number): Pro
 }
 
 test.describe('l’aperçu annonce ce qu’on récupère et ce qu’on perd (FR-046, FR-047)', () => {
-  test('remboursement, cases libérées, gisement conservé et production perdue', async ({ page }) => {
+  test('remboursement, cases libérées, gisement conservé et production perdue', async ({
+    page,
+  }) => {
     test.setTimeout(300_000)
     await signUp(page)
     await buildMine(page)
@@ -162,10 +165,7 @@ test.describe('l’aperçu annonce ce qu’on récupère et ce qu’on perd (FR-
     await expect(preview).toContainText(/veine de Camelote/i)
 
     // Le remboursement, en valeur exacte : c'est celle qu'on refait à la main (SC-002).
-    await expect(preview.locator('[data-refund]')).toHaveAttribute(
-      'data-refund',
-      /^camelote:\d+/,
-    )
+    await expect(preview.locator('[data-refund]')).toHaveAttribute('data-refund', /^camelote:\d+/)
 
     // Ce qu'on perd, et **quand** : à l'échéance, pas au constat (FR-048).
     await expect(preview).toContainText(/à l’échéance/i)

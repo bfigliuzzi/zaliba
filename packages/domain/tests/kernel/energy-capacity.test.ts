@@ -68,6 +68,20 @@ function inDeficit(): PlanetSnapshot {
   }
 }
 
+/**
+ * Le même assortiment, mais alimenté : une centrale suffisamment haute lève le
+ * déficit sans toucher à la capacité — la centrale ne stocke rien.
+ *
+ * C'est le témoin qui rend les égalités de ce fichier concluantes : comparer une
+ * planète en déficit à une planète *différente* n'aurait rien dit du déficit.
+ */
+function supplied(): PlanetSnapshot {
+  return {
+    ...inDeficit(),
+    buildings: [...inDeficit().buildings, placed('centrale', { x: 4, y: 5 }, 3)],
+  }
+}
+
 describe('la mise en déficit est bien celle qu’on croit', () => {
   it('consomme plus que la planète ne produit', () => {
     const report = energyReport(inDeficit(), CATALOGS)
@@ -100,20 +114,42 @@ describe('la mise en déficit est bien celle qu’on croit', () => {
   })
 })
 
+/**
+ * **La propriété éprouvée ici a été resserrée par US7, et elle en sort plus juste.**
+ *
+ * Avant que l'entrepôt ne relève les plafonds, « la capacité n'est pas dégradée par
+ * le déficit » et « la capacité vaut celle de la disposition » étaient la *même*
+ * égalité. Elles ne le sont plus, et les confondre aurait rendu ce fichier muet sur
+ * son sujet : il aurait suffi d'oublier de compter les entrepôts pour le satisfaire.
+ *
+ * La comparaison porte donc désormais sur des planètes **au même assortiment de
+ * bâtiments**, l'une en déficit et l'autre pas. C'est la seule forme qui isole la
+ * variable qu'on éprouve. Le montant absolu du plafond, lui, appartient à
+ * `capacity.test.ts`.
+ */
 describe('les trois plafonds sont inchangés en déficit (FR-023b, R21)', () => {
+  it('la planète alimentée n’est bien plus en déficit', () => {
+    expect(energyReport(supplied(), CATALOGS).deficit).toBe(false)
+    expect(energyReport(inDeficit(), CATALOGS).deficit).toBe(true)
+  })
+
   it.each(['camelote', 'jus', 'bave-etoiles'] as const)(
-    '%s garde exactement le plafond de la planète à l’équilibre',
+    '%s garde exactement le plafond de la même planète alimentée',
     (resourceId) => {
       expect(storageCaps(inDeficit(), CATALOGS)[resourceId]).toBe(
-        storageCaps(fresh(), CATALOGS)[resourceId],
+        storageCaps(supplied(), CATALOGS)[resourceId],
       )
     },
   )
 
-  it('rend les trois plafonds de la disposition, au grain près', () => {
+  /**
+   * Et l'entrepôt **compte** : sans cette moitié, l'égalité ci-dessus serait
+   * satisfaite par un entrepôt qu'on aurait simplement oublié partout.
+   */
+  it('le plafond dépasse celui de la disposition, entrepôt compris', () => {
     const caps = storageCaps(inDeficit(), CATALOGS)
     for (const resourceId of RESOURCES) {
-      expect(caps[resourceId]).toBe(BERCEAU.baseCapacityGrains[resourceId])
+      expect(caps[resourceId]).toBeGreaterThan(BERCEAU.baseCapacityGrains[resourceId])
     }
   })
 
@@ -129,28 +165,41 @@ describe('les trois plafonds sont inchangés en déficit (FR-023b, R21)', () => 
         fc.integer({ min: 1, max: BUILDINGS.mine.maxLevel }),
         fc.integer({ min: 1, max: BUILDINGS.entrepot.maxLevel }),
         (mineLevel, storeLevel) => {
-          const snapshot: PlanetSnapshot = {
+          const store = placed('entrepot', { x: 2, y: 5 }, storeLevel)
+
+          // Deux planètes au **même** entrepôt : l'une écrasée par une mine de haut
+          // niveau, l'autre pas. Seule l'énergie diffère, donc seule l'énergie est
+          // éprouvée.
+          const strained: PlanetSnapshot = {
             ...fresh(),
-            buildings: [
-              placed('mine', { x: 0, y: 4 }, mineLevel),
-              placed('entrepot', { x: 2, y: 5 }, storeLevel),
-            ],
+            buildings: [placed('mine', { x: 0, y: 4 }, mineLevel), store],
           }
-          const caps = storageCaps(snapshot, CATALOGS)
+          const alone: PlanetSnapshot = { ...fresh(), buildings: [store] }
+
+          const strainedCaps = storageCaps(strained, CATALOGS)
+          const aloneCaps = storageCaps(alone, CATALOGS)
           for (const resourceId of RESOURCES) {
-            expect(caps[resourceId]).toBe(BERCEAU.baseCapacityGrains[resourceId])
+            expect(strainedCaps[resourceId]).toBe(aloneCaps[resourceId])
           }
         },
       ),
     )
   })
 
-  /** Le plafond que la **projection** publie, et non seulement celui du noyau. */
+  /**
+   * Le plafond que la **projection** publie, et non seulement celui du noyau.
+   *
+   * L'égalité porte sur les deux planètes au même assortiment : c'est le déficit
+   * qu'on éprouve, pas le montant. Recopier la base ici referait la confusion que
+   * l'arrivée de l'entrepôt a mise au jour.
+   */
   it.each(['camelote', 'jus', 'bave-etoiles'] as const)(
     'publie pour %s le même plafond dans l’état projeté',
     (resourceId) => {
-      const state = projectPlanet(inDeficit(), CATALOGS, T0)
-      expect(state.holdings[resourceId].cap).toBe(BERCEAU.baseCapacityGrains[resourceId])
+      const strained = projectPlanet(inDeficit(), CATALOGS, T0)
+      const alone = projectPlanet(supplied(), CATALOGS, T0)
+      expect(strained.holdings[resourceId].cap).toBe(alone.holdings[resourceId].cap)
+      expect(strained.holdings[resourceId].cap).toBe(storageCaps(inDeficit(), CATALOGS)[resourceId])
     },
   )
 })
@@ -173,7 +222,10 @@ describe('la production, elle, est bien dégradée', () => {
     for (const resourceId of RESOURCES) {
       const holding = state.holdings[resourceId]
       expect(holding.amount).toBeLessThanOrEqual(holding.cap)
-      expect(holding.cap).toBe(BERCEAU.baseCapacityGrains[resourceId])
+      // Le plafond est **intact**, c'est-à-dire égal à celui que le noyau calcule
+      // sans rien savoir de l'énergie — entrepôt compris (FR-023b, R21).
+      expect(holding.cap).toBe(storageCaps(inDeficit(), CATALOGS)[resourceId])
+      expect(holding.cap).toBeGreaterThan(BERCEAU.baseCapacityGrains[resourceId])
     }
   })
 })

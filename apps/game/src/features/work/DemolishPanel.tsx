@@ -163,6 +163,33 @@ function DemolishPreview({
           </>
         )}
 
+        {/*
+          **La baisse de plafond, et le surplus qu'elle jette** (FR-051, US7).
+          Démolir un entrepôt est la seule action du jeu qui *réduit* une capacité :
+          un plafond qui baisse sans avertissement transformerait une réorganisation
+          en confiscation. Le surplus est distinct du remboursement écrêté — celui-ci
+          retient une ressource jamais détenue, celui-là jette une ressource que le
+          joueur possède déjà.
+        */}
+        {effect.capacityLost.length > 0 && (
+          <>
+            <dt>Plafonds abaissés de</dt>
+            <dd data-capacity-lost={amountsToken(effect.capacityLost)}>
+              {`${formatUnits(effect.capacityLost[0]?.grains ?? 0)} sur chacun des trois`}
+            </dd>
+          </>
+        )}
+
+        {effect.overflowLost.length > 0 && (
+          <>
+            <dt>Perdu par le plafond abaissé</dt>
+            <dd data-overflow-lost={amountsToken(effect.overflowLost)}>
+              {describeAmounts(effect.overflowLost)} — au-delà du nouveau plafond, ce stock ne peut
+              plus être gardé
+            </dd>
+          </>
+        )}
+
         <dt>Cases libérées</dt>
         <dd>{`${formatWhole(effect.cellsFreed.length)} cases`}</dd>
 

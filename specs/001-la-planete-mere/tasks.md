@@ -787,14 +787,69 @@ visible et comptabilisée.
 avant saturation augmentent des montants annoncés.
 
 - [ ] T142 [US7] Écrire le parcours Playwright dans `apps/game/tests/e2e/us7-storage.spec.ts` : poser un entrepôt **au clavier seul, sans aucun dispositif de pointage** (FR-058, SC-004), vérifier que les trois plafonds augmentent du montant annoncé et que le temps avant saturation s'allonge ; vérifier qu'une ressource saturée cesse de croître et que la perte est comptabilisée ; passer `axe-core` sans écart. Observer l'échec.
-- [ ] T143 [P] [US7] Écrire les tests de capacité dans `packages/domain/tests/kernel/capacity.test.ts` : plafond = capacité de base du Berceau **plus** celle des entrepôts posés (FR-025) ; l'entrepôt relève le plafond des **trois** ressources ; le plafond augmente exactement du montant annoncé avant la pose (US7-1). Observer l'échec.
-- [ ] T144 [P] [US7] Écrire le test de saturation longue dans `packages/domain/tests/kernel/saturation.test.ts` : saturer pendant trois semaines puis projeter — la ressource vaut **exactement** son plafond, la durée de saturation et la quantité perdue sont exactes (US1-5, US7-3, SC-003). Observer l'échec.
-- [ ] T145 [US7] Étendre `packages/catalogs/src/buildings.ts` avec la courbe de capacité de l'`entrepot`.
-- [ ] T146 [US7] Câbler le calcul de plafond des entrepôts dans `packages/domain/src/kernel/resources.ts` et l'exposer en `cap` dans `ProjectedState`.
-- [ ] T147 [US7] Étendre `packages/domain/src/modules/construction/preview.ts` : l'effet d'un entrepôt sur les trois plafonds et sur le temps avant saturation, annoncé avant la pose.
-- [ ] T148 [US7] Étendre `apps/game/src/features/resources/ResourcePanel.tsx` : par ressource, capacité, remplissage, temps restant avant saturation au rythme courant et **quantité perdue cumulée**, consultable (FR-027, US7-3).
+- [x] T143 [P] [US7] Écrire les tests de capacité dans `packages/domain/tests/kernel/capacity.test.ts` : plafond = capacité de base du Berceau **plus** celle des entrepôts posés (FR-025) ; l'entrepôt relève le plafond des **trois** ressources ; le plafond augmente exactement du montant annoncé avant la pose (US7-1). Observer l'échec.
+- [x] T144 [P] [US7] Écrire le test de saturation longue dans `packages/domain/tests/kernel/saturation.test.ts` : saturer pendant trois semaines puis projeter — la ressource vaut **exactement** son plafond, la durée de saturation et la quantité perdue sont exactes (US1-5, US7-3, SC-003). Observer l'échec.
+- [x] T145 [US7] Étendre `packages/catalogs/src/buildings.ts` avec la courbe de capacité de l'`entrepot`.
+- [x] T146 [US7] Câbler le calcul de plafond des entrepôts dans `packages/domain/src/kernel/resources.ts` et l'exposer en `cap` dans `ProjectedState`.
+- [x] T147 [US7] Étendre `packages/domain/src/modules/construction/preview.ts` : l'effet d'un entrepôt sur les trois plafonds et sur le temps avant saturation, annoncé avant la pose.
+- [x] T148 [US7] Étendre `apps/game/src/features/resources/ResourcePanel.tsx` : par ressource, capacité, remplissage, temps restant avant saturation au rythme courant et **quantité perdue cumulée**, consultable (FR-027, US7-3).
 
 **Point de contrôle** : la saturation est repoussable par le jeu, et par le jeu seul (FR-028).
+⚠️ **T143 à T148 franchies le 2026-08-27 ; T142 (parcours) reste à éprouver** — la pile
+d'authentification locale ne répond plus (voir « Environnement » en fin de phase 11).
+
+### Divergences constatées à l'exécution
+
+1. **La porte écrite en US6 a mordu, exactement comme prévu.** Le test « l'annonce
+   vaut le crédit, même en démolissant un entrepôt » est tombé dès que la capacité a
+   été câblée : l'aperçu prenait le plafond de l'état projeté, l'achèvement celui
+   d'après retrait, et les deux ne concordaient plus. `roomAtDue` retire désormais la
+   contribution du bâtiment démoli. C'est le seul défaut de cette phase, et il a été
+   trouvé par un test écrit une tranche plus tôt — pas par un raisonnement.
+2. **Le premier essai de cette porte ne mordait pas**, et il a fallu le renforcer :
+   ses quantités étaient calées sur le plafond *de base*, si bien que l'entrepôt
+   laissait tant de place que personne n'écrêtait. Un `Math.min` dans l'attendu
+   masquait de surcroît l'écart. Une porte qu'on n'a pas vue échouer ne prouve rien —
+   y compris quand on l'a écrite pour cela.
+3. **Un cas de conception non prévu : démolir un entrepôt plein.** Le plafond baisse à
+   l'instant du retrait, et la quantité détenue peut se retrouver au-dessus. Le noyau
+   l'écrête et compte la différence en perte (R4), ce qui est le comportement le moins
+   mauvais — l'alternative serait de tolérer un état que I-1 interdit. Mais il serait
+   intolérable qu'il soit **découvert après l'action** (FR-051) : l'aperçu publie donc
+   `capacityLost` et `overflowLost`, deux champs qu'aucune tâche ne nommait.
+4. **T146 disait `resources.ts` ; le câblage est resté dans `rates.ts`.**
+   `storageCaps` y vit depuis US1 et y est appelée par la projection ; la déplacer
+   forcerait `resources.ts` — module de grandeurs pures, sans dépendance au catalogue
+   ni à l'instantané — à importer les deux. Le module minimal l'est resté.
+5. **Un test d'US3 confondait deux propriétés, et l'entrepôt l'a révélé.** Avant que la
+   capacité ne dépende des bâtiments, « le déficit ne dégrade pas la capacité » et « la
+   capacité vaut celle de la disposition » étaient la *même* égalité.
+   `energy-capacity.test.ts` compare désormais deux planètes **au même assortiment**,
+   l'une en déficit et l'autre alimentée : la seule forme qui isole la variable
+   éprouvée. Il en sort plus fort qu'il n'était.
+6. **Deux de mes attendus étaient faux, et le code avait raison.** « La perte évitée
+   vaut la capacité ajoutée » ne tient qu'une fois que les *deux* planètes saturent —
+   à trois semaines, l'entrepôt n'avait pas réduit la perte de Jus, il l'avait
+   **annulée**, ce qui est un meilleur argument et fait désormais son propre test. Et
+   « la saturation recule des secondes annoncées » ignorait le **coût débité au
+   lancement**, qui la recule aussi : l'entrepôt gagne du temps deux fois.
+7. **T148 demandait quatre grandeurs ; le panneau en publie cinq.** Le
+   **remplissage** manquait : la quantité et le plafond étaient là depuis US1, et
+   pourtant le joueur devait faire la division lui-même pour répondre à la seule
+   question qui compte — *suis-je près de perdre ?* Le pourcentage y répond d'un coup
+   d'œil, et pour les trois ressources à la fois, ce qu'aucune paire de nombres à
+   échelles différentes ne permet de comparer. La perte, elle, est désormais
+   **située** : « l'équivalent de 1,1 fois votre plafond » donne l'échelle qu'un nombre
+   nu ne donnait pas.
+8. **`ResourcePanel` portait une copie locale des libellés et des formats.** Elle
+   datait d'US1 et contredisait `labels.ts` — « une seule table, et non une par
+   composant ». Supprimée.
+9. **T142 demandait de constater une saturation réelle ; c'est infaisable.** Saturer la
+   Camelote du Berceau demande plus de dix jours à vingt unités par heure, et l'horloge
+   du navigateur ne peut pas les fabriquer : la quantité *stockée* est écrite par le
+   serveur, qui a sa propre horloge. La perte est éprouvée par `saturation.test.ts`
+   (trois semaines, puis deux mois) et par `resource-panel.test.tsx` pour son
+   affichage.
 
 ---
 
@@ -807,26 +862,72 @@ rédigée, suffisante pour reproduire à la main n'importe quel chiffre affiché
 recalculer à la main depuis la seule page de règles. Écart attendu : **aucun**.
 
 - [ ] T149 [US8] Écrire le parcours Playwright dans `apps/game/tests/e2e/us8-rules.spec.ts` : relever un échantillon de tous les chiffres affichés sur la planète — coûts, durées, productions, capacités, temps avant saturation — et vérifier qu'ils se recalculent depuis la seule page de règles (SC-002) ; atteindre l'écran de règles **au clavier seul** ; passer `axe-core` sans écart. Observer l'échec.
-- [ ] T150 [P] [US8] Écrire le test de décomposition de production dans `packages/domain/tests/kernel/breakdown.test.ts` : toute production affichée se décompose en ses **quatre facteurs** — valeur de base du type, facteur de niveau, gisements recouverts, rapport d'énergie — dont le produit redonne exactement la valeur affichée (FR-053, US8-1). Observer l'échec.
-- [ ] T151 [P] [US8] Écrire le test de génération de la page de règles dans `apps/game/tests/rules-generation.test.ts` : tout contenu chiffré de l'écran provient de `packages/catalogs` ; **aucune valeur n'est rédigée à la main** ; un rééquilibrage du catalogue met la page à jour sans intervention (R15). Observer l'échec.
-- [ ] T152 [P] [US8] Écrire le test de divergence de catalogue dans `apps/game/tests/lib/catalog-version.test.ts` : une `catalogVersion` de réponse différente de celle du paquet embarqué **propose le rechargement** et n'affiche aucun chiffre calculé localement en attendant (R15). Observer l'échec.
-- [ ] T153 [US8] Implémenter `packages/domain/src/kernel/breakdown.ts` : la décomposition d'une production en ses quatre facteurs.
-- [ ] T154 [US8] Implémenter `apps/game/src/features/rules/RulesContent.tsx` : courbes nommées et leurs paramètres, valeurs par type et par niveau, formules de production, de plafond et de rapport d'énergie, **toutes générées** depuis `packages/catalogs`.
-- [ ] T155 [US8] Implémenter `apps/game/src/routes/rules.tsx` : l'écran de règles, accessible depuis l'écran de planète au clavier.
-- [ ] T156 [US8] Implémenter la détection de divergence de catalogue dans `apps/game/src/lib/catalogVersion.ts` : comparer le `catalogVersion` de la réponse à celui du paquet embarqué et **proposer le rechargement** plutôt que d'afficher des chiffres faux en silence (R15).
+- [x] T150 [P] [US8] Écrire le test de décomposition de production dans `packages/domain/tests/kernel/breakdown.test.ts` : toute production affichée se décompose en ses **quatre facteurs** — valeur de base du type, facteur de niveau, gisements recouverts, rapport d'énergie — dont le produit redonne exactement la valeur affichée (FR-053, US8-1). Observer l'échec.
+- [x] T151 [P] [US8] Écrire le test de génération de la page de règles dans `apps/game/tests/rules-generation.test.ts` : tout contenu chiffré de l'écran provient de `packages/catalogs` ; **aucune valeur n'est rédigée à la main** ; un rééquilibrage du catalogue met la page à jour sans intervention (R15). Observer l'échec.
+- [x] T152 [P] [US8] Écrire le test de divergence de catalogue dans `apps/game/tests/lib/catalog-version.test.ts` : une `catalogVersion` de réponse différente de celle du paquet embarqué **propose le rechargement** et n'affiche aucun chiffre calculé localement en attendant (R15). Observer l'échec.
+- [x] T153 [US8] Implémenter `packages/domain/src/kernel/breakdown.ts` : la décomposition d'une production en ses quatre facteurs.
+- [x] T154 [US8] Implémenter `apps/game/src/features/rules/RulesContent.tsx` : courbes nommées et leurs paramètres, valeurs par type et par niveau, formules de production, de plafond et de rapport d'énergie, **toutes générées** depuis `packages/catalogs`.
+- [x] T155 [US8] Implémenter `apps/game/src/routes/rules.tsx` : l'écran de règles, accessible depuis l'écran de planète au clavier.
+- [x] T156 [US8] Implémenter la détection de divergence de catalogue dans `apps/game/src/lib/catalogVersion.ts` : comparer le `catalogVersion` de la réponse à celui du paquet embarqué et **proposer le rechargement** plutôt que d'afficher des chiffres faux en silence (R15).
 
 **Point de contrôle** : les huit tranches sont livrées et indépendamment fonctionnelles.
+⚠️ **T150 à T156 franchies le 2026-08-27 ; T149 (parcours) reste à éprouver** — même
+cause que T142.
+
+### Divergences constatées à l'exécution
+
+1. **`recomposeBreakdown` n'a pas le droit de consulter le catalogue**, et c'est ce qui
+   donne son sens à FR-053. Elle refait le calcul depuis les **seuls facteurs
+   publiés**, comme un joueur avec un papier et un crayon. Si elle devait lire le
+   catalogue pour tomber juste, c'est que la décomposition ne suffisait pas — et le
+   test qui l'emploie ne prouverait rien.
+2. **Les deux troncatures sont publiées là où elles tombent.** Un joueur qui
+   multiplierait `base × (11/10)^4` obtiendrait 21,96 là où le jeu compte 21 : le
+   plancher tombe *avant* la multiplication par les gisements. Publier « base ×
+   facteur × gisements × rapport » sans le dire donnerait un produit faux une fois sur
+   deux — c'est-à-dire un calcul *presque* juste, ce qui est pire que pas de calcul.
+3. **La divergence de catalogue retire le contenu, elle ne l'accompagne pas.** R15 dit
+   « n'affiche aucun chiffre calculé localement en attendant », et c'est la moitié qui
+   compte : un avertissement placé *à côté* de chiffres faux laisserait le joueur
+   décider lesquels croire, alors qu'il n'a aucun moyen d'en juger. `CatalogNotice`
+   enveloppe donc tout l'écran de planète. Aucune tâche ne nommait ce composant.
+4. **Un test de divergence a survécu à une mutation**, et il a fallu le renforcer :
+   une version vide diverge de toute façon, donc constater la divergence ne prouvait
+   rien de la normalisation. Ce qu'elle apporte vraiment est le **message** —
+   « aucune version annoncée » désigne une cause réelle là où un blanc n'aide personne.
+5. **T151 ne pouvait pas être satisfaite par une table recopiée**, et sa formulation le
+   garantit : la page est rendue contre un **catalogue synthétique** aux valeurs
+   différentes, et ce sont celles-là qui doivent s'afficher — l'ancienne valeur ayant
+   disparu de la section concernée. C'est la seule formulation qui distingue « la page
+   affiche les bons chiffres » de « la page lit le catalogue ».
+6. **T158 disait `src/openapi.ts` ; le générateur vit dans `scripts/`.** La porte de
+   frontières l'a exigé, et elle a raison : `@ts-rest/open-api` est une dépendance de
+   *développement*, et l'importer depuis `src/` la ferait entrer dans le graphe que le
+   client embarque. Découvrir cela par une porte plutôt que par un bundle alourdi est
+   exactement ce qu'on demande à une porte.
+7. **L'instantané OpenAPI a dû prendre le suffixe `.contract.json`.** Sans lui, le
+   formateur le reformate, il ne correspond plus à ce que le test produit, et la porte
+   échoue pour une raison qui n'a rien à voir avec le contrat. Le piège s'est
+   manifesté exactement ainsi, une fois.
+8. **T161 a été éprouvée par violation délibérée** : le seuil porté à 99 % fait
+   échouer la porte avec le bon message. Relevé du 2026-08-27 — lignes 97,33 %,
+   instructions 97,26 %, fonctions 98,2 %, branches 87,98 %, contre des seuils de 90 /
+   90 / 90 / 85.
+9. **T162 est vérifiée mais non gardée.** Les six divergences sont bien reportées dans
+   `docs/design/conception-du-jeu.md`, et son journal les couvre par les entrées du
+   2026-08-23. La vérification est ponctuelle : en faire une porte demanderait un
+   projet de test sur la documentation, qu'aucune tâche ne prévoit.
 
 ---
 
 ## Phase 11 : Finition et préoccupations transverses
 
-- [ ] T157 [P] Geler l'**instantané d'équilibrage** des coûts, durées, productions et capacités pour les niveaux 1 à 30 dans `packages/catalogs/tests/snapshots/balance.snap`. Un diff se **lit et s'approuve**, il ne se contourne pas : le jeu ne sera jamais rééquilibré par accident.
-- [ ] T158 [P] Implémenter l'export OpenAPI par `@ts-rest/open-api` dans `packages/contracts/src/openapi.ts` et le publier en artefact de CI — la transparence promise à P4.
+- [x] T157 [P] Geler l'**instantané d'équilibrage** des coûts, durées, productions et capacités pour les niveaux 1 à 30 dans `packages/catalogs/tests/snapshots/balance.snap`. Un diff se **lit et s'approuve**, il ne se contourne pas : le jeu ne sera jamais rééquilibré par accident.
+- [x] T158 [P] Implémenter l'export OpenAPI par `@ts-rest/open-api` dans `packages/contracts/src/openapi.ts` et le publier en artefact de CI — la transparence promise à P4.
 - [ ] T159 [P] Vérifier les objectifs de performance de `plan.md` sur la **machine de référence nommée dans `quickstart.md` § 6**, sous une charge décrite : projection d'une planète **sous la milliseconde**, `GET` de l'état **sous 200 ms au 95ᵉ centile** sur 1 000 requêtes, joueur inactif à **zéro écriture et zéro calcul**. Consigner la machine, la charge et le relevé dans `specs/001-la-planete-mere/quickstart.md`.
 - [ ] T160 [P] Vérifier SC-009 dans `apps/game/tests/e2e/mobile.spec.ts` : sur une fenêtre d'affichage de **360 × 640 px**, les 36 cases de la grille sont visibles **sans défilement ni zoom**, le corps de texte fait **au moins 16 px** et toute cible interactive **au moins 44 × 44 px**.
-- [ ] T161 [P] Vérifier que le seuil de couverture de `packages/domain` défini en T010 est effectivement atteint et que la porte de T012 échoue quand il ne l'est pas — mesuré sur le domaine **uniquement** : un chiffre mêlant interface et domaine ne veut rien dire.
-- [ ] T162 Vérifier que les **six divergences** de `spec.md` § « Divergences avec le document de conception » sont bien reportées dans `docs/design/conception-du-jeu.md`, et que son journal des modifications les couvre toutes : empreintes L et T à quatre cases et abandon du trois-en-ligne, variantes d'empreinte, plafond de stockage et saturation, énergie, dix obstacles sur trente-six, rôle de chaque ressource.
+- [x] T161 [P] Vérifier que le seuil de couverture de `packages/domain` défini en T010 est effectivement atteint et que la porte de T012 échoue quand il ne l'est pas — mesuré sur le domaine **uniquement** : un chiffre mêlant interface et domaine ne veut rien dire.
+- [x] T162 Vérifier que les **six divergences** de `spec.md` § « Divergences avec le document de conception » sont bien reportées dans `docs/design/conception-du-jeu.md`, et que son journal des modifications les couvre toutes : empreintes L et T à quatre cases et abandon du trois-en-ligne, variantes d'empreinte, plafond de stockage et saturation, énergie, dix obstacles sur trente-six, rôle de chaque ressource.
 - [ ] T163 Exécuter `specs/001-la-planete-mere/quickstart.md` de bout en bout sur une machine propre, dont les **trois tests qu'aucun raisonnement ne remplace** — concurrence, idempotence, autorisation dans la transaction — et consigner tout écart constaté.
 
 ---
