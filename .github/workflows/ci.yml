@@ -66,6 +66,16 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
 
+      # **La compilation est une condition d'exécution, pas une porte.**
+      # `dependency-cruiser` résout les paquets de l'espace de travail par leur
+      # champ `exports`, qui pointe sur `dist/`. Sans compilation préalable, il
+      # ne trouve rien à résoudre et rend **cent trente-deux** violations
+      # `aucun-module-inexistant` — un échec qui accuse l'architecture pour un
+      # défaut d'outillage, c'est-à-dire le contraire de ce qu'on attend d'une
+      # porte. Le poste de développement compilait sans y penser ; le premier
+      # passage en intégration continue l'a mis au jour.
+      - run: pnpm -w build
+
       # Porte 3 en premier : une frontière franchie invalide tout le reste.
       - name: Porte — frontières de paquets (le principe II, mécaniquement)
         run: pnpm -w boundaries

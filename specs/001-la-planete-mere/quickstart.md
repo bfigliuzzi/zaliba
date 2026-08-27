@@ -111,6 +111,7 @@ Symptôme si l'on oublie : `Could not find a working container runtime strategy`
 
 ```bash
 pnpm install
+pnpm -w build              # **obligatoire** — voir ci-dessous
 pnpm -w typecheck          # tsc --noEmit sur tous les paquets
 pnpm -w boundaries         # dependency-cruiser : le principe II, mécaniquement
 pnpm -w test               # domaine, catalogues, contrats
@@ -118,6 +119,15 @@ pnpm -w test:integration   # Testcontainers : concurrence, idempotence, autorisa
 pnpm -w dev                # apps/api et apps/game
 pnpm -w e2e                # Playwright + axe-core
 ```
+
+**`build` n'est pas une commodité, c'est une condition.** Les applications et
+`dependency-cruiser` résolvent les paquets de l'espace de travail par leur champ
+`exports`, qui pointe sur `dist/`. Sans compilation, `boundaries` rend cent
+trente-deux violations `aucun-module-inexistant`, et une fonction de domaine
+ajoutée reste invisible aux tests de composant — le symptôme est
+`X is not a function`, qui n'accuse jamais sa cause. Sur un poste où l'on a
+compilé une fois, l'oubli ne se voit pas ; il s'est vu au premier passage en
+intégration continue.
 
 **L'ordre compte pour un diagnostic rapide.** `boundaries` échoue avant les tests
 si une frontière de paquet a été franchie : c'est une erreur d'architecture, pas
