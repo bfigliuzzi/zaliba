@@ -6,6 +6,7 @@ import {
   applyEffects,
   DEFAULT_CATALOGS,
   decideBuild,
+  decideClear,
   decideUpgrade,
   emptySnapshot,
   grains,
@@ -118,6 +119,9 @@ const build = (snapshot: PlanetSnapshot, overrides: Record<string, unknown> = {}
 const upgrade = (snapshot: PlanetSnapshot, buildingId = BUILDING_ID) =>
   decideUpgrade(state(snapshot), { kind: 'upgrade', workId: WORK_ID, buildingId }, CATALOGS)
 
+const clear = (snapshot: PlanetSnapshot, cell: { x: number; y: number }) =>
+  decideClear(state(snapshot), { kind: 'clear', workId: WORK_ID, cell }, CATALOGS)
+
 /**
  * Un refus **réel** par code publié.
  *
@@ -135,6 +139,8 @@ const PROVOCATIONS = {
   'building-not-found': () => upgrade({ ...fresh(), buildings: [MINE] }, ABSENT_ID),
   'max-level-reached': () =>
     upgrade({ ...fresh(), buildings: [{ ...MINE, level: BUILDINGS.mine.maxLevel }] }),
+  /** (5,5) est libre dans la disposition du Berceau : rien à déblayer. */
+  'cell-not-obstructed': () => clear(fresh(), { x: 5, y: 5 }),
 } as const satisfies Record<(typeof REFUSAL_CODES_V1)[number], () => unknown>
 
 describe('le domaine et le contrat nomment les mêmes motifs', () => {

@@ -32,6 +32,13 @@ const WELL_FORMED: Readonly<Record<(typeof WORK_INTENT_NATURES_V1)[number], obje
    * qui doit rester complète.
    */
   upgrade: { nature: 'upgrade', buildingId: '88888888-8888-4888-8888-888888888888' },
+  /**
+   * Une case, et rien d'autre (FR-044). Ni le résultat, ni le type d'obstacle :
+   * les deux sont dérivés de la disposition du catalogue moins les cases déjà
+   * déblayées, et les laisser proposer ferait du contenu de la planète un champ
+   * de formulaire.
+   */
+  clear: { nature: 'clear', x: 3, y: 2 },
 }
 
 /**

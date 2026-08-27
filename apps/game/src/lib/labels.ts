@@ -20,6 +20,23 @@ export const RESOURCE_LABELS: Readonly<Record<ResourceId, string>> = {
   'bave-etoiles': 'Bave d’étoiles',
 }
 
+/**
+ * Les gisements, nommés par le **vocabulaire du jeu** et non par leur ressource.
+ *
+ * « Veine », « geyser », « récif » : ce sont les mots du document de conception
+ * § 1, et ils ne sont pas de la décoration. Un joueur qui lit « geyser de Jus »
+ * apprend que ce gisement se nomme, donc qu'il existe un vocabulaire à connaître ;
+ * « gisement de Jus » lui aurait fait croire à une catégorie interchangeable.
+ * L'aperçu du déblaiement en dépend directement — il annonce ce que le joueur
+ * achète —, et la grille emploie les mêmes mots pour que ce soit le même jeu des
+ * deux côtés.
+ */
+export const DEPOSIT_LABELS: Readonly<Record<ResourceId, string>> = {
+  camelote: 'veine de Camelote',
+  jus: 'geyser de Jus',
+  'bave-etoiles': 'récif de Bave d’étoiles',
+}
+
 export const OBSTACLE_LABELS: Readonly<Record<ObstacleId, string>> = {
   eboulis: 'éboulis',
   rocher: 'rocher',
@@ -81,9 +98,7 @@ export function describeCell(cell: CellView): string {
         : 'libre'
 
   const deposit =
-    cell.depositOf === null
-      ? ''
-      : `, gisement de ${RESOURCE_LABELS[cell.depositOf] ?? cell.depositOf}`
+    cell.depositOf === null ? '' : `, ${DEPOSIT_LABELS[cell.depositOf] ?? cell.depositOf}`
 
   return `${describePosition(cell)} : ${state}${deposit}`
 }

@@ -1283,6 +1283,33 @@
                       "nature"
                     ],
                     "type": "object"
+                  },
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "nature": {
+                        "enum": [
+                          "clear"
+                        ],
+                        "type": "string"
+                      },
+                      "x": {
+                        "maximum": 15,
+                        "minimum": 0,
+                        "type": "integer"
+                      },
+                      "y": {
+                        "maximum": 15,
+                        "minimum": 0,
+                        "type": "integer"
+                      }
+                    },
+                    "required": [
+                      "nature",
+                      "x",
+                      "y"
+                    ],
+                    "type": "object"
                   }
                 ]
               }

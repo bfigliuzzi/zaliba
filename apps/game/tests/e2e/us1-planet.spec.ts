@@ -35,11 +35,19 @@ const OBSTRUCTED = [
   [2, 4],
 ] as const
 
-/** Les trois gisements affleurants. */
+/**
+ * Les trois gisements affleurants, **et le nom que le jeu leur donne**.
+ *
+ * « Veine », « geyser », « récif » : le vocabulaire du document de conception § 1,
+ * arrivé dans les libellés avec US5 — dont l'aperçu de déblaiement doit annoncer
+ * ce qu'il révèle. Vérifier le nom exact plutôt que le mot « gisement » rend ce
+ * test plus fort : il constate que la case (1,1) porte un *geyser*, donc que le
+ * joueur sait qu'un puits y va, et non une mine.
+ */
 const DEPOSITS = [
-  [0, 4, 'camelote'],
-  [1, 1, 'jus'],
-  [4, 4, 'bave-etoiles'],
+  [0, 4, 'camelote', 'veine de Camelote'],
+  [1, 1, 'jus', 'geyser de Jus'],
+  [4, 4, 'bave-etoiles', 'récif de Bave d’étoiles'],
 ] as const
 
 test.describe('un joueur neuf reçoit son Berceau', () => {
@@ -79,11 +87,11 @@ test.describe('un joueur neuf reçoit son Berceau', () => {
   test('les trois gisements sont à leur place (FR-004)', async ({ page }) => {
     await signUp(page)
 
-    for (const [x, y] of DEPOSITS) {
+    for (const [x, y, , label] of DEPOSITS) {
       const cell = page.getByRole('gridcell', {
-        name: new RegExp(`Colonne ${x + 1}, rangée ${y + 1}.*gisement`, 'i'),
+        name: new RegExp(`Colonne ${x + 1}, rangée ${y + 1}.*${label}`, 'i'),
       })
-      await expect(cell, `gisement en (${x},${y})`).toHaveCount(1)
+      await expect(cell, `${label} en (${x},${y})`).toHaveCount(1)
     }
     await expect(page.locator('[role="gridcell"][data-deposit]')).toHaveCount(3)
   })

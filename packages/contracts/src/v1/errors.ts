@@ -80,8 +80,8 @@ export function categoryOfStatus(status: number): ErrorCategory | null {
  * L'union **fermée** des motifs de refus de règle de jeu.
  *
  * Elle s'enrichit tranche par tranche : US2 a apporté les six premiers, US4
- * `building-not-found` et `max-level-reached` ; US5 apportera
- * `cell-not-obstructed`, US6 `building-is-work-target`.
+ * `building-not-found` et `max-level-reached`, US5 `cell-not-obstructed` ; US6
+ * apportera `building-is-work-target`.
  *
  * Le caractère **fermé** est ce qui satisfait FR-013, FR-034 et SC-007 : ces
  * exigences demandent le *motif exact*, qu'un booléen ou un message libre ne
@@ -113,6 +113,16 @@ export const REFUSAL_CODES_V1 = [
   'building-not-found',
   /** Le plafond de niveau du catalogue est atteint (FR-040). */
   'max-level-reached',
+  /**
+   * La case visée par un déblaiement ne porte pas d'obstacle.
+   *
+   * Libre, occupée, ou **déjà déblayée** : les trois donnent le même motif, et
+   * c'est juste — le joueur n'a rien à déblayer, et la raison qui l'y aurait
+   * autorisé est absente. C'est un refus de **règle de jeu** et non une requête
+   * malformée : le schéma accepte n'importe quelle coordonnée bornée, et rien en
+   * lui ne peut dire ce qu'une case porte.
+   */
+  'cell-not-obstructed',
 ] as const satisfies readonly string[]
 
 export type RefusalCodeV1 = (typeof REFUSAL_CODES_V1)[number]
@@ -194,6 +204,25 @@ export const RefusalDetailsV1 = {
     .object({
       buildingId: z.string().uuid(),
       maxLevel: z.number().int().min(1).max(30),
+    })
+    .strict(),
+
+  /**
+   * La case, **reprise telle quelle**.
+   *
+   * Le rendre permet au client de savoir *laquelle* de ses lectures est périmée,
+   * ce qui compte dès qu'un second onglet est ouvert : le déblaiement fait
+   * ailleurs explique le refus, et le client peut rafraîchir sa grille plutôt que
+   * de laisser le joueur réessayer sur une case qui n'est plus obstruée.
+   *
+   * Le type d'obstacle **n'est pas** dans le détail, et c'est délibéré : il n'y en
+   * a plus. Nommer celui qui *était* là raconterait le passé de la case au lieu de
+   * dire son état.
+   */
+  'cell-not-obstructed': z
+    .object({
+      x: z.number().int().min(0).max(15),
+      y: z.number().int().min(0).max(15),
     })
     .strict(),
 } as const satisfies Record<RefusalCodeV1, z.ZodTypeAny>

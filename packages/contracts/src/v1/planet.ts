@@ -192,14 +192,14 @@ export type CellV1 = z.infer<typeof CellV1>
  * Le sens de l'élargissement est celui que le versionnement autorise : élargir
  * une entrée est **compatible** (README § 2), la resserrer ne l'est pas. Déclarer
  * les quatre natures d'avance nous interdirait d'en retirer une ; les déclarer au
- * fur et à mesure ne coûte rien. `upgrade` est arrivée avec US4 ; `clear` arrive
- * avec US5, `demolish` avec US6.
+ * fur et à mesure ne coûte rien. `upgrade` est arrivée avec US4, `clear` avec
+ * US5 ; `demolish` arrive avec US6.
  *
- * **Pourquoi deux natures ici, alors que le serveur en honore deux aussi.** La
+ * **Pourquoi trois natures ici, alors que le serveur en honore trois aussi.** La
  * règle est celle-là : une nature n'entre dans cette liste que quand une route
  * sait l'exécuter. C'est ce qui distingue un contrat d'une intention de contrat.
  */
-export const WORK_INTENT_NATURES_V1 = ['build', 'upgrade'] as const
+export const WORK_INTENT_NATURES_V1 = ['build', 'upgrade', 'clear'] as const
 
 export const WorkIntentV1 = z.discriminatedUnion('nature', [
   z
@@ -228,6 +228,26 @@ export const WorkIntentV1 = z.discriminatedUnion('nature', [
    * formulaire.
    */
   z.object({ nature: z.literal('upgrade'), buildingId: uuid }).strict(),
+
+  /**
+   * **Une case, et rien d'autre** — la forme mécanique de FR-044.
+   *
+   * Ni `reveals`, ni `depositOf`, ni `obstacleId`. « Le résultat d'un déblaiement
+   * est déterminé par le type d'obstacle, et jamais tiré au sort » n'est donc pas
+   * une vérification à écrire côté serveur : c'est un champ à ne pas créer ici.
+   * Personne ne peut réclamer un geyser sous un éboulis, parce qu'il n'y a aucun
+   * endroit pour le réclamer.
+   *
+   * Le type d'obstacle est **dérivé** de la disposition du catalogue moins les
+   * cases déjà déblayées, jamais annoncé : le laisser proposer ferait du contenu
+   * de la planète un champ de formulaire.
+   *
+   * `x` et `y` à plat, et non un objet `cell` : c'est la forme que `PlacedBuilding`
+   * emploie déjà pour son ancre (`anchorX`, `anchorY`), et une seconde convention
+   * de coordonnées dans le même contrat obligerait chaque client à savoir laquelle
+   * s'applique où.
+   */
+  z.object({ nature: z.literal('clear'), x: coordinate, y: coordinate }).strict(),
 ])
 
 export type WorkIntentV1 = z.infer<typeof WorkIntentV1>

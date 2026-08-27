@@ -51,9 +51,16 @@ describe('l’annonce porte les six informations de FR-059', () => {
     expect(spoken).toContain('Colonne 1, rangée 5')
   })
 
-  it('dit le contenu de la case', () => {
+  /**
+   * Le gisement est nommé par le **vocabulaire du jeu** — « veine de Camelote »,
+   * et non « gisement de Camelote » (document de conception § 1). Le changement est
+   * arrivé avec US5, dont l'aperçu doit annoncer « geyser de Jus » : la table de
+   * libellés est unique, et deux mots pour une seule notion feraient énoncer au
+   * lecteur d'écran un nom que l'aperçu n'emploie pas.
+   */
+  it('dit le contenu de la case, dans le vocabulaire du jeu', () => {
     expect(spoken).toMatch(/libre/i)
-    expect(spoken).toMatch(/gisement de Camelote/i)
+    expect(spoken).toMatch(/veine de Camelote/i)
   })
 
   it('dit l’empreinte courante, par son nom et non par son identifiant', () => {

@@ -1,3 +1,4 @@
+import type { ObstacleId } from '@zaliba/catalogs'
 import type { Catalogs } from '../../kernel/catalogs.js'
 import type { BuildingId, ResourceAmount } from '../../kernel/effects.js'
 import {
@@ -21,6 +22,16 @@ import {
   secondsUntilAffordable,
   shortfallOf,
 } from './build.js'
+import {
+  type ClearCommand,
+  type ClearRefusal,
+  type ClearReveal,
+  clearCost,
+  clearDuration,
+  clearRefusalOf,
+  clearReveals,
+  clearTargetOf,
+} from './clear.js'
 import { workInProgress } from './refusals.js'
 import {
   type UpgradeCommand,
@@ -174,6 +185,89 @@ export interface UpgradePreview extends PreviewTerms {
 export type UpgradePreviewResult =
   | { readonly outcome: 'accepted'; readonly preview: UpgradePreview }
   | { readonly outcome: 'refused'; readonly refusal: UpgradeRefusal }
+
+/**
+ * Ce qu'un déblaiement changerait, une fois achevé (FR-042, FR-043).
+ *
+ * **`reveals` est le champ qui porte toute la tranche.** Les trois autres
+ * mécaniques annoncent un effet que le joueur connaît d'avance — un bâtiment, un
+ * niveau, un remboursement ; celle-ci annonce ce qu'il ne peut pas deviner. Le
+ * taire ferait du déblaiement un pari, et US5 tout entière est là pour qu'il n'en
+ * soit pas un.
+ */
+export interface ClearPreviewEffect {
+  readonly kind: 'clear'
+  readonly cell: { readonly x: number; readonly y: number }
+  /**
+   * Le type d'obstacle, **nommé**.
+   *
+   * C'est lui qui rend la planète lisible : qui a déblayé un `filon-enfoui` sait
+   * ce que le prochain lui donnera. L'écran le publie pour que la règle
+   * s'apprenne en jouant, au lieu de s'apprendre par surprise.
+   */
+  readonly obstacleId: ObstacleId
+  /** Terrain nu, ou gisement nommé — jamais « peut-être » (FR-044). */
+  readonly reveals: ClearReveal
+}
+
+export interface ClearPreview extends PreviewTerms {
+  readonly effect: ClearPreviewEffect
+}
+
+export type ClearPreviewResult =
+  | { readonly outcome: 'accepted'; readonly preview: ClearPreview }
+  | { readonly outcome: 'refused'; readonly refusal: ClearRefusal }
+
+/**
+ * L'aperçu d'un déblaiement.
+ *
+ * Refuse pour les mêmes motifs que `decideClear`, **sauf** le manque de
+ * ressources : il n'y a rien à prévisualiser d'une case qui ne porte pas
+ * d'obstacle, alors qu'il y a tout à dire d'un déblaiement qu'on ne peut pas
+ * encore payer (FR-035, SC-007). C'est précisément le cas où le joueur a besoin
+ * du chiffre : savoir qu'une poche scellée rend un geyser de Jus est ce qui lui
+ * fait mettre de côté deux cents Camelote.
+ *
+ * Les contrôles ne sont pas réécrits ici : ils sont **le même code** que
+ * l'arbitrage (R8). Une seconde liste finirait par diverger d'un cas, et le cas
+ * divergent serait un aperçu qui promet ce que le serveur refuse.
+ *
+ * **Aucun effet énergétique n'est annoncé, et il n'y en a aucun** : un
+ * déblaiement ne pose ni ne retire de bâtiment, donc ni la production ni la
+ * consommation ne bougent. Publier un champ toujours égal au rapport courant
+ * ferait chercher au joueur un effet qui n'existe pas.
+ */
+export function previewClear(
+  state: ProjectedState,
+  command: ClearCommand,
+  catalogs: Catalogs,
+): ClearPreviewResult {
+  const refusal = clearRefusalOf(state, command)
+  if (refusal !== null) return { outcome: 'refused', refusal }
+
+  const target = clearTargetOf(state, command.cell)
+  const cost = clearCost(target.obstacleId, catalogs)
+  const shortfall = shortfallOf(state, cost)
+  const duration = clearDuration(target.obstacleId, catalogs)
+
+  return {
+    outcome: 'accepted',
+    preview: {
+      cost,
+      duration,
+      dueAt: addDuration(state.at, duration),
+      shortfall: shortfall.length > 0 ? shortfall : null,
+      secondsUntilAffordable:
+        shortfall.length > 0 ? secondsUntilAffordable(state, shortfall, cost) : null,
+      effect: {
+        kind: 'clear',
+        cell: { x: command.cell.x, y: command.cell.y },
+        obstacleId: target.obstacleId,
+        reveals: clearReveals(target.obstacleId, catalogs),
+      },
+    },
+  }
+}
 
 /**
  * L'aperçu d'une pose.

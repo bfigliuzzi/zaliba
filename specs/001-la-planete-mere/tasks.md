@@ -610,16 +610,68 @@ ouverte. ✅ **Franchi le 2026-08-26.**
 **Test indépendant** : déblayer une case et vérifier que ce qui apparaît
 correspond exactement à ce qui était annoncé.
 
-- [ ] T126 [US5] Écrire le parcours Playwright dans `apps/game/tests/e2e/us5-clear.spec.ts` : sélectionner (3,2) **au clavier seul**, vérifier que l'aperçu annonce « geyser de Jus », payer, atteindre l'échéance, vérifier que la case est libre et porte un geyser de Jus ; passer `axe-core` sans écart. Observer l'échec.
-- [ ] T127 [P] [US5] Écrire l'invariant **I-8** dans `packages/domain/tests/modules/construction/clear-invariants.test.ts` : une case déblayée ne redevient **jamais** obstruée — aucun chemin d'écriture ne le permet (FR-045). Observer l'échec.
-- [ ] T128 [P] [US5] Écrire les tests de déblaiement dans `packages/domain/tests/modules/construction/clear.test.ts` : coût, durée et résultat lus du type d'obstacle et annoncés avant paiement (FR-042, FR-043) ; **déterminisme** — deux déblaiements de la même case dans le même état donnent le même résultat, aucun tirage au sort (FR-044, US5-3) ; refus `cell-not-obstructed` sur une case libre. Observer l'échec.
-- [ ] T129 [US5] Implémenter `packages/domain/src/modules/construction/clear.ts` : effets `debit-resources` et `schedule-work` au lancement, `clear-cell` à l'échéance.
-- [ ] T130 [US5] Étendre `packages/domain/src/modules/construction/preview.ts` avec la variante `clear` : `reveals: 'bare-ground' | { depositOf: ResourceId }`.
-- [ ] T131 [US5] Étendre `packages/contracts/src/v1/planet.ts` avec `{ nature: 'clear', x, y }` et `packages/contracts/src/v1/errors.ts` avec `cell-not-obstructed` (`{ x, y }`).
-- [ ] T132 [US5] Implémenter l'écriture de `game.cleared_cells` dans `packages/db/src/repository/cells.ts` — l'état obstrué d'une case est la disposition du catalogue **moins** ces lignes, jamais une table de 36 lignes par planète.
-- [ ] T133 [US5] Implémenter `apps/game/src/features/work/ClearPanel.tsx` : coût, durée et **nature exacte du résultat** affichés avant tout paiement, accessibles au clavier depuis le curseur de grille.
+- [x] T126 [US5] Écrire le parcours Playwright dans `apps/game/tests/e2e/us5-clear.spec.ts` : sélectionner (3,2) **au clavier seul**, vérifier que l'aperçu annonce « geyser de Jus », payer, atteindre l'échéance, vérifier que la case est libre et porte un geyser de Jus ; passer `axe-core` sans écart. Observer l'échec.
+- [x] T127 [P] [US5] Écrire l'invariant **I-8** dans `packages/domain/tests/modules/construction/clear-invariants.test.ts` : une case déblayée ne redevient **jamais** obstruée — aucun chemin d'écriture ne le permet (FR-045). Observer l'échec.
+- [x] T128 [P] [US5] Écrire les tests de déblaiement dans `packages/domain/tests/modules/construction/clear.test.ts` : coût, durée et résultat lus du type d'obstacle et annoncés avant paiement (FR-042, FR-043) ; **déterminisme** — deux déblaiements de la même case dans le même état donnent le même résultat, aucun tirage au sort (FR-044, US5-3) ; refus `cell-not-obstructed` sur une case libre. Observer l'échec.
+- [x] T129 [US5] Implémenter `packages/domain/src/modules/construction/clear.ts` : effets `debit-resources` et `schedule-work` au lancement, `clear-cell` à l'échéance.
+- [x] T130 [US5] Étendre `packages/domain/src/modules/construction/preview.ts` avec la variante `clear` : `reveals: 'bare-ground' | { depositOf: ResourceId }`.
+- [x] T131 [US5] Étendre `packages/contracts/src/v1/planet.ts` avec `{ nature: 'clear', x, y }` et `packages/contracts/src/v1/errors.ts` avec `cell-not-obstructed` (`{ x, y }`).
+- [x] T132 [US5] Implémenter l'écriture de `game.cleared_cells` dans `packages/db/src/repository/cells.ts` — l'état obstrué d'une case est la disposition du catalogue **moins** ces lignes, jamais une table de 36 lignes par planète.
+- [x] T133 [US5] Implémenter `apps/game/src/features/work/ClearPanel.tsx` : coût, durée et **nature exacte du résultat** affichés avant tout paiement, accessibles au clavier depuis le curseur de grille.
 
 **Point de contrôle** : le premier antidote à la grille figée est livré.
+✅ **Franchi le 2026-08-27.**
+
+### Divergences constatées à l'exécution
+
+1. **T132 était déjà faite depuis la phase 4.** `syncClearedCells` existait, la
+   contrainte `works_target_matches_nature` couvrait déjà la nature `clear`, et le
+   mapping de la cible en colonnes plates aussi. La tâche n'a donc rien écrit —
+   elle a fait **éprouver** ce qui existait, par un test d'intégration sur un vrai
+   PostgreSQL. Une porte jamais vue échouer ne prouve rien : la contrainte n'avait
+   jamais reçu de ligne `clear` écrite par l'application.
+2. **Le câblage manquait encore entre deux tâches voisines**, à l'identique de la
+   phase 6 : T131 déclare la nature au contrat, T126 exige le parcours complet, et
+   aucune tâche ne dit qui l'exécute. Les deux `switch` de `POST /works` et la
+   table de libellés de refus ont été étendus — trois endroits qu'aucune tâche ne
+   nommait, et que la compilation exige puisque les `switch` n'ont pas de branche
+   par défaut.
+3. **`cell-not-obstructed` ne couvre pas la case hors grille**, et
+   `placement-out-of-grid` a été **réemployé** plutôt que doublé. Une case absente
+   de la planète n'a aucun état à examiner : dire d'elle qu'elle « n'est pas
+   obstruée » serait inventer une réponse, exactement comme `grid.ts` refuse de
+   dire d'elle qu'elle est obstruée. Aucun code nouveau n'a été ajouté à l'union
+   au-delà de celui que la tâche prévoyait.
+4. **Le parcours a imposé un vocabulaire, et le vocabulaire a bougé.** T126 exige
+   que l'aperçu annonce « **geyser** de Jus » — le mot du document de conception
+   § 1. Or `labels.ts` ne portait que « gisement de Jus », et il n'admet qu'**une**
+   table de correspondance : deux mots pour une notion feraient énoncer au lecteur
+   d'écran un nom que l'aperçu n'emploie pas. `DEPOSIT_LABELS` a donc été
+   introduite — veine, geyser, récif — et employée aussi par `describeCell`. Trois
+   tests ont été portés avec elle, dont un parcours d'US1 qui en devient **plus
+   fort** : il vérifie désormais que (1,1) porte un *geyser*, donc que le joueur
+   sait qu'un puits y va.
+5. **L'échéance de la poche scellée a été atteinte par l'horloge du navigateur**,
+   et non attendue. Deux mille sept cents secondes — quarante-cinq minutes — et
+   c'est le seul obstacle de la disposition qui révèle un geyser : l'attendre
+   aurait été renoncer à éprouver le sujet de la tranche. `page.clock` de
+   Playwright avance la lecture d'une horloge, jamais un état de jeu ; l'achèvement
+   est appliqué par la projection **locale** à `dueAt`, sans un appel réseau
+   (FR-031, FR-032, R3, R8), et le serveur ne l'apprendra qu'à la prochaine
+   mutation. Le cas passe en **six secondes** au lieu de quarante-cinq minutes.
+   L'éboulis, lui, reste attendu en temps réel : trois cents secondes, le même
+   prix assumé qu'US2 et US4.
+6. **Un test d'intégration s'est trompé, et le code avait raison.** Il attendait
+   deux lignes dans `cleared_cells` après un refus. Un refus **annule la
+   transaction** : le second déblaiement échu avait bien été appliqué en mémoire —
+   sans quoi le refus n'aurait pas pu être calculé — mais rien n'a été écrit
+   (FR-031). L'attente a été corrigée, et l'énoncé y a gagné : c'est maintenant la
+   démonstration la plus nette qu'un refus ne consolide pas.
+7. **`structuredClone` n'existe pas pour `packages/domain`.** Le paquet se compile
+   sans les types du navigateur ni ceux de Node — c'est ce qui le rend éprouvable
+   sans serveur —, et le typecheck l'a dit là où les tests passaient. Copie par
+   sérialisation : l'instantané n'est fait que de nombres, de chaînes et d'objets
+   plats.
 
 ---
 

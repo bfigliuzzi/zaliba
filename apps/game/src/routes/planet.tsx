@@ -5,6 +5,7 @@ import type {
   BuildCommand,
   BuildingView,
   CellView,
+  ClearPreviewResult,
   PreviewResult,
   UpgradePreviewResult,
 } from '@zaliba/domain'
@@ -13,6 +14,7 @@ import {
   layoutOf,
   placementCells,
   previewBuild,
+  previewClear,
   previewUpgrade,
   validatePlacement,
 } from '@zaliba/domain'
@@ -28,6 +30,7 @@ import { EnergyPanel } from '../features/resources/EnergyPanel.js'
 import { ResourcePanel } from '../features/resources/ResourcePanel.js'
 import { useExtrapolatedState } from '../features/resources/useExtrapolatedState.js'
 import { BuildPanel, type BuildSelection } from '../features/work/BuildPanel.js'
+import { ClearPanel } from '../features/work/ClearPanel.js'
 import { CurrentWork } from '../features/work/CurrentWork.js'
 import { RefusalNotice } from '../features/work/RefusalNotice.js'
 import { UpgradePanel } from '../features/work/UpgradePanel.js'
@@ -59,9 +62,11 @@ import { rootRoute } from './root.js'
  * grille. Une grille qui détiendrait son curseur obligerait chacune à en tenir une
  * copie, c'est-à-dire à afficher un fantôme à un endroit et à poser à un autre.
  *
- * **Le curseur sert les deux mécaniques, et c'est ce qui rend US4 accessible sans
- * rien ajouter** (FR-058, SC-004) : une case libre arme une pose, une case occupée
- * désigne son bâtiment. Le joueur apprend un seul modèle de navigation.
+ * **Le curseur sert les trois mécaniques, et c'est ce qui rend US4 et US5
+ * accessibles sans rien ajouter** (FR-058, SC-004) : une case libre arme une pose,
+ * une case occupée désigne son bâtiment, une case obstruée arme un déblaiement.
+ * Le joueur apprend un seul modèle de navigation, et les trois ne se disputent
+ * jamais — une case ne peut être à la fois obstruée et occupée.
  */
 export const planetRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -121,7 +126,7 @@ export function PlanetScreen({ snapshot, gateway, onSnapshot }: PlanetScreenProp
    * joueur a besoin de savoir lequel des deux il a engagé — et `aria-busy` sur un
    * bouton qu'on n'a pas pressé est une information fausse.
    */
-  const [pending, setPending] = useState<'build' | 'upgrade' | null>(null)
+  const [pending, setPending] = useState<'build' | 'upgrade' | 'clear' | null>(null)
 
   /**
    * Choisir un type **présélectionne sa première variante**.
@@ -212,6 +217,24 @@ export function PlanetScreen({ snapshot, gateway, onSnapshot }: PlanetScreenProp
     )
   }, [upgradeTarget, state])
 
+  /**
+   * L'aperçu de déblaiement, calculé **localement** par le code du serveur (R8).
+   *
+   * Il est armé par la **même** position de curseur que l'amélioration, et les deux
+   * ne se disputent jamais : une case porte un obstacle ou un bâtiment, jamais les
+   * deux (I-5 et la définition de `CellState`). Le joueur apprend donc un seul
+   * modèle de navigation pour trois mécaniques — c'est ce qui rend US5 accessible
+   * au clavier sans rien ajouter (FR-058, SC-004).
+   */
+  const clearPreview = useMemo((): ClearPreviewResult | null => {
+    if (cell === undefined) return null
+    return previewClear(
+      state,
+      { kind: 'clear', workId: 'apercu-local', cell: { x: cell.x, y: cell.y } },
+      DEFAULT_CATALOGS,
+    )
+  }, [cell, state])
+
   const announcement = useMemo(() => {
     if (cell === undefined) return null
     return {
@@ -244,7 +267,10 @@ export function PlanetScreen({ snapshot, gateway, onSnapshot }: PlanetScreenProp
    * précisément le chemin qu'on éprouve le moins.
    */
   const launch = useCallback(
-    async (kind: 'build' | 'upgrade', intent: Parameters<PlanetGateway['startWork']>[0]) => {
+    async (
+      kind: 'build' | 'upgrade' | 'clear',
+      intent: Parameters<PlanetGateway['startWork']>[0],
+    ) => {
       setPending(kind)
       setRefusal(null)
       try {
@@ -301,6 +327,26 @@ export function PlanetScreen({ snapshot, gateway, onSnapshot }: PlanetScreenProp
     await launch('upgrade', { nature: 'upgrade', buildingId: upgradeTarget.id })
   }, [upgradeTarget, pending, upgradePreview, launch])
 
+  /**
+   * Le lancement d'un déblaiement.
+   *
+   * Même discipline que les deux autres : un **refus local** est traité sans appel
+   * réseau, l'aperçu employant le même code que le serveur (R8). La sélection de
+   * construction n'est pas remise à zéro — un déblaiement ne la consomme pas, et
+   * la vider ferait perdre au joueur un choix qu'il n'a pas défait.
+   */
+  const confirmClear = useCallback(async () => {
+    if (cell === undefined || pending !== null) return
+
+    if (clearPreview !== null && clearPreview.outcome === 'refused') {
+      const { code, ...details } = clearPreview.refusal
+      setRefusal(new PlanetRefusal(409, code, 'Ce déblaiement est refusé.', details))
+      return
+    }
+
+    await launch('clear', { nature: 'clear', x: cell.x, y: cell.y })
+  }, [cell, pending, clearPreview, launch])
+
   const handleConfirm = useCallback(
     (_cell: CellView) => {
       void confirm()
@@ -346,6 +392,19 @@ export function PlanetScreen({ snapshot, gateway, onSnapshot }: PlanetScreenProp
         preview={upgradePreview}
         pending={pending === 'upgrade'}
         onConfirm={() => void confirmUpgrade()}
+      />
+
+      {/*
+        Le déblaiement après l'amélioration, et pour la même raison qu'elle suit la
+        grille : sa cible est la case du curseur. Les deux panneaux sont armés par
+        la même position et ne se disputent jamais — une case porte un obstacle ou
+        un bâtiment, jamais les deux.
+      */}
+      <ClearPanel
+        cell={cell ?? null}
+        preview={clearPreview}
+        pending={pending === 'clear'}
+        onConfirm={() => void confirmClear()}
       />
 
       <ResourcePanel holdings={state.holdings} at={state.at} />
