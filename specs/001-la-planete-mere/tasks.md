@@ -960,7 +960,45 @@ cause que T142.
   demanderait un projet de test sur la documentation, qu'aucune tâche ne prévoit.
 - **T163 ⛔ bloquée** — même cause.
 
-### Environnement : ce qui bloque les cinq tâches restantes
+### Reprise du 2026-08-27, après remise en route de la pile
+
+La pile a été remise en route — `docker rm -f supabase_auth_zaliba` pour lever une tâche
+containerd orpheline, puis `supabase stop && supabase start`. **Les clés n'ont pas
+changé** : `signing_keys.json` était en place, et la clé `anon` du `.env` reste valide.
+
+**Ce qui a été gagné :**
+
+- **La porte d'intégration est vérifiée sur le code final** : 150 tests, 10 fichiers,
+  79 s. Le run précédent avait échoué sur un démon Docker saturé — 108 cas sautés faute
+  de conteneur, six fichiers en dépassement de délai —, ce qui n'était pas un défaut du
+  code : la relance après remise en route passe sans rien changer.
+- **T142 est éprouvée à 12 cas sur 14.** Le seul échec venait du test lui-même : il
+  comparait un plafond à « deux fois la capacité ajoutée », ce qui ne veut rien dire —
+  le plafond de base de la Camelote vaut déjà plus. L'assertion dit maintenant ce
+  qu'elle voulait dire : les trois plafonds sont **exactement** ceux relevés avant la
+  sélection. ⚠️ **Cette correction n'a pas pu être revérifiée** : au moment de la
+  relance, l'inscription ne répondait plus.
+
+**Ce qui a cédé, et comment le reconnaître.** L'authentification s'est remise à échouer,
+avec une signature précise dans ses journaux :
+
+```
+error | 500: Database error finding user
+error | 504: Processing this request timed out, please retry after a moment.
+info  | mailer: reloaded template type: …        ← GoTrue vient de redémarrer
+```
+
+GoTrue attend la base, dépasse son délai, meurt, revient. La base, elle, **répond en
+direct** (`psql -h 127.0.0.1 -p 54322` rend ses 639 comptes) : ce n'est donc ni le
+schéma, ni les migrations, ni un plafond d'inscriptions. C'est l'**entrée-sortie du
+démon** — le symptôme visible côté client est un bouton « Inscription en cours… » resté
+désarmé, la requête toujours en vol.
+
+Réduire Playwright à un seul worker et un seul profil (`--workers=1 --project=bureau`)
+n'y change rien : la charge n'est pas la concurrence des parcours, c'est l'usure du
+démon lui-même. **Seul un redémarrage de Rancher Desktop en vient à bout.**
+
+### Environnement : ce qui bloque les tâches restantes
 
 **Au 2026-08-27, la pile Supabase locale ne répond plus.** Le service
 d'authentification (`supabase_auth_zaliba`) a reçu un arrêt propre et n'est pas

@@ -67,6 +67,14 @@ test.describe('l’aperçu annonce l’effet sur les plafonds avant paiement (US
   test('plafonds résultants, capacité ajoutée et saturation repoussée', async ({ page }) => {
     await signUp(page)
 
+    // Les plafonds **avant** toute sélection : c'est à eux qu'on comparera, et non à
+    // une constante. Le premier essai de ce test comparait le plafond à « deux fois la
+    // capacité ajoutée », ce qui ne voulait rien dire — le plafond de base de la
+    // Camelote vaut déjà plus que cela, et l'assertion échouait sans rien éprouver.
+    const before = Object.fromEntries(
+      await Promise.all(RESOURCES.map(async (id) => [id, await capOf(page, id)] as const)),
+    )
+
     await page.getByRole('radio', { name: STORE.label }).check()
 
     const preview = buildPreview(page)
@@ -82,10 +90,11 @@ test.describe('l’aperçu annonce l’effet sur les plafonds avant paiement (US
       new RegExp(`camelote:${ADDED_GRAINS}`),
     )
 
-    // Rien n'a été payé : l'annonce est antérieure à la confirmation (FR-035).
+    // **Rien n'a changé** : l'annonce est antérieure à la confirmation (FR-035). Aucun
+    // chantier, et les trois plafonds sont exactement ceux d'avant la sélection.
     await expect(currentWork(page)).toContainText(/aucun chantier/i)
     for (const resourceId of RESOURCES) {
-      expect(await capOf(page, resourceId)).toBeLessThan(ADDED_GRAINS * 2)
+      expect(await capOf(page, resourceId), resourceId).toBe(before[resourceId])
     }
 
     await expectNoAccessibilityViolations(page)
