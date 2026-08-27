@@ -309,6 +309,79 @@ intervalle qui est ici une **mécanique de jeu**, pas une hypothèse théorique.
 
 ---
 
+## 5 bis. Objectifs de performance — machine, charge et relevé
+
+Les objectifs de `plan.md` § « Performance Goals » se **mesurent**, et le relevé est
+consigné ici avec la machine et la charge : un chiffre sans son contexte n'est pas
+reproductible, et un objectif dont on ne sait pas sur quoi il a été atteint n'engage
+personne.
+
+**Ce n'est pas une porte de CI**, et c'est délibéré : un seuil de durée mesuré sur une
+machine partagée échoue par intermittence, et une porte qui échoue au hasard finit par
+être ignorée — donc par ne plus rien garder.
+
+### La machine de référence
+
+| | |
+| --- | --- |
+| Processeur | Apple M1 Pro, 10 cœurs |
+| Mémoire | 16 Gio |
+| Système | macOS 26.6.2 |
+| Node | 24.18.0 (contre 24.19.0 porté par `.nvmrc` — écart consigné en phase 1) |
+| PostgreSQL | 17, provisionné par Supabase local |
+
+### Projection d'une planète — objectif : sous la milliseconde
+
+```sh
+pnpm --filter @zaliba/domain bench
+```
+
+**La charge est choisie pour être la pire** que 001 permette : vingt bâtiments — la
+borne que l'objectif nomme, et plus que ce que trente-six cases peuvent porter —, un
+chantier **échu** qui force la segmentation en deux temps (R3), et trois semaines
+d'écart, la durée que SC-003 nomme.
+
+Relevé du **2026-08-27**, sur dix mille itérations après mille de préchauffage :
+
+| Grandeur | Mesure |
+| --- | --- |
+| Médiane | 0,103 ms |
+| 95ᵉ centile | **0,158 ms** |
+| 99ᵉ centile | 0,216 ms |
+| Maximum | 1,401 ms |
+
+**Objectif atteint**, avec un facteur six de marge au 95ᵉ centile. Le maximum dépasse la
+milliseconde une fois sur dix mille : c'est une pause du ramasse-miettes, pas un coût du
+calcul — et c'est précisément pourquoi le relevé publie des centiles et non le pire cas.
+
+### Joueur inactif — objectif : zéro écriture, zéro calcul
+
+**Tenu par construction, et vérifiable par l'absence.** Il n'existe aucune tâche de
+fond côté serveur : `git grep -nE "setInterval|setTimeout|cron" apps/api/src/` ne rend
+**rien**. Un joueur qui ne joue pas ne déclenche donc aucun travail — sa planète est un
+instantané daté, et rien ne la fait avancer avant sa prochaine requête.
+
+L'absence d'écriture à la lecture est éprouvée séparément, par
+`apps/api/tests/integration/get-planet.test.ts` : un `GET` ne consolide pas, même sur un
+chantier échu depuis trois semaines (FR-031).
+
+### `GET` de l'état — objectif : sous 200 ms au 95ᵉ centile
+
+⚠️ **Non relevé au 2026-08-27.** La mesure demande la pile Supabase locale, dont le
+service d'authentification ne répondait plus à cette date (voir « Environnement » en fin
+de `tasks.md` phase 11). La commande à exécuter, une fois la pile rétablie :
+
+```sh
+# 1 000 requêtes, l'API et la pile locale démarrées, un compte provisionné
+# La clé du porteur s'obtient comme dans le § 3.
+for i in $(seq 1000); do
+  curl -s -o /dev/null -w '%{time_total}\n' \
+    -H "Authorization: Bearer $JETON" http://127.0.0.1:3000/v1/me/planet
+done | sort -n | awk '{a[NR]=$1} END {printf "95e centile : %.3f s\n", a[int(NR*0.95)]}'
+```
+
+---
+
 ## 6. Ce qui n'est pas validé par ce guide, et pourquoi
 
 - **Le rendu des composants** : au titre du principe V, doc de stack §7.7. Ce qui

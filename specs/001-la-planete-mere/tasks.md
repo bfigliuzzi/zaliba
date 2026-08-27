@@ -930,6 +930,70 @@ cause que T142.
 - [x] T162 Vérifier que les **six divergences** de `spec.md` § « Divergences avec le document de conception » sont bien reportées dans `docs/design/conception-du-jeu.md`, et que son journal des modifications les couvre toutes : empreintes L et T à quatre cases et abandon du trois-en-ligne, variantes d'empreinte, plafond de stockage et saturation, énergie, dix obstacles sur trente-six, rôle de chaque ressource.
 - [ ] T163 Exécuter `specs/001-la-planete-mere/quickstart.md` de bout en bout sur une machine propre, dont les **trois tests qu'aucun raisonnement ne remplace** — concurrence, idempotence, autorisation dans la transaction — et consigner tout écart constaté.
 
+### Avancement au 2026-08-27
+
+- **T157 ✅** — instantané d'équilibrage des niveaux 1 à 30 dans
+  `packages/catalogs/tests/snapshots/balance.snap`. Format texte à colonnes fixes, pour
+  qu'un diff montre la colonne qui a changé plutôt que la ligne décalée.
+- **T158 ✅** — export OpenAPI et publication en artefact de CI. Le générateur vit dans
+  `scripts/` et non `src/` : la porte de frontières l'a exigé (voir phase 10, § 6).
+- **T159 ⚠️ à moitié** — la projection est mesurée et **atteint son objectif avec un
+  facteur six de marge** : 0,158 ms au 95ᵉ centile contre 1 ms exigé, sur la charge la
+  pire que 001 permette. Le « joueur inactif à zéro écriture, zéro calcul » est tenu par
+  construction et vérifié par l'absence de toute tâche de fond. **Le `GET` sous 200 ms
+  n'est pas relevé** : il demande la pile locale. Machine, charge, relevé et commande
+  restante sont consignés dans `quickstart.md` § 5 bis — la tâche demandait le § 6, qui
+  parle d'autre chose ; aucune machine de référence n'y était nommée, elle l'est
+  maintenant.
+- **T160 ⚠️ écrit, éprouvé à un cinquième** — `apps/game/tests/e2e/mobile.spec.ts`
+  mesure les trois grandeurs de SC-009 sur le seul profil `mobile`, et **s'abstient**
+  ailleurs : le lancer sur `bureau` mesurerait une fenêtre que SC-009 ne décrit pas, et
+  il passerait pour de mauvaises raisons. Le cas de la page de règles est éprouvé — elle
+  est lisible sans compte, donc sans authentification. Les quatre autres attendent la
+  pile.
+- **T161 ✅** — seuil atteint et **porte éprouvée par violation délibérée** : porté à
+  99 %, elle échoue avec le bon message. Relevé : lignes 97,33 %, instructions 97,26 %,
+  fonctions 98,2 %, branches 87,98 %.
+- **T162 ✅** — les six divergences sont reportées dans
+  `docs/design/conception-du-jeu.md`, et son journal les couvre par les entrées du
+  2026-08-23. Vérification ponctuelle, non gardée par une porte : en faire une
+  demanderait un projet de test sur la documentation, qu'aucune tâche ne prévoit.
+- **T163 ⛔ bloquée** — même cause.
+
+### Environnement : ce qui bloque les cinq tâches restantes
+
+**Au 2026-08-27, la pile Supabase locale ne répond plus.** Le service
+d'authentification (`supabase_auth_zaliba`) a reçu un arrêt propre et n'est pas
+remonté ; le démon Docker de Rancher Desktop met plus de deux minutes à répondre à un
+`docker ps`. Les symptômes, dans l'ordre où ils apparaissent :
+
+1. `POST /auth/v1/signup` rend **502** puis ne répond plus du tout (code `000`) ;
+2. l'API rejette alors toute requête en **401** — le jeton n'arrive jamais ;
+3. les parcours Playwright échouent sur `signUp`, à l'attente du titre « Ma planète » ;
+4. `pnpm -w test:integration` ne termine pas : Testcontainers attend un démon saturé.
+
+**Ce n'est pas un défaut du code.** Les cinq parcours d'US1 à US6 passaient une heure
+plus tôt, sur le même commit pour l'essentiel. La cause est l'usure de l'environnement
+local — une suite complète de parcours et plusieurs séries de Testcontainers dans la
+même session.
+
+**Remède**, à la main de la personne qui développe : redémarrer Rancher Desktop, puis
+`supabase stop && supabase start`. Si les clés changent, régénérer `.env` et
+`signing_keys.json` comme le décrit `quickstart.md` § 1 — le JWK **doit** porter
+`key_ops: ["sign","verify"]` et `ext: true`, sans quoi GoTrue échoue sur
+`no signing key found`.
+
+**Puis, dans cet ordre** — chaque commande au premier plan, la suite complète se faisant
+tuer par `SIGTERM` en tâche de fond :
+
+```sh
+lsof -ti tcp:3000 | xargs kill -9          # l'API ne recharge pas : la tuer d'abord
+npx playwright test --config=playwright.config.ts us7-storage    # T142
+npx playwright test --config=playwright.config.ts us8-rules      # T149
+npx playwright test --config=playwright.config.ts mobile         # T160
+DOCKER_HOST="unix://$HOME/.rd/docker.sock" TESTCONTAINERS_RYUK_DISABLED=true   pnpm -w test:integration                                       # T163, trois tests
+```
+
 ---
 
 ## Dépendances et ordre d'exécution
