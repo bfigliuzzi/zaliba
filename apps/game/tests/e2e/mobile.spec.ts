@@ -128,13 +128,37 @@ test.describe('la planète tient sur un téléphone (SC-009)', () => {
      *
      * La mesure porte sur la boîte **rendue**, pas sur une propriété déclarée : un
      * `min-height` que le contenu contredit ne protège personne.
+     *
+     * Et elle porte sur la **zone activable** : pour un bouton radio, c'est son
+     * étiquette englobante, pas la commande de treize pixels que le navigateur dessine.
+     * Étirer la commande elle-même la déformerait ; c'est l'étiquette qui porte la
+     * cible, et c'est elle que WCAG 2.5.5 mesure.
      */
     const tooSmall = await page.evaluate((minimum) => {
       const offenders: string[] = []
       const selector = 'button, a[href], input, [role="gridcell"], select, textarea'
 
+      /**
+       * **La zone activable, et non la boîte de la commande.**
+       *
+       * Un bouton radio ou une case à cocher garde sa taille native — treize pixels —
+       * et c'est très bien : l'étirer le déforme selon le navigateur. Ce qu'on vise,
+       * c'est son **étiquette**, qui l'englobe ; cliquer une étiquette active sa
+       * commande, et le navigateur s'en charge sans une ligne de script.
+       *
+       * C'est aussi ce que WCAG 2.5.5 mesure : la cible, pas le dessin.
+       */
+      function activableBox(node: Element): DOMRect {
+        const type = node.getAttribute('type')
+        if (node.tagName === 'INPUT' && (type === 'radio' || type === 'checkbox')) {
+          const label = node.closest('label')
+          if (label !== null) return label.getBoundingClientRect()
+        }
+        return node.getBoundingClientRect()
+      }
+
       for (const node of Array.from(document.querySelectorAll(selector))) {
-        const rect = node.getBoundingClientRect()
+        const rect = activableBox(node)
         // Un élément de taille nulle n'est pas affiché : le compter en ferait échouer
         // le test pour un nœud que personne ne peut viser.
         if (rect.width === 0 && rect.height === 0) continue

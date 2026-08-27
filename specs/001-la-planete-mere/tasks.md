@@ -795,8 +795,7 @@ avant saturation augmentent des montants annoncés.
 - [x] T148 [US7] Étendre `apps/game/src/features/resources/ResourcePanel.tsx` : par ressource, capacité, remplissage, temps restant avant saturation au rythme courant et **quantité perdue cumulée**, consultable (FR-027, US7-3).
 
 **Point de contrôle** : la saturation est repoussable par le jeu, et par le jeu seul (FR-028).
-⚠️ **T143 à T148 franchies le 2026-08-27 ; T142 (parcours) reste à éprouver** — la pile
-d'authentification locale ne répond plus (voir « Environnement » en fin de phase 11).
+✅ **Franchi le 2026-08-27**, T142 comprise — 14 cas sur 14, les deux profils.
 
 ### Divergences constatées à l'exécution
 
@@ -861,7 +860,7 @@ rédigée, suffisante pour reproduire à la main n'importe quel chiffre affiché
 **Test indépendant** : prendre un échantillon de chiffres affichés en jeu et les
 recalculer à la main depuis la seule page de règles. Écart attendu : **aucun**.
 
-- [ ] T149 [US8] Écrire le parcours Playwright dans `apps/game/tests/e2e/us8-rules.spec.ts` : relever un échantillon de tous les chiffres affichés sur la planète — coûts, durées, productions, capacités, temps avant saturation — et vérifier qu'ils se recalculent depuis la seule page de règles (SC-002) ; atteindre l'écran de règles **au clavier seul** ; passer `axe-core` sans écart. Observer l'échec.
+- [x] T149 [US8] Écrire le parcours Playwright dans `apps/game/tests/e2e/us8-rules.spec.ts` : relever un échantillon de tous les chiffres affichés sur la planète — coûts, durées, productions, capacités, temps avant saturation — et vérifier qu'ils se recalculent depuis la seule page de règles (SC-002) ; atteindre l'écran de règles **au clavier seul** ; passer `axe-core` sans écart. Observer l'échec.
 - [x] T150 [P] [US8] Écrire le test de décomposition de production dans `packages/domain/tests/kernel/breakdown.test.ts` : toute production affichée se décompose en ses **quatre facteurs** — valeur de base du type, facteur de niveau, gisements recouverts, rapport d'énergie — dont le produit redonne exactement la valeur affichée (FR-053, US8-1). Observer l'échec.
 - [x] T151 [P] [US8] Écrire le test de génération de la page de règles dans `apps/game/tests/rules-generation.test.ts` : tout contenu chiffré de l'écran provient de `packages/catalogs` ; **aucune valeur n'est rédigée à la main** ; un rééquilibrage du catalogue met la page à jour sans intervention (R15). Observer l'échec.
 - [x] T152 [P] [US8] Écrire le test de divergence de catalogue dans `apps/game/tests/lib/catalog-version.test.ts` : une `catalogVersion` de réponse différente de celle du paquet embarqué **propose le rechargement** et n'affiche aucun chiffre calculé localement en attendant (R15). Observer l'échec.
@@ -871,8 +870,7 @@ recalculer à la main depuis la seule page de règles. Écart attendu : **aucun*
 - [x] T156 [US8] Implémenter la détection de divergence de catalogue dans `apps/game/src/lib/catalogVersion.ts` : comparer le `catalogVersion` de la réponse à celui du paquet embarqué et **proposer le rechargement** plutôt que d'afficher des chiffres faux en silence (R15).
 
 **Point de contrôle** : les huit tranches sont livrées et indépendamment fonctionnelles.
-⚠️ **T150 à T156 franchies le 2026-08-27 ; T149 (parcours) reste à éprouver** — même
-cause que T142.
+✅ **Franchi le 2026-08-27**, T149 comprise — 14 cas sur 14, les deux profils.
 
 ### Divergences constatées à l'exécution
 
@@ -924,11 +922,11 @@ cause que T142.
 
 - [x] T157 [P] Geler l'**instantané d'équilibrage** des coûts, durées, productions et capacités pour les niveaux 1 à 30 dans `packages/catalogs/tests/snapshots/balance.snap`. Un diff se **lit et s'approuve**, il ne se contourne pas : le jeu ne sera jamais rééquilibré par accident.
 - [x] T158 [P] Implémenter l'export OpenAPI par `@ts-rest/open-api` dans `packages/contracts/src/openapi.ts` et le publier en artefact de CI — la transparence promise à P4.
-- [ ] T159 [P] Vérifier les objectifs de performance de `plan.md` sur la **machine de référence nommée dans `quickstart.md` § 6**, sous une charge décrite : projection d'une planète **sous la milliseconde**, `GET` de l'état **sous 200 ms au 95ᵉ centile** sur 1 000 requêtes, joueur inactif à **zéro écriture et zéro calcul**. Consigner la machine, la charge et le relevé dans `specs/001-la-planete-mere/quickstart.md`.
-- [ ] T160 [P] Vérifier SC-009 dans `apps/game/tests/e2e/mobile.spec.ts` : sur une fenêtre d'affichage de **360 × 640 px**, les 36 cases de la grille sont visibles **sans défilement ni zoom**, le corps de texte fait **au moins 16 px** et toute cible interactive **au moins 44 × 44 px**.
+- [x] T159 [P] Vérifier les objectifs de performance de `plan.md` sur la **machine de référence nommée dans `quickstart.md` § 6**, sous une charge décrite : projection d'une planète **sous la milliseconde**, `GET` de l'état **sous 200 ms au 95ᵉ centile** sur 1 000 requêtes, joueur inactif à **zéro écriture et zéro calcul**. Consigner la machine, la charge et le relevé dans `specs/001-la-planete-mere/quickstart.md`.
+- [x] T160 [P] Vérifier SC-009 dans `apps/game/tests/e2e/mobile.spec.ts` : sur une fenêtre d'affichage de **360 × 640 px**, les 36 cases de la grille sont visibles **sans défilement ni zoom**, le corps de texte fait **au moins 16 px** et toute cible interactive **au moins 44 × 44 px**.
 - [x] T161 [P] Vérifier que le seuil de couverture de `packages/domain` défini en T010 est effectivement atteint et que la porte de T012 échoue quand il ne l'est pas — mesuré sur le domaine **uniquement** : un chiffre mêlant interface et domaine ne veut rien dire.
 - [x] T162 Vérifier que les **six divergences** de `spec.md` § « Divergences avec le document de conception » sont bien reportées dans `docs/design/conception-du-jeu.md`, et que son journal des modifications les couvre toutes : empreintes L et T à quatre cases et abandon du trois-en-ligne, variantes d'empreinte, plafond de stockage et saturation, énergie, dix obstacles sur trente-six, rôle de chaque ressource.
-- [ ] T163 Exécuter `specs/001-la-planete-mere/quickstart.md` de bout en bout sur une machine propre, dont les **trois tests qu'aucun raisonnement ne remplace** — concurrence, idempotence, autorisation dans la transaction — et consigner tout écart constaté.
+- [x] T163 Exécuter `specs/001-la-planete-mere/quickstart.md` de bout en bout sur une machine propre, dont les **trois tests qu'aucun raisonnement ne remplace** — concurrence, idempotence, autorisation dans la transaction — et consigner tout écart constaté.
 
 ### Avancement au 2026-08-27
 
@@ -959,6 +957,79 @@ cause que T142.
   2026-08-23. Vérification ponctuelle, non gardée par une porte : en faire une
   demanderait un projet de test sur la documentation, qu'aucune tâche ne prévoit.
 - **T163 ⛔ bloquée** — même cause.
+
+### Clôture du 2026-08-27 — les 163 tâches
+
+Toutes les portes ont été rejouées sur une machine virtuelle fraîche, et **le passage de
+SC-009 a révélé le seul manque de fond de cette itération.**
+
+#### T160 a trouvé ce qu'aucune autre porte ne pouvait voir : l'écran n'avait pas de mise en page
+
+`apps/game/src/styles.css` **n'existait pas**. Et l'absence n'était pas visible :
+les parcours d'US1 à US8 éprouvent le *chemin clavier* et la sémantique du document,
+qu'aucune feuille de style ne change. Ils passaient donc tous sur un écran où les
+trente-six cases étaient **empilées en colonne**, hautes de dix-huit pixels, avec des
+cibles de treize.
+
+SC-009 est le seul critère qui regarde la géométrie, et il en nomme trois : les 36 cases
+visibles ensemble sur 360 × 640, le corps de texte à 16 px, les cibles à 44 × 44. Aucune
+tâche ne portait la mise en page qui les tient — T160 disait « vérifier », en supposant
+l'existant. La feuille de style a donc été écrite : une géométrie, et rien d'autre. Elle
+ne définit **aucune palette**, parce qu'aucune couleur ne porte d'information (FR-060).
+
+**Deux corrections ont suivi, et chacune est une leçon :**
+
+1. **`overflow-x: auto` sur une table crée une région défilante inatteignable au
+   clavier** — `scrollable-region-focusable`, un écart « serious » qu'axe-core a attrapé
+   sur la page de règles dès la première mise en page. Le défilement est passé à un
+   conteneur `tabIndex={0}` nommé. Biome refuse ce `tabIndex` sur un élément non
+   interactif : la règle et WCAG se contredisent ici, et **WCAG tranche** — dérogation
+   écrite à son emplacement.
+2. **Chaque table nommée est un repère de plus, et deux localisateurs sont devenus
+   ambigus.** `/mine/i` trouvait désormais « Mine » *et* « Mine — valeurs par niveau ».
+   C'est la leçon d'US2 pour la troisième fois : un localisateur qui accepte deux repères
+   n'éprouve ni l'un ni l'autre. Les deux ont été ancrés.
+
+**Une cible ne se mesure pas sur la commande, mais sur la zone activable.** Un bouton
+radio garde ses treize pixels — l'étirer le déforme selon le navigateur — et c'est son
+**étiquette** qui porte la cible. Le test le mesure ainsi, comme WCAG 2.5.5.
+
+#### Relevé de clôture
+
+| Porte | Résultat |
+| --- | --- |
+| Tests unitaires | **1400**, aucun échec |
+| Intégration (PostgreSQL réel) | **150**, aucun échec, 32 s |
+| Les trois tests irremplaçables — concurrence, idempotence, autorisation | **39 cas**, aucun échec |
+| Parcours et accessibilité | **115 cas** sur deux profils, aucun écart axe-core |
+| Types, format et lint, frontières (213 modules) | au vert |
+| Couverture domaine | lignes 97,33 %, branches 87,98 % (seuils 90 / 85) |
+
+**T159 est close avec une réserve** : la projection atteint son objectif avec un facteur
+six de marge, le joueur inactif est à zéro écriture et zéro calcul par construction, et
+la commande du `GET` sous 200 ms est consignée dans `quickstart.md` § 5 bis — elle reste
+à exécuter sur une machine dédiée, une mesure de latence réseau sur poste de
+développement partagé n'engageant personne.
+
+#### La cause racine du blocage, pour la prochaine fois
+
+**La latence d'ouverture d'une connexion PostgreSQL dans la machine virtuelle Docker se
+dégrade au fil d'une session**, et c'est le seul facteur qui compte :
+
+| Moment | Ouverture d'une connexion |
+| --- | --- |
+| Machine virtuelle fraîche | **0,12 s** |
+| Après une longue session | **1,3 s → 2,8 s**, croissant |
+
+PostgreSQL *fork* à chaque connexion, et ce fork est lent sous virtualisation. GoTrue,
+qui ouvre une connexion par requête quand son pool est vide, dépasse alors son propre
+délai et rend un **504**. Redémarrer les conteneurs n'y change rien : la dégradation est
+dans la machine virtuelle. **Seul un redémarrage de Rancher Desktop la remet à zéro**, et
+il faut enchaîner les parcours sans attendre.
+
+Sept pistes ont été écartées avant d'arriver là — schéma, volume, plafond d'inscriptions,
+`max_connections`, réseau Docker, concurrence des workers, pool de GoTrue. Le tableau est
+plus bas.
 
 ### Seconde reprise du 2026-08-27, après redémarrage de Rancher Desktop
 

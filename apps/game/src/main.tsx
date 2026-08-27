@@ -3,16 +3,24 @@ import { RouterProvider } from '@tanstack/react-router'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { createPlanetGateway } from './lib/planetGateway.js'
+import './styles.css'
 import { createGameSession } from './lib/supabase.js'
 import { createAppRouter } from './router.js'
 
 /**
  * Le point de montage du client.
  *
- * Il ne fait que trois choses — un client de requêtes, un routeur, une racine —
- * et c'est délibéré : tout ce qui vit ici échappe aux tests, puisqu'il n'y a
- * pas de document à monter dans un cas unitaire. Ce qui doit être éprouvé vit
- * dans `router.tsx` et les routes, qu'un test rend avec son propre historique.
+ * Il ne fait que quatre choses — la feuille de style, un client de requêtes, un
+ * routeur, une racine — et c'est délibéré : tout ce qui vit ici échappe aux tests,
+ * puisqu'il n'y a pas de document à monter dans un cas unitaire. Ce qui doit être
+ * éprouvé vit dans `router.tsx` et les routes, qu'un test rend avec son propre
+ * historique.
+ *
+ * **La feuille de style est importée ici et nulle part ailleurs.** Elle ne porte aucune
+ * information — les états sont nommés dans les attributs d'accessibilité et doublés par
+ * un caractère visible (FR-060) —, elle porte une *géométrie* : celle que SC-009 exige.
+ * Les tests de rendu ne la chargent donc pas, et n'en ont pas besoin ; c'est le parcours
+ * `mobile.spec.ts` qui la mesure, sur la fenêtre de 360 × 640 px.
  */
 
 const queryClient = new QueryClient({

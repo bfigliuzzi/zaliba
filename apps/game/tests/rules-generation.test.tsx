@@ -223,7 +223,11 @@ describe('un rééquilibrage met la page à jour sans intervention (R15)', () =>
     renderRules(rebalanced)
     // Le coût de niveau 1 de la mine était de cent unités de Camelote. La ligne de la
     // mine ne doit plus le porter.
-    const mineSection = screen.getByRole('region', { name: /mine/i })
+    // Le nom est **ancré** : depuis que chaque table large est une région défilante
+    // nommée, `/mine/i` seul trouve aussi « Mine — valeurs par niveau ». Un
+    // localisateur qui accepte deux repères n'éprouve ni l'un ni l'autre — c'est la
+    // leçon d'US2, et elle se représente à chaque repère ajouté.
+    const mineSection = screen.getByRole('region', { name: /^mine$/i })
     expect(mineSection.textContent).not.toContain('100')
     expect(mineSection.textContent).toContain('777')
   })

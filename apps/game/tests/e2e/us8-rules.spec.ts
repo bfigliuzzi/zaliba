@@ -96,7 +96,10 @@ test.describe('les règles sont atteignables au clavier seul (FR-058, SC-004)', 
     await expect(page.getByRole('heading', { name: /règles du jeu/i })).toBeVisible()
     // Exiger un compte pour lire les règles serait les cacher à moitié : c'est la
     // promesse faite à P4.
-    await expect(rulesRegion(page, /mine/i)).toBeVisible()
+    // Le nom est **ancré**, comme partout ailleurs dans ce fichier : chaque table large
+    // est une région défilante nommée depuis la mise en page, donc `/mine/i` seul
+    // trouverait aussi « Mine — valeurs par niveau ».
+    await expect(rulesRegion(page, /^mine$/i)).toBeVisible()
   })
 })
 

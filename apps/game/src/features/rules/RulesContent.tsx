@@ -1,6 +1,7 @@
 import type { BuildingTypeId, Curve, ObstacleId, ResourceId } from '@zaliba/catalogs'
 import { GRAINS_PER_UNIT } from '@zaliba/catalogs'
 import { type Catalogs, evaluateCurve, layoutOf } from '@zaliba/domain'
+import type React from 'react'
 import { formatWhole } from '../../lib/format.js'
 import {
   BUILDING_LABELS,
@@ -82,6 +83,34 @@ function describeCost(
   return entries.map(([resourceId, grains]) => `${units(grains)} ${label(resourceId)}`).join(', ')
 }
 
+/**
+ * Une table dans son conteneur **défilant et focalisable**.
+ *
+ * Les tables de cette page sont larges par nature, et elles doivent défiler dans leur
+ * propre boîte plutôt que de pousser la page — un défilement horizontal du document
+ * ferait perdre la grille au joueur (SC-009). Mais une région défilante qu'aucune
+ * tabulation n'atteint est un écart WCAG : `scrollable-region-focusable`, que le parcours
+ * d'accessibilité a attrapé dès la première mise en page.
+ *
+ * Le conteneur porte donc `tabIndex={0}` — on y entre au clavier, les flèches font
+ * défiler — et un nom, sans lequel il serait un arrêt de tabulation muet.
+ */
+function ScrollableTable({
+  label,
+  children,
+}: {
+  readonly label: string
+  readonly children: React.ReactNode
+}) {
+  return (
+    // biome-ignore lint/a11y/useSemanticElements: aucun élément natif ne porte le rôle `region` avec un défilement propre ; c'est le motif que WCAG recommande pour une table large.
+    // biome-ignore lint/a11y/noNoninteractiveTabindex: la règle et WCAG se contredisent ici, et WCAG tranche. Une région défilante **doit** être focalisable — `scrollable-region-focusable`, un écart « serious » que le parcours d'accessibilité attrape —, et c'est le conteneur du défilement qui doit l'être, pas la table.
+    <div className="table-defilante" tabIndex={0} role="region" aria-label={label}>
+      {children}
+    </div>
+  )
+}
+
 export function RulesContent({ catalogs }: RulesContentProps) {
   const layout = layoutOf(catalogs, 'berceau-v1')
   const resourceLabel = (id: ResourceId) => RESOURCE_LABELS[id] ?? id
@@ -132,25 +161,27 @@ export function RulesContent({ catalogs }: RulesContentProps) {
           La production de base de la planète s’ajoute <strong>après</strong> le rapport d’énergie
           et n’en est jamais réduite : même à zéro énergie, la planète produit.
         </p>
-        <table>
-          <caption>Production de base de la planète, en unités par heure</caption>
-          <thead>
-            <tr>
-              <th scope="col">Ressource</th>
-              <th scope="col">Par heure</th>
-              <th scope="col">Plafond de base</th>
-            </tr>
-          </thead>
-          <tbody>
-            {catalogs.resourceIds.map((resourceId) => (
-              <tr key={resourceId}>
-                <th scope="row">{resourceLabel(resourceId)}</th>
-                <td>{formatWhole(layout.baseProductionPerHour[resourceId] ?? 0)}</td>
-                <td>{units(layout.baseCapacityGrains[resourceId] ?? 0)}</td>
+        <ScrollableTable label="Production et plafonds de base">
+          <table>
+            <caption>Production de base de la planète, en unités par heure</caption>
+            <thead>
+              <tr>
+                <th scope="col">Ressource</th>
+                <th scope="col">Par heure</th>
+                <th scope="col">Plafond de base</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {catalogs.resourceIds.map((resourceId) => (
+                <tr key={resourceId}>
+                  <th scope="row">{resourceLabel(resourceId)}</th>
+                  <td>{formatWhole(layout.baseProductionPerHour[resourceId] ?? 0)}</td>
+                  <td>{units(layout.baseCapacityGrains[resourceId] ?? 0)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </ScrollableTable>
       </section>
 
       <section aria-labelledby="regles-energie">
@@ -280,39 +311,41 @@ export function RulesContent({ catalogs }: RulesContentProps) {
                 trente lignes par type feraient cent cinquante lignes que personne ne
                 lit, et la fraction ci-dessus permet d'aller plus loin.
               */}
-              <table>
-                <caption>{`${label} — valeurs par niveau`}</caption>
-                <thead>
-                  <tr>
-                    <th scope="col">Niveau</th>
-                    {Object.keys(type.cost).map((resourceId) => (
-                      <th key={resourceId} scope="col">
-                        {resourceLabel(resourceId as ResourceId)}
-                      </th>
-                    ))}
-                    <th scope="col">Durée (s)</th>
-                    {type.production !== null && <th scope="col">Production / gisement</th>}
-                    {type.capacity !== null && <th scope="col">Capacité</th>}
-                  </tr>
-                </thead>
-                <tbody>
-                  {SHOWN_LEVELS.filter((level) => level <= type.maxLevel).map((level) => (
-                    <tr key={level}>
-                      <th scope="row">{formatWhole(level)}</th>
-                      {Object.entries(type.cost).map(([resourceId, curve]) => (
-                        <td key={resourceId}>{units(evaluateCurve(curve, level))}</td>
+              <ScrollableTable label={`${label} — valeurs par niveau`}>
+                <table>
+                  <caption>{`${label} — valeurs par niveau`}</caption>
+                  <thead>
+                    <tr>
+                      <th scope="col">Niveau</th>
+                      {Object.keys(type.cost).map((resourceId) => (
+                        <th key={resourceId} scope="col">
+                          {resourceLabel(resourceId as ResourceId)}
+                        </th>
                       ))}
-                      <td>{formatWhole(evaluateCurve(type.buildDuration, level))}</td>
-                      {type.production !== null && (
-                        <td>{formatWhole(evaluateCurve(type.production, level))}</td>
-                      )}
-                      {type.capacity !== null && (
-                        <td>{units(evaluateCurve(type.capacity, level))}</td>
-                      )}
+                      <th scope="col">Durée (s)</th>
+                      {type.production !== null && <th scope="col">Production / gisement</th>}
+                      {type.capacity !== null && <th scope="col">Capacité</th>}
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {SHOWN_LEVELS.filter((level) => level <= type.maxLevel).map((level) => (
+                      <tr key={level}>
+                        <th scope="row">{formatWhole(level)}</th>
+                        {Object.entries(type.cost).map(([resourceId, curve]) => (
+                          <td key={resourceId}>{units(evaluateCurve(curve, level))}</td>
+                        ))}
+                        <td>{formatWhole(evaluateCurve(type.buildDuration, level))}</td>
+                        {type.production !== null && (
+                          <td>{formatWhole(evaluateCurve(type.production, level))}</td>
+                        )}
+                        {type.capacity !== null && (
+                          <td>{units(evaluateCurve(type.capacity, level))}</td>
+                        )}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </ScrollableTable>
             </section>
           )
         })}
@@ -324,53 +357,57 @@ export function RulesContent({ catalogs }: RulesContentProps) {
           Le résultat d’un déblaiement appartient au <strong>type d’obstacle</strong>, jamais à la
           case : qui a déblayé une fois sait ce que le prochain du même type donnera.
         </p>
-        <table>
-          <caption>Déblaiement, par type d’obstacle</caption>
-          <thead>
-            <tr>
-              <th scope="col">Obstacle</th>
-              <th scope="col">Coût</th>
-              <th scope="col">Durée (s)</th>
-              <th scope="col">Ce qui apparaît</th>
-            </tr>
-          </thead>
-          <tbody>
-            {(Object.keys(catalogs.obstacles) as readonly ObstacleId[]).map((obstacleId) => {
-              const obstacle = catalogs.obstacles[obstacleId]
-              if (obstacle === undefined) return null
+        <ScrollableTable label="Déblaiement, par type d’obstacle">
+          <table>
+            <caption>Déblaiement, par type d’obstacle</caption>
+            <thead>
+              <tr>
+                <th scope="col">Obstacle</th>
+                <th scope="col">Coût</th>
+                <th scope="col">Durée (s)</th>
+                <th scope="col">Ce qui apparaît</th>
+              </tr>
+            </thead>
+            <tbody>
+              {(Object.keys(catalogs.obstacles) as readonly ObstacleId[]).map((obstacleId) => {
+                const obstacle = catalogs.obstacles[obstacleId]
+                if (obstacle === undefined) return null
 
-              return (
-                <tr key={obstacleId}>
-                  <th scope="row">{OBSTACLE_LABELS[obstacleId] ?? obstacleId}</th>
-                  <td>{describeCost(obstacle.cost, resourceLabel)}</td>
-                  <td>{formatWhole(obstacle.durationSeconds)}</td>
-                  <td>{describeReveals(obstacleId, catalogs)}</td>
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
+                return (
+                  <tr key={obstacleId}>
+                    <th scope="row">{OBSTACLE_LABELS[obstacleId] ?? obstacleId}</th>
+                    <td>{describeCost(obstacle.cost, resourceLabel)}</td>
+                    <td>{formatWhole(obstacle.durationSeconds)}</td>
+                    <td>{describeReveals(obstacleId, catalogs)}</td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </ScrollableTable>
       </section>
 
       <section aria-labelledby="regles-depart">
         <h2 id="regles-depart">Au départ</h2>
-        <table>
-          <caption>Stock initial de la planète</caption>
-          <thead>
-            <tr>
-              <th scope="col">Ressource</th>
-              <th scope="col">Quantité</th>
-            </tr>
-          </thead>
-          <tbody>
-            {catalogs.resourceIds.map((resourceId) => (
-              <tr key={resourceId}>
-                <th scope="row">{resourceLabel(resourceId)}</th>
-                <td>{units(layout.startingStockGrains[resourceId] ?? 0)}</td>
+        <ScrollableTable label="Stock initial de la planète">
+          <table>
+            <caption>Stock initial de la planète</caption>
+            <thead>
+              <tr>
+                <th scope="col">Ressource</th>
+                <th scope="col">Quantité</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {catalogs.resourceIds.map((resourceId) => (
+                <tr key={resourceId}>
+                  <th scope="row">{resourceLabel(resourceId)}</th>
+                  <td>{units(layout.startingStockGrains[resourceId] ?? 0)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </ScrollableTable>
         <p>
           La planète mesure {formatWhole(layout.width)} sur {formatWhole(layout.height)} cases, dont{' '}
           {formatWhole(layout.cells.filter((cell) => cell.obstacleId !== null).length)} obstruées.
