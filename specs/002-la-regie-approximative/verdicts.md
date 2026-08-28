@@ -213,15 +213,15 @@ Docker Desktop périmé détourne la détection.
 | 5 | `pnpm -w test:coverage` | ✅ | 543 tests, seuils tenus |
 | 6 | `pnpm -w test:integration` | ✅ | 156 tests |
 | 7 | `pnpm -w build` | ✅ | 299 modules transformés |
-| 8 | `pnpm -w e2e` | ✅ | **207 passés, 5 ignorés, aucun échec** en 23,3 min |
+| 8 | `pnpm -w e2e` | ✅ | **209 passés, 5 ignorés, aucun échec** en 23,2 min — relevé du 2026-08-28 après T108, qui ajoute deux cas (un par profil). Le relevé antérieur disait 207 |
 | 9 | `pnpm audit --audit-level moderate` | ✅ | *No known vulnerabilities found* — **les quatre ajouts de 002 audités** |
-| 10 | `gitleaks detect` | ⚠️ **non exécutée** | `gitleaks` est **absent du PATH** de cette machine |
+| 10 | `gitleaks detect` | ✅ | **38 commits** parcourus, 3,68 Mo, aucune fuite — voir ci-dessous (T109) |
 
 **Les cinq cas ignorés le sont par conception**, et depuis 001 : ce sont ceux de
 `mobile.spec.ts` sur le profil `bureau`, qui s'auto-ignorent parce que SC-009 porte sur
 la fenêtre de 360 × 640 px — « le lancer sur `bureau` mesurerait une fenêtre que SC-009
 ne décrit pas, et il passerait pour de mauvaises raisons ». Les cinq **passent** sur le
-profil `mobile`, et sont comptés dans les 207.
+profil `mobile`, et sont comptés dans les 209.
 
 **Les deux portes ajoutées par la tranche constatent avoir lu quelque chose**, comme
 l'amendement 2.1.0 de la constitution l'exige :
@@ -233,16 +233,51 @@ l'amendement 2.1.0 de la constitution l'exige :
 - non-régression des valeurs en dur : le nombre de fichiers parcourus est asserté non
   nul, et la porte trouve la source unique à sa place.
 
-### Ce qui n'a pas pu être exécuté ici, et pourquoi
+### Porte 10 — fuite de secrets : exécutée le 2026-08-28 (T109)
 
-**`gitleaks` (porte 10)** n'est pas installé sur cette machine. La porte est
-**bloquante en CI** et elle y tournera ; localement, elle n'a pas pu être reproduite.
-C'est une lacune de la reproduction locale, non de la porte — et la dire vaut mieux
-que de laisser croire que les dix commandes ont toutes été passées.
+`gitleaks` **8.30.1** a été installé sur cette machine, et la porte a tourné. Elle
+n'avait alors tourné **nulle part** : la branche n'a aucun amont — `git rev-parse
+--abbrev-ref @{u}` rend « no upstream configured » —, donc l'intégration continue ne
+l'avait jamais vue non plus. Le paragraphe qui disait l'impossibilité est remplacé
+par ce qu'elle a rendu.
 
-Ce que l'on peut affirmer sans elle : la tranche n'ajoute **aucun chemin de
-configuration**, aucun fichier d'environnement, et aucune valeur qui ressemble à un
-secret. Les quatre dépendances ajoutées sont du contenu statique.
+**L'historique complet**, ce que la porte de CI scanne avec `fetch-depth: 0` :
+
+```
+$ gitleaks detect --config .gitleaks.toml --no-banner
+INF 38 commits scanned.
+INF scanned ~3684818 bytes (3.68 MB) in 453ms
+INF no leaks found
+code de sortie = 0
+```
+
+**Trente-huit commits parcourus, 3,68 Mo** : la porte a lu quelque chose, ce que
+l'amendement 2.1.0 exige d'affirmer plutôt que de supposer. Les cinq excuses de
+`.gitleaks.toml` n'ont eu à couvrir aucun relevé — les valeurs de fixture qu'elles
+nomment vivent dans des commits que ce parcours a traversés, et aucune n'a été
+comptée comme fuite.
+
+**Et elle mord.** Un appât hors dépôt — un JWT de forme canonique, dans un dossier
+portant la même configuration — a rendu `leaks found: 1` et **le code de sortie 1**.
+Le premier appât essayé, la clé d'exemple `AKIAIOSFODNN7EXAMPLE`, n'avait rien rendu :
+la configuration par défaut de `gitleaks` l'excuse, étant la clé que la documentation
+d'AWS publie. C'est le genre de détail qui fait conclure à tort qu'une porte est
+inerte — il est consigné pour que la prochaine vérification ne s'y reprenne pas.
+
+**L'arbre de travail**, hors périmètre de la porte mais parcouru par acquit de
+conscience, rend quatre relevés `jwt` : un dans `.env`, trois dans
+`apps/game/dist/assets/`. `git check-ignore` les rattache aux lignes 6 et 22 de
+`.gitignore`, et `git ls-files` confirme qu'aucun n'est suivi. Rien de ce que git
+transporte ne fuit.
+
+Ce que l'on peut affirmer par ailleurs, et que la porte corrobore : la tranche
+n'ajoute **aucun chemin de configuration**, aucun fichier d'environnement, et aucune
+valeur qui ressemble à un secret. Les quatre dépendances ajoutées sont du contenu
+statique.
+
+**Ce qui reste hors de portée d'ici** : le verdict des onze portes en intégration
+continue, que seule une poussée de la branche produirait. Elle n'a pas été faite —
+c'est une action vers l'extérieur, et elle appartient à la revue.
 
 ---
 
@@ -540,9 +575,76 @@ jamais en relisant.
 
 ### Ce que la relecture laisse ouvert
 
-- **`gitleaks` (porte 10) n'a pas pu être exécutée** localement — absente du PATH.
-  Elle est bloquante en CI.
+- ~~**`gitleaks` (porte 10) n'a pas pu être exécutée** localement — absente du PATH.
+  Elle est bloquante en CI.~~ **Levé le 2026-08-28 par T109** : installée, exécutée sur
+  l'historique complet, aucune fuite, et éprouvée mordante.
 - **Les quatre verdicts humains ne sont pas conduits.** Trois critères de succès —
   SC-003, SC-009 de 002, SC-011 — et la moitié audible de SC-007 restent donc
   **ouverts**. Leurs moitiés mécaniques sont vertes ; ce n'est pas la même chose, et
   les confondre serait rendre vert ce qu'on n'a pas tenu.
+
+
+---
+
+## Phase 10 — la convergence, et ce qu'elle a trouvé de plus grave
+
+**Date** : 2026-08-28. Trois écarts relevés entre les artefacts de la tranche et l'état
+du code. Le premier est de la nature exacte que l'amendement 2.1.0 de la constitution
+nomme.
+
+### T107 — la porte qui parcourait la moitié du client
+
+`.github/workflows/ci.yml` lançait `pnpm vitest run --project game --project api`.
+Le projet **`game-dom`** n'apparaissait nulle part dans le fichier. Or c'est celui qui
+porte les tests de rendu : **26 fichiers, 469 tests** — dont les onze `.test.tsx`
+écrits par 002, c'est-à-dire *tout* son corps de tests de rendu. L'ordre du document,
+le balisage de la rature, la légende des douze états, l'unicité de la région
+d'annonce : la CI n'en exécutait aucun.
+
+**Le défaut préexiste à la tranche** — 001 laissait déjà quinze fichiers hors porte —
+mais 002 a porté le trou de quinze à vingt-six, et l'a rempli de ce qui fait son sujet.
+
+**Constaté par exécution**, et dans les deux sens :
+
+| Commande | Avant la perturbation | Sous perturbation |
+| --- | --- | --- |
+| l'ancienne — `game`, `api` | 384 tests, 21 fichiers | **384 passés, aucun échec** |
+| la corrigée — `game`, `game-dom`, `api` | **853 tests, 47 fichiers** | **3 échoués**, 850 passés |
+
+La perturbation était le retrait de l'`aria-hidden="true"` du visuel de `Rature.tsx` —
+c'est-à-dire le défaut dont la casse produit une valeur **fausse**, « niveau 2 3 » à un
+lecteur d'écran. **L'ancienne porte l'a laissée passer en vert.** La source a été
+rétablie et les 853 tests repassent.
+
+Le nom de la porte devient « client (chemin clavier **et rendu**) », et un commentaire
+y dit ce que la liste de projets a de piégeux : celui qu'on oublie n'échoue pas, il
+disparaît.
+
+### T108 — FR-024a, un `MUST` que rien ne mesurait
+
+`base.css` déclare `outline-color: Highlight` et `box-shadow: none` sous
+`@media (forced-colors: active)`. `FR-024a` n'apparaissait dans tout `apps/game/` que
+dans ce commentaire CSS. Les quatre cas du bloc `forced-colors` de `us9-regie.spec.ts`
+portaient sur les canaux non chromatiques, l'héritage de `currentColor`, la distinction
+des quadruplets et l'absence d'ombre — **jamais sur le focus**.
+
+Un cinquième cas a été écrit. Il tabule jusqu'à un élément qui porte réellement
+`:focus-visible`, relit la palette **dans les feuilles de style** — la relire sur
+`:root` mesurerait des valeurs déjà repeintes —, et vérifie que la couleur *calculée*
+du contour n'est aucune des **quinze** teintes déclarées, qu'elle vaut la mise en
+évidence du système, et que l'anneau d'ombre du focus composite a disparu.
+
+**Ce que la perturbation a appris, et qui est consigné dans le cas lui-même.** Retirer
+`outline-color: Highlight` de `base.css` ne fait **pas** rougir le cas : Chromium impose
+la mise en évidence de lui-même sous contrastes forcés, et la déclaration ne fait que
+l'écrire. Ce que le cas garde est donc la **sortie**, non la ligne. Il mord bien sur la
+régression réelle — un `forced-color-adjust: none` doublé d'un contour laissé à
+`--couleur-encre` lui a rendu `rgb(27, 34, 32)`, et il l'a refusé.
+
+`us9-regie.spec.ts` passe de 92 à **94 cas**, tous verts sur les deux profils. La suite
+complète a été repassée après coup : **209 passés, 5 ignorés, aucun échec** en 23,2 min.
+
+### T109 — la porte 10, exécutée
+
+Voir « Porte 10 — fuite de secrets » plus haut : `gitleaks` 8.30.1 installé, 38 commits
+parcourus, aucune fuite, code de sortie 1 sur appât.

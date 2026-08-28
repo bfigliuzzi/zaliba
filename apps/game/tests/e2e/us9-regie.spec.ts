@@ -215,6 +215,153 @@ test.describe('le mode contrastes forcés ne perd aucun état (SC-009, FR-033)',
     )
     expect(ombres, `ombres subsistantes : ${ombres.join(', ')}`).toEqual([])
   })
+
+  /**
+   * FR-024a — **l'indicateur de focus passe à la couleur de mise en évidence du
+   * système**.
+   *
+   * L'indicateur ordinaire est **composite** : un anneau `encre` doublé d'un anneau
+   * `papier` porté par une ombre, parce qu'aucune teinte seule ne tient les 3:1 de
+   * FR-024 contre les huit fonds de l'écran. Sous contrastes forcés, ce couple
+   * n'existe plus : le système repeint, l'ombre est retirée, et s'accrocher à une
+   * teinte de la palette reviendrait à ne plus rien indiquer sur la cible la plus
+   * sollicitée d'un jeu qui se joue au clavier.
+   *
+   * **Ce qui est mesuré est la couleur calculée**, jamais la déclaration : une valeur
+   * écrite dans `base.css` ne prouve rien si la cascade repeint plus loin — c'est
+   * exactement ce que la porte de contraste a démontré sur le tampon. Et elle porte
+   * sur un élément **réellement** `:focus-visible`, faute de quoi le cas mesurerait
+   * la valeur initiale d'un contour qui n'est pas dessiné, et passerait à vide.
+   *
+   * **Ce que ce cas ne dit pas, et qui a été éprouvé.** Retirer `outline-color:
+   * Highlight` de `base.css` ne le fait **pas** rougir : Chromium impose la mise en
+   * évidence de lui-même sous contrastes forcés, et la déclaration ne fait que
+   * l'écrire. Ce que le cas garde est donc la **sortie**, non la ligne — et il rougit
+   * bien sur la régression réelle, qui est un `forced-color-adjust: none` ou un anneau
+   * peint hors du chemin des couleurs forcées : la perturbation du 2026-08-28 y a rendu
+   * `rgb(27, 34, 32)`, c'est-à-dire `--couleur-encre`, et le cas l'a refusée.
+   *
+   * *Ajouté le 2026-08-28.* `FR-024a` n'apparaissait dans tout `apps/game/` que dans
+   * un commentaire CSS : un `MUST` de plus qui n'atteignait qu'une tâche
+   * d'implémentation, sur une tranche dont l'argument est que tout a été rendu
+   * observable avant d'être écrit.
+   */
+  test('repeint l’indicateur de focus hors de la palette (FR-024a)', async ({ page }) => {
+    await page.emulateMedia({ forcedColors: 'active' })
+    await ouvrirA(page, LARGEURS.mobile)
+
+    /*
+      Le focus se prend **au clavier**. `:focus-visible` est ce que la règle cible, et
+      un `.focus()` par programme ne l'obtient pas de façon fiable : le mesurer sur un
+      élément qui ne le porte pas rendrait le cas vert sur un contour absent.
+    */
+    let porte = false
+    for (let essai = 0; essai < 12 && !porte; essai += 1) {
+      await page.keyboard.press('Tab')
+      porte = await page.evaluate(() => document.activeElement?.matches(':focus-visible') === true)
+    }
+    expect(porte, 'aucun élément ne porte `:focus-visible` après tabulation').toBe(true)
+
+    /*
+      La palette est relue **dans les feuilles de style**, et non sur `:root` : sous
+      contrastes forcés, toute valeur que le document résout est déjà repeinte, et
+      comparer la couleur du contour à une palette elle-même forcée ne dirait rien. Ce
+      qu'on veut est la liste des teintes **déclarées** — et la relire ainsi évite de
+      la recopier ici, où elle périmerait au premier jeton ajouté.
+    */
+    const teintes = await page.evaluate(() => {
+      /** Les règles d'une feuille, ou aucune si le navigateur en refuse la lecture. */
+      const reglesDe = (feuille: CSSStyleSheet): CSSRule[] => {
+        try {
+          return Array.from(feuille.cssRules)
+        } catch {
+          return []
+        }
+      }
+
+      /** `#rrggbb` → `rgb(r, g, b)`, la forme que rend `getComputedStyle`. */
+      const enRgb = (hexa: string): string | null => {
+        const trouve = /^#([0-9a-f]{6})$/i.exec(hexa.trim())
+        if (trouve === null) return null
+        const valeur = Number.parseInt(trouve[1] ?? '', 16)
+        return `rgb(${(valeur >> 16) & 255}, ${(valeur >> 8) & 255}, ${valeur & 255})`
+      }
+
+      const declarations = Array.from(document.styleSheets)
+        .flatMap(reglesDe)
+        .map((regle) => (regle as CSSStyleRule).style as CSSStyleDeclaration | undefined)
+        .filter((style): style is CSSStyleDeclaration => style !== undefined)
+
+      const lues = declarations.flatMap((style) =>
+        Array.from(style)
+          .filter((propriete) => propriete.startsWith('--couleur'))
+          .map((propriete) => enRgb(style.getPropertyValue(propriete))),
+      )
+
+      return [...new Set(lues.filter((rgb): rgb is string => rgb !== null))]
+    })
+
+    const actif = await page.evaluate(() => {
+      const element = document.activeElement
+      if (element === null) return null
+
+      /*
+        La couleur de mise en évidence du système, **relevée dans la page** : sa valeur
+        dépend du thème de contraste actif, et l'écrire ici en dur ferait de ce cas une
+        mesure de la plate-forme d'intégration continue plutôt que du style.
+      */
+      const sonde = document.createElement('span')
+      sonde.style.color = 'Highlight'
+      document.body.append(sonde)
+      const miseEnEvidence = window.getComputedStyle(sonde).color
+      sonde.remove()
+
+      const calcule = window.getComputedStyle(element)
+      return {
+        balise: element.tagName,
+        couleur: calcule.outlineColor,
+        style: calcule.outlineStyle,
+        largeur: calcule.outlineWidth,
+        ombre: calcule.boxShadow,
+        miseEnEvidence,
+      }
+    })
+
+    // La porte doit avoir **lu quelque chose** : une palette vide rendrait
+    // l'assertion centrale vraie sans rien prouver (amendement 2.1.0).
+    expect(teintes.length, 'aucune teinte lue dans les feuilles de style').toBeGreaterThan(9)
+    expect(actif, 'aucun élément actif à mesurer').not.toBeNull()
+
+    // Et le contour doit être **dessiné** : la couleur d'un contour absent ne dit
+    // rien non plus.
+    expect(actif?.style, 'le contour de focus n’est pas dessiné').not.toBe('none')
+    expect(
+      Number.parseFloat(actif?.largeur ?? '0'),
+      'le contour de focus est de largeur nulle',
+    ).toBeGreaterThan(0)
+
+    expect(
+      teintes,
+      `le contour reste à une teinte de la palette (${actif?.balise}) : ${actif?.couleur}`,
+    ).not.toContain(actif?.couleur)
+
+    /*
+      Et il vaut **la couleur de mise en évidence**, ce que « hors palette » ne suffit
+      pas à dire : le mode repeint de lui-même tout ce que l'auteur a déclaré, si bien
+      qu'un contour laissé à `--couleur-encre` sort lui aussi de la palette — repeint en
+      couleur de **texte**. C'est la seule assertion des deux qui distingue le style
+      écrit du comportement du navigateur, et donc la seule qui mesure FR-024a.
+    */
+    expect(
+      actif?.couleur,
+      `le contour n’est pas la mise en évidence du système (${actif?.miseEnEvidence})`,
+    ).toBe(actif?.miseEnEvidence)
+
+    // La seconde moitié de l'indicateur composite — l'anneau `papier` porté par une
+    // ombre — n'existe plus ici. Le cas précédent ne peut pas le dire : il ne
+    // focalise rien, donc aucune ombre de focus n'est calculée quand il mesure.
+    expect(actif?.ombre, 'l’anneau d’ombre du focus subsiste').toBe('none')
+  })
 })
 
 /** Sans les bandes de coordonnées, l'adresse n'existe plus à l'œil (FR-016). */
