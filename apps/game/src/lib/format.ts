@@ -66,6 +66,34 @@ export function formatDuration(seconds: number): string {
 }
 
 /**
+ * Le temps restant d'un chantier, au format **`HH:MM:SS`** (FR-009, FR-002).
+ *
+ * Le format complet plutôt que `formatDuration` — qui rendrait « 5 h » —, et ce
+ * n'est pas une préférence : le chrono est la **seule** grandeur de l'écran qui
+ * bouge à la seconde, et l'arrondir à l'heure la rendrait immobile. Un joueur qui
+ * revient sur son écran doit voir que le temps passe, sans quoi rien ne distingue
+ * un chantier en cours d'un affichage figé.
+ *
+ * **Les deux chiffres de tête ne sont pas plafonnés à 24.** Ce sont des heures
+ * cumulées, pas une heure du jour : un chantier de trois jours affiche `72:00:00`,
+ * qui se lit, là où `00:00:00` mentirait. Et les heures dépassent deux chiffres
+ * plutôt que d'être tronquées.
+ *
+ * Rendu en chasse fixe tabulaire par la classe `.chiffre` du composant : sans
+ * elle, les deux-points sautilleraient à chaque seconde.
+ */
+export function formatClock(seconds: number): string {
+  const total = Math.max(0, Math.floor(seconds))
+  const deuxChiffres = (valeur: number): string => String(valeur).padStart(2, '0')
+
+  return [
+    deuxChiffres(Math.floor(total / 3_600)),
+    deuxChiffres(Math.floor((total % 3_600) / 60)),
+    deuxChiffres(total % 60),
+  ].join(':')
+}
+
+/**
  * Une durée **écoulée** en clair — « depuis combien de temps » (US1/AC5).
  *
  * Elle tronque vers le bas, à l'inverse de `formatDuration`, et ce n'est pas une

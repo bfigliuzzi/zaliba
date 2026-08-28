@@ -100,6 +100,18 @@ importers:
 
   apps/game:
     dependencies:
+      '@fontsource/archivo':
+        specifier: 5.3.0
+        version: 5.3.0
+      '@fontsource/archivo-narrow':
+        specifier: 5.3.0
+        version: 5.3.0
+      '@fontsource/jetbrains-mono':
+        specifier: 5.3.0
+        version: 5.3.0
+      '@fontsource/saira-stencil-one':
+        specifier: 5.3.0
+        version: 5.3.0
       '@supabase/supabase-js':
         specifier: 2.112.3
         version: 2.112.3
@@ -708,6 +720,18 @@ packages:
 
   '@fastify/proxy-addr@5.1.0':
     resolution: {integrity: sha512-INS+6gh91cLUjB+PVHfu1UqcB76Sqtpyp7bnL+FYojhjygvOPA9ctiD/JDKsyD9Xgu4hUhCSJBPig/w7duNajw==}
+
+  '@fontsource/archivo-narrow@5.3.0':
+    resolution: {integrity: sha512-fK2Y7PdIP23+t5Dp7gh9n94zxTCdHD6M955aJ8QzR6RvW+5WgmryKySEvaCUAeSLXzA113hyW0BwEHHxHADX7Q==}
+
+  '@fontsource/archivo@5.3.0':
+    resolution: {integrity: sha512-5DIMgPVJRi62OqdOVoogCFxP73EkNM/E0YVTSDIQlDEJfDbxqZduwM/YoNZwC9Sx1CDgpKinqf8ckRY1QNIecw==}
+
+  '@fontsource/jetbrains-mono@5.3.0':
+    resolution: {integrity: sha512-fqDfB5I9f1p1TV486aUgB9t8zP84P0O1FtQR5Ol9vjwPy+S+EIGlVYm1cvj2W5shcZMTg2nZFdVMoH5wFu8a1A==}
+
+  '@fontsource/saira-stencil-one@5.3.0':
+    resolution: {integrity: sha512-b7ILM7KrAWTIUSWKuzV29lTQZV5QOGhlmXXEt3Dsg/rJ4lo1kjUjuo6dBG9Iq+pR7wRZCVXftinVHDof+i9nSA==}
 
   '@grpc/grpc-js@1.14.4':
     resolution: {integrity: sha512-k9Dj3DV/itK9D06Y8f190Qgop7/Ui+D0njFV3LHMPwPT75DpXLQohE9Wmz0QElrJnzsjB7KPWiKJbOl7IPDArQ==}
@@ -2873,6 +2897,14 @@ snapshots:
     dependencies:
       '@fastify/forwarded': 3.0.2
       ipaddr.js: 2.5.0
+
+  '@fontsource/archivo-narrow@5.3.0': {}
+
+  '@fontsource/archivo@5.3.0': {}
+
+  '@fontsource/jetbrains-mono@5.3.0': {}
+
+  '@fontsource/saira-stencil-one@5.3.0': {}
 
   '@grpc/grpc-js@1.14.4':
     dependencies:

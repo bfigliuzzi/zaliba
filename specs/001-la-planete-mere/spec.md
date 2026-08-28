@@ -634,8 +634,36 @@ aurait invalidé les renvois de `research.md`, `data-model.md`, `contracts/` et
 - **SC-008**: deux comptes créés indépendamment reçoivent une planète initiale
   identique, disposition d'obstacles et de gisements comprises.
 - **SC-009**: sur une fenêtre d'affichage de **360 × 640 px**, les 36 cases de la
-  grille sont visibles **sans défilement ni zoom**, le corps de texte fait au moins
-  **16 px** et toute cible interactive au moins **44 × 44 px**.
+  grille sont visibles **sans défilement ni zoom**, **tout champ de saisie fait au
+  moins 16 px** et toute cible interactive au moins **44 × 44 px**.
+
+  *Clause typographique amendée le 2026-08-28, par la tranche
+  [002 — La Régie approximative](../002-la-regie-approximative/spec.md).* Elle
+  exigeait 16 px pour **tout le corps de texte**. Le motif qu'elle invoquait est
+  unique et exact — *iOS Safari zoome de lui-même à la mise au point d'un champ
+  dont le texte est sous 16 px*, donc le zoom que ce critère interdit arriverait
+  **par** l'interface —, et ce motif porte sur les **champs de saisie**. Le test
+  l'avait généralisé à sept sélecteurs, dont six que le motif ne couvre pas.
+
+  La clause est donc **recentrée** sur `input`, `select` et `textarea`, où elle
+  garde toute sa force, et le plancher du reste du texte passe au **rôle** :
+  16 px pour un champ de saisie, 14 px pour un texte porteur d'information, 12 px
+  pour un intitulé de bloc, 9,5 px pour un décor qui ne porte rien — table
+  complète et raisonnement en
+  [`002/research.md § R14`](../002-la-regie-approximative/research.md). S'y ajoute
+  une règle qui pèse plus lourd que tout plancher : **aucune taille de police
+  n'est exprimée en pixels**, ce qui est ce qui rend WCAG 1.4.4 réellement vrai —
+  un texte de 14 px qui double avec le réglage système sert mieux qu'un texte de
+  16 px figé qui ne bouge pas, et aucun critère de WCAG 2.1 AA ne fixe de taille
+  minimale.
+
+  **Les deux autres clauses de ce critère ne sont pas touchées** : la fenêtre de
+  360 × 640 px sans défilement ni zoom, et les cibles de 44 × 44 px, restent en
+  vigueur telles quelles. Amender le critère entier aurait retiré deux exigences
+  que personne n'a proposé de retirer.
+
+  L'écart entre les deux tranches est ainsi résolu **dans les deux
+  spécifications**, et non contourné dans un plan (principe I).
 - **SC-010**: aucune valeur transmise par le joueur ne modifie un coût, une durée
   ou un résultat : les tentatives sont sans effet.
 

@@ -415,6 +415,41 @@ export function RulesContent({ catalogs }: RulesContentProps) {
           graine.
         </p>
       </section>
+
+      {/*
+        **L'angle mort connu de la lecture du plan** (FR-035).
+
+        Il est publié ici parce que P4 « a besoin de tout savoir », et parce que la
+        promesse du projet est qu'aucune formule n'est cachée. Un défaut connu de
+        lisibilité en est une : le taire laisserait un joueur croire qu'il lit mal,
+        alors que c'est l'écran qui alerte mal.
+
+        Et il est publié **dans le jeu** plutôt que dans un document de conception :
+        le joueur concerné est celui qui joue, pas celui qui relit la spécification.
+      */}
+      <section aria-labelledby="regles-lisibilite">
+        <h2 id="regles-lisibilite">Lire le plan sans distinguer les couleurs</h2>
+        <p>
+          Chaque état de case porte un <strong>canal non chromatique</strong> : une silhouette, un
+          style de trait plein ou évidé, une marque d’angle, ou le cadre d’emprise d’un bâtiment.
+          Aucune information du plan ne tient à la teinte seule, et la légende donne la clé de
+          chaque forme.
+        </p>
+        <p>
+          <strong>Un angle mort subsiste, et il est connu.</strong> Sous <strong>protanopie</strong>{' '}
+          — la forme de daltonisme qui atténue le rouge —, la teinte du refus de pose se rapproche
+          de l’orange de la Camelote. L’état reste identifiable : le disque barré d’une croix ne
+          ressemble à aucune autre silhouette, et la case refusée nomme sa cause dans son libellé.
+          Mais il <strong>alerte plus faiblement</strong> qu’il ne le devrait : le rouge y perd sa
+          fonction d’avertissement, et il ne reste que la forme.
+        </p>
+        <p>
+          C’est la contrepartie assumée d’une palette de trois ressources dont l’une est rouge
+          orangé. La corriger demanderait de changer la teinte de la Camelote, qui identifie une
+          ressource sur tout l’écran, ou celle du refus, qui n’a que le rouge à sa disposition dans
+          la convention d’alerte.
+        </p>
+      </section>
     </>
   )
 }

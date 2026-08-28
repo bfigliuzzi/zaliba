@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Archivo+Narrow:wght@400;600;700&family=JetBrains+Mono:wght@400;500;700&family=Saira+Stencil+One&display=swap">
+<style>
+@keyframes zaTamponFrappe{0%{transform:rotate(-6deg) scale(1.6);opacity:0}55%{transform:rotate(-6deg) scale(.97);opacity:1}100%{transform:rotate(-6deg) scale(1);opacity:1}}
+@media (prefers-reduced-motion: reduce){*{animation-duration:1ms !important;animation-iteration-count:1 !important;transition-duration:1ms !important}}
+</style>
+</helmet>
+<div style="{{ root }}">
+  <p id="aide-{{ uid }}" style="{{ aideStyle }}">{{ aide }}</p>
+  <div style="display:flex;align-items:stretch;gap:0">
+    <table role="grid" aria-describedby="aide-{{ uid }}" aria-label="Parcelle, 6 colonnes A à F, 6 rangées 1 à 6" ref="{{ gridRef }}" onKeyDown="{{ onKey }}" style="{{ tableStyle }}">
+      <caption style="{{ capStyle }}">{{ caption }}</caption>
+      <thead>
+        <tr>
+          <td style="{{ corner }}"></td>
+          <sc-for list="{{ cols }}" as="c" hint-placeholder-count="6">
+            <th scope="col" role="columnheader" style="{{ headStyle }}">{{ c }}</th>
+          </sc-for>
+        </tr>
+      </thead>
+      <tbody>
+        <sc-for list="{{ rows }}" as="row" hint-placeholder-count="6">
+          <tr>
+            <th scope="row" role="rowheader" style="{{ headStyle }}">{{ row.num }}</th>
+            <sc-for list="{{ row.cells }}" as="cell" hint-placeholder-count="6">
+              <td role="gridcell" data-id="{{ cell.id }}" tabindex="{{ cell.tab }}" aria-label="{{ cell.annonce }}" aria-selected="{{ cell.sel }}" onClick="{{ cell.onClick }}" onFocus="{{ cell.onFocus }}" style="{{ cell.td }}">
+                <div style="{{ cell.inner }}">
+                  <span aria-hidden="true" style="{{ cell.addrStyle }}">{{ cell.id }}</span>
+                  <svg viewBox="0 0 24 24" width="{{ gSize }}" height="{{ gSize }}" aria-hidden="true" focusable="false" style="display:block">
+                    <circle cx="12" cy="12" r="11.4" fill="{{ cell.discFill }}"></circle>
+                    <sc-if value="{{ cell.gCam }}" hint-placeholder-val="{{ false }}">
+                      <polygon points="12,3.5 21,19 3,19" fill="{{ cell.gInk }}"></polygon>
+                      <rect x="2.5" y="20" width="19" height="2.2" fill="{{ cell.gInk }}"></rect>
+                    </sc-if>
+                    <sc-if value="{{ cell.gJus }}" hint-placeholder-val="{{ false }}">
+                      <polygon points="12,2 21.5,12 12,22 2.5,12" fill="{{ cell.gInk }}"></polygon>
+                      <rect x="10.6" y="6.5" width="2.8" height="11" fill="{{ cell.gBg }}"></rect>
+                    </sc-if>
+                    <sc-if value="{{ cell.gBave }}" hint-placeholder-val="{{ false }}">
+                      <circle cx="12" cy="12" r="10" fill="{{ cell.gInk }}"></circle>
+                      <circle cx="12" cy="12" r="4.2" fill="{{ cell.gBg }}"></circle>
+                    </sc-if>
+                    <sc-if value="{{ cell.gGrav }}" hint-placeholder-val="{{ false }}">
+                      <polygon points="2.5,20.5 8,7.5 16,7.5 21.5,20.5" fill="{{ cell.gInk }}"></polygon>
+                    </sc-if>
+                    <sc-if value="{{ cell.gDome }}" hint-placeholder-val="{{ false }}">
+                      <polygon points="12,2.5 21.5,12 12,21.5 2.5,12" fill="none" stroke="{{ cell.gInk }}" stroke-width="2.6"></polygon>
+                      <polygon points="12,8 16,12 12,16 8,12" fill="{{ cell.gInk }}"></polygon>
+                    </sc-if>
+                    <sc-if value="{{ cell.gBarre }}" hint-placeholder-val="{{ false }}">
+                      <rect x="1" y="10.4" width="22" height="3.2" fill="{{ cell.gBarreCol }}" transform="rotate(45 12 12)"></rect>
+                      <rect x="1" y="10.4" width="22" height="3.2" fill="{{ cell.gBarreCol }}" transform="rotate(-45 12 12)"></rect>
+                    </sc-if>
+                    <sc-if value="{{ cell.gOk }}" hint-placeholder-val="{{ false }}">
+                      <polygon points="4,12.5 9.5,18 20,5.5 22,8 9.5,22 2,14.5" fill="{{ cell.gInk }}"></polygon>
+                    </sc-if>
+                  </svg>
+                  <sc-if value="{{ cell.nivTxt }}" hint-placeholder-val="{{ false }}">
+                    <span aria-hidden="true" style="{{ cell.chipStyle }}">{{ cell.nivTxt }}</span>
+                  </sc-if>
+                  <sc-if value="{{ cell.tampon }}" hint-placeholder-val="{{ false }}">
+                    <span aria-hidden="true" style="{{ cell.tamponStyle }}">{{ cell.tampon }}</span>
+                  </sc-if>
+                </div>
+              </td>
+            </sc-for>
+          </tr>
+        </sc-for>
+      </tbody>
+    </table>
+  </div>
+  <div role="status" aria-live="polite" style="{{ srOnly }}">{{ msg }}</div>
+  <p aria-hidden="true" style="{{ statusStyle }}">{{ bandeau }}</p>
+  <sc-if value="{{ interactive }}" hint-placeholder-val="{{ false }}">
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px">
+      <button type="button" onClick="{{ onStart }}" style="{{ btn }}">{{ startLabel }}</button>
+      <button type="button" onClick="{{ onRot }}" aria-disabled="{{ notPlacing }}" style="{{ btn }}">Pivoter d’un quart de tour</button>
+      <button type="button" onClick="{{ onGis }}" aria-disabled="{{ notPlacing }}" style="{{ btn }}">Gisements recouverts</button>
+      <button type="button" onClick="{{ onPoser }}" aria-disabled="{{ notPlacing }}" style="{{ btnFort }}">Poser</button>
+      <button type="button" onClick="{{ onCancel }}" aria-disabled="{{ notPlacing }}" style="{{ btn }}">Annuler</button>
+    </div>
+  </sc-if>
+  <sc-if value="{{ legend }}" hint-placeholder-val="{{ false }}">
+    <div style="{{ legWrap }}">
+      <h4 style="{{ legTitle }}">Légende — les onze états de case</h4>
+      <ul style="list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:10px">
+        <sc-for list="{{ legende }}" as="it" hint-placeholder-count="11">
+          <li style="display:flex;gap:9px;align-items:flex-start">
+            <span style="{{ it.td }}">
+              <span style="{{ it.inner }}">
+                <svg viewBox="0 0 24 24" width="{{ gSize }}" height="{{ gSize }}" aria-hidden="true" focusable="false" style="display:block">
+                  <circle cx="12" cy="12" r="11.4" fill="{{ it.discFill }}"></circle>
+                  <sc-if value="{{ it.gCam }}" hint-placeholder-val="{{ false }}">
+                    <polygon points="12,3.5 21,19 3,19" fill="{{ it.gInk }}"></polygon>
+                    <rect x="2.5" y="20" width="19" height="2.2" fill="{{ it.gInk }}"></rect>
+                  </sc-if>
+                  <sc-if value="{{ it.gJus }}" hint-placeholder-val="{{ false }}">
+                    <polygon points="12,2 21.5,12 12,22 2.5,12" fill="{{ it.gInk }}"></polygon>
+                    <rect x="10.6" y="6.5" width="2.8" height="11" fill="{{ it.gBg }}"></rect>
+                  </sc-if>
+                  <sc-if value="{{ it.gBave }}" hint-placeholder-val="{{ false }}">
+                    <circle cx="12" cy="12" r="10" fill="{{ it.gInk }}"></circle>
+                    <circle cx="12" cy="12" r="4.2" fill="{{ it.gBg }}"></circle>
+                  </sc-if>
+                  <sc-if value="{{ it.gGrav }}" hint-placeholder-val="{{ false }}">
+                    <polygon points="2.5,20.5 8,7.5 16,7.5 21.5,20.5" fill="{{ it.gInk }}"></polygon>
+                  </sc-if>
+                  <sc-if value="{{ it.gDome }}" hint-placeholder-val="{{ false }}">
+                    <polygon points="12,2.5 21.5,12 12,21.5 2.5,12" fill="none" stroke="{{ it.gInk }}" stroke-width="2.6"></polygon>
+                    <polygon points="12,8 16,12 12,16 8,12" fill="{{ it.gInk }}"></polygon>
+                  </sc-if>
+                  <sc-if value="{{ it.gBarre }}" hint-placeholder-val="{{ false }}">
+                    <rect x="1" y="10.4" width="22" height="3.2" fill="{{ it.gBarreCol }}" transform="rotate(45 12 12)"></rect>
+                    <rect x="1" y="10.4" width="22" height="3.2" fill="{{ it.gBarreCol }}" transform="rotate(-45 12 12)"></rect>
+                  </sc-if>
+                  <sc-if value="{{ it.gOk }}" hint-placeholder-val="{{ false }}">
+                    <polygon points="4,12.5 9.5,18 20,5.5 22,8 9.5,22 2,14.5" fill="{{ it.gInk }}"></polygon>
+                  </sc-if>
+                </svg>
+                <sc-if value="{{ it.nivTxt }}" hint-placeholder-val="{{ false }}">
+                  <span aria-hidden="true" style="{{ it.chipStyle }}">{{ it.nivTxt }}</span>
+                </sc-if>
+              </span>
+            </span>
+            <span style="{{ legTxt }}"><b style="{{ legNum }}">{{ it.n }}</b> {{ it.titre }}</span>
+          </li>
+        </sc-for>
+      </ul>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:460,&quot;height&quot;:520},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;clair&quot;,&quot;sombre&quot;],&quot;default&quot;:&quot;clair&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;cell&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:56,&quot;min&quot;:40,&quot;max&quot;:88,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;},&quot;ts&quot;:{&quot;editor&quot;:&quot;float&quot;,&quot;default&quot;:1,&quot;min&quot;:1,&quot;max&quot;:2,&quot;step&quot;:0.25,&quot;tsType&quot;:&quot;number&quot;},&quot;interactive&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;legend&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;showAide&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;modeInit&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;normal&quot;,&quot;placement&quot;],&quot;default&quot;:&quot;normal&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;shapeInit&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;monocase&quot;,&quot;1x2&quot;,&quot;1x3&quot;,&quot;2x2&quot;,&quot;L&quot;,&quot;T&quot;,&quot;2x3&quot;,&quot;3x3&quot;],&quot;default&quot;:&quot;L&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;rotInit&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:0,&quot;min&quot;:0,&quot;max&quot;:3,&quot;tsType&quot;:&quot;number&quot;},&quot;anchorInit&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;C3&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;uid&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;p&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;caption&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Parcelle 4-B — colonnes A à F, rangées 1 à 6&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;pad&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;14px&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+class Component extends DCLogic {
+  state = {
+    focus: this.props.anchorInit || 'C3',
+    mode: this.props.modeInit || 'normal',
+    shape: this.props.shapeInit || 'L',
+    rot: this.props.rotInit || 0,
+    msg: '',
+    poses: [],
+    frappe: 0
+  };
+  gridRef = React.createRef();
+  COLS = ['A', 'B', 'C', 'D', 'E', 'F'];
+  SHAPES = {
+    monocase: { nom: '1 case', off: [[0, 0]] },
+    '1x2': { nom: '1 sur 2', off: [[0, 0], [1, 0]] },
+    '1x3': { nom: '1 sur 3', off: [[0, 0], [1, 0], [2, 0]] },
+    '2x2': { nom: '2 sur 2', off: [[0, 0], [1, 0], [0, 1], [1, 1]] },
+    L: { nom: 'L', off: [[0, 0], [0, 1], [1, 1]] },
+    T: { nom: 'T', off: [[0, 0], [1, 0], [2, 0], [1, 1]] },
+    '2x3': { nom: '2 sur 3', off: [[0, 0], [1, 0], [0, 1], [1, 1], [0, 2], [1, 2]] },
+    '3x3': { nom: '3 sur 3', off: [[0, 0], [1, 0], [2, 0], [0, 1], [1, 1], [2, 1], [0, 2], [1, 2], [2, 2]] }
+  };
+  GIS = { A1: 'camelote', B2: 'camelote', C1: 'camelote', E2: 'camelote', F2: 'jus', A5: 'bave', D6: 'bave' };
+  OBST = { E5: 'gravats', F5: 'gravats', F6: 'gravats', D6: 'dome' };
+  BATS = [
+    { id: 'M', nom: 'Mine de Camelote', niv: 3, res: 'camelote', cells: ['A1', 'B1', 'A2', 'B2'], statut: 'actif', emprise: 'A1 à B2' },
+    { id: 'P', nom: 'Puits de Jus', niv: 1, res: 'jus', cells: ['E1', 'E2'], statut: 'actif', emprise: 'E1 à E2' },
+    { id: 'C', nom: 'Cuve de Bave d’étoiles', niv: 2, res: 'bave', cells: ['C4', 'C5', 'D5'], statut: 'chantier', emprise: 'C4, C5 et D5', restant: '4 minutes 12 secondes' }
+  ];
+  NOMGIS = { camelote: 'veine de Camelote', jus: 'geyser de Jus', bave: 'récif de Bave d’étoiles' };
+  ORIENT = ['orientation initiale', 'un quart de tour', 'un demi-tour', 'trois quarts de tour'];
+
+  pal() {
+    const d = this.props.theme === 'sombre';
+    return {
+      dark: d,
+      papier: d ? '#1B2220' : '#E2E6DC',
+      encre: d ? '#E2E6DC' : '#1B2220',
+      camelote: '#C4552A',
+      jus: '#E8B21C',
+      bave: d ? '#B072C8' : '#8E4BA8',
+      gravats: d ? '#6F6A5E' : '#9B9384',
+      refus: d ? '#EC6455' : '#B02418',
+      bati: d ? '#313A36' : '#C9CFC4',
+      faible: d ? 'rgba(226,230,220,.16)' : 'rgba(27,34,32,.16)'
+    };
+  }
+  lum(hex) {
+    const v = [1, 3, 5].map(i => parseInt(hex.substr(i, 2), 16) / 255).map(c => c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4));
+    return 0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2];
+  }
+  ratio(a, b) { const x = this.lum(a), y = this.lum(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); }
+  best(fill) { const P = this.pal(); return this.ratio(fill, P.encre) >= this.ratio(fill, P.papier) ? P.encre : P.papier; }
+  hatch(deg, col, w, gap) { return 'repeating-linear-gradient(' + deg + 'deg,' + col + ' 0 ' + w + 'px,transparent ' + w + 'px ' + gap + 'px)'; }
+  parse(id) { return [this.COLS.indexOf(id[0]), parseInt(id.slice(1), 10) - 1]; }
+  mk(c, r) { return this.COLS[c] + (r + 1); }
+  batOf(id) {
+    const posed = this.state.poses.find(b => b.cells.indexOf(id) >= 0);
+    if (posed) return posed;
+    return this.BATS.find(b => b.cells.indexOf(id) >= 0);
+  }
+  offsets() {
+    let off = this.SHAPES[this.state.shape].off.map(o => o.slice());
+    for (let i = 0; i < ((this.state.rot % 4) + 4) % 4; i++) off = off.map(o => [-o[1], o[0]]);
+    const mx = Math.min.apply(null, off.map(o => o[0])), my = Math.min.apply(null, off.map(o => o[1]));
+    return off.map(o => [o[0] - mx, o[1] - my]);
+  }
+  emprise() {
+    const [c, r] = this.parse(this.state.focus);
+    return this.offsets().map(o => ({ c: c + o[0], r: r + o[1] }));
+  }
+  validite() {
+    if (this.state.mode !== 'placement') return { ok: true, cells: [], hors: [], raison: '' };
+    const cs = this.emprise();
+    const hors = cs.filter(p => p.c < 0 || p.c > 5 || p.r < 0 || p.r > 5);
+    const ids = cs.filter(p => !(p.c < 0 || p.c > 5 || p.r < 0 || p.r > 5)).map(p => this.mk(p.c, p.r));
+    let raison = '', ok = true;
+    if (hors.length) {
+      ok = false;
+      const d = [];
+      if (hors.some(p => p.c > 5)) d.push('par la droite');
+      if (hors.some(p => p.c < 0)) d.push('par la gauche');
+      if (hors.some(p => p.r > 5)) d.push('par le bas');
+      if (hors.some(p => p.r < 0)) d.push('par le haut');
+      const n = hors.length;
+      raison = n + (n > 1 ? ' cases sortent' : ' case sort') + ' de la parcelle ' + d.join(' et ') + '. Reculez d’une case' + (d.length > 1 ? ' ou pivotez avec R' : '');
+    }
+    const obst = ids.filter(id => this.OBST[id]);
+    if (ok && obst.length) {
+      ok = false;
+      const t = this.OBST[obst[0]] === 'dome' ? 'un dôme cristallisé' : 'des gravats';
+      raison = 'la case ' + obst[0] + ' est obstruée par ' + t + '. Déblayez-la ou déplacez l’emprise';
+    }
+    const occ = ids.map(id => ({ id: id, b: this.batOf(id) })).filter(x => x.b);
+    if (ok && occ.length) {
+      ok = false;
+      raison = 'l’emprise chevauche ' + occ[0].b.nom + ' en ' + occ[0].id + '. Déplacez l’emprise';
+    }
+    const couverts = ids.filter(id => this.GIS[id] && !this.OBST[id]).map(id => this.GIS[id]);
+    return { ok: ok, cells: ids, hors: hors, raison: raison, couverts: couverts };
+  }
+  listeGis(couverts) {
+    if (!couverts || !couverts.length) return 'aucun gisement recouvert';
+    const n = {};
+    couverts.forEach(k => { n[k] = (n[k] || 0) + 1; });
+    return Object.keys(n).map(k => (n[k] > 1 ? n[k] + ' ' + this.NOMGIS[k].replace('veine', 'veines').replace('geyser', 'geysers').replace('récif', 'récifs') : 'un ' + this.NOMGIS[k]).replace('un veine', 'une veine')).join(', ');
+  }
+  etat(id) {
+    const b = this.batOf(id), g = this.GIS[id], o = this.OBST[id];
+    if (o) return o === 'dome' ? 'dome' : 'gravats';
+    if (b && b.statut === 'chantier') return 'chantier';
+    if (b && g) return g === b.res ? 'productif' : 'sterile';
+    if (b) return 'batiment';
+    if (g) return 'gisement';
+    return 'libre';
+  }
+  annonce(id, cible) {
+    const b = this.batOf(id), g = this.GIS[id], e = this.etat(id), v = this.validite();
+    if (cible) {
+      const t = this.SHAPES[this.state.shape].nom, or = this.ORIENT[((this.state.rot % 4) + 4) % 4];
+      if (id !== this.state.focus) return id + ', case couverte par l’emprise en cours';
+      const base = id + ', emprise en ' + t + ', ' + or + ', occupe ' + v.cells.join(', ') + '. ';
+      return base + (v.ok ? 'Placement valide, ' + this.listeGis(v.couverts) + '. Entrée pour poser.' : 'Placement refusé : ' + v.raison + '.');
+    }
+    if (e === 'gravats') return id + ', case obstruée par des gravats, déblaiement 2 minutes, libère du terrain nu';
+    if (e === 'dome') return id + ', case obstruée par un dôme cristallisé, déblaiement 6 minutes, libère un gisement';
+    if (e === 'gisement') return id + ', ' + this.NOMGIS[g] + ', libre';
+    if (e === 'productif') return id + ', ' + this.NOMGIS[g] + ' productive, recouverte par ' + b.nom + ' niveau ' + b.niv + ', emprise ' + b.emprise;
+    if (e === 'sterile') return id + ', ' + this.NOMGIS[g] + ' stérile : recouverte par ' + b.nom + ' niveau ' + b.niv + ', qui n’exploite pas cette matière. Aucune production. Déplacez le bâtiment pour la libérer';
+    if (e === 'chantier') return id + ', ' + b.nom + ' niveau ' + b.niv + ' en chantier, emprise ' + b.emprise + ', fin dans ' + b.restant;
+    if (e === 'batiment') {
+      const tot = b.cells.filter(x => this.GIS[x]).length, bons = b.cells.filter(x => this.GIS[x] === b.res).length;
+      return id + ', ' + b.nom + ' niveau ' + b.niv + ', emprise ' + b.emprise + (tot ? ', recouvre ' + bons + ' gisement' + (bons > 1 ? 's' : '') + ' utile' + (bons > 1 ? 's' : '') + ' sur ' + tot : ', sur terrain nu');
+    }
+    return id + ', terrain libre';
+  }
+
+  style(id, cible, valide, taille) {
+    const P = this.pal(), e = this.etat(id), b = this.batOf(id), g = this.GIS[id];
+    const trait = P.dark ? 'rgba(226,230,220,.5)' : 'rgba(27,34,32,.5)';
+    const s = { position: 'relative', width: '100%', height: '100%', boxSizing: 'border-box', display: 'flex', alignItems: 'center', justifyContent: 'center', background: P.papier, backgroundImage: this.hatch(45, P.faible, 1, 9), overflow: 'visible', boxShadow: 'inset 0 0 0 1px ' + trait };
+    if (e === 'gravats') { s.background = P.gravats; s.backgroundImage = this.hatch(45, P.encre, 2, 6) + ',' + this.hatch(-45, P.encre, 2, 6); }
+    if (e === 'dome') { s.background = P.gravats; s.backgroundImage = this.hatch(90, P.encre, 2.5, 7); }
+    if (e === 'gisement' || e === 'productif' || e === 'sterile') {
+      const col = P[g], hk = this.best(col);
+      s.background = col;
+      s.backgroundImage = g === 'camelote' ? this.hatch(45, hk, 2, 7) : g === 'jus' ? this.hatch(90, hk, 2, 7) : this.hatch(0, hk, 2, 7);
+      s.boxShadow = 'inset 0 0 0 2px ' + P.encre;
+    }
+    if (e === 'sterile') s.backgroundImage = this.hatch(-45, P.refus, 5, 11) + ',' + this.hatch(45, this.best(P[g]), 2, 7);
+    if (e === 'batiment') { s.background = P.bati; s.backgroundImage = this.hatch(90, P.faible, 1, 7) + ',' + this.hatch(0, P.faible, 1, 7); }
+    if (e === 'chantier') { s.background = P.papier; s.backgroundImage = this.hatch(45, P.encre, 5, 13); }
+    // limite d'emprise : trait épais sur les côtés qui bordent l'extérieur du bâtiment
+    if (b) {
+      const [c, r] = this.parse(id), w = 3, sh = [];
+      if (b.cells.indexOf(this.mk(c, r - 1)) < 0) sh.push('inset 0 ' + w + 'px 0 ' + P.encre);
+      if (b.cells.indexOf(this.mk(c, r + 1)) < 0) sh.push('inset 0 -' + w + 'px 0 ' + P.encre);
+      if (c > 0 && b.cells.indexOf(this.mk(c - 1, r)) < 0 || c === 0) sh.push('inset ' + w + 'px 0 0 ' + P.encre);
+      if (b.cells.indexOf(this.mk(c + 1, r)) < 0) sh.push('inset -' + w + 'px 0 0 ' + P.encre);
+      s.boxShadow = sh.join(',');
+    }
+    if (cible) {
+      s.outline = '3px ' + (valide ? 'dashed ' : 'solid ') + (valide ? P.encre : P.refus);
+      s.outlineOffset = '-3px';
+      s.boxShadow = 'inset 0 0 0 6px ' + (valide ? P.papier : 'transparent');
+      if (!valide) s.backgroundImage = this.hatch(-45, P.refus, 6, 12) + ',' + s.backgroundImage;
+    }
+    return s;
+  }
+  glyphes(id, cible, valide) {
+    const P = this.pal(), e = this.etat(id), g = this.GIS[id], b = this.batOf(id);
+    const o = { gCam: false, gJus: false, gBave: false, gGrav: false, gDome: false, gBarre: false, gOk: false, gInk: P.encre, gBg: P.papier, discFill: 'transparent', gBarreCol: P.refus };
+    if (e === 'gravats') { o.gGrav = true; o.discFill = P.papier; }
+    if (e === 'dome') { o.gDome = true; o.discFill = P.papier; }
+    if (g && (e === 'gisement' || e === 'productif' || e === 'sterile')) {
+      o.gCam = g === 'camelote'; o.gJus = g === 'jus'; o.gBave = g === 'bave';
+      o.gInk = this.best(P[g]); o.gBg = P[g];
+    }
+    if (e === 'productif') { o.discFill = P.papier; o.gInk = P.encre; o.gBg = P.papier; }
+    if (e === 'sterile') { o.gBarre = true; o.discFill = P.papier; }
+    if (e === 'batiment' && b && b.cells[0] === id) { o.gCam = b.res === 'camelote'; o.gJus = b.res === 'jus'; o.gBave = b.res === 'bave'; }
+    if (cible && id === this.state.focus) { if (valide) { o.gOk = true; o.discFill = P.papier; o.gInk = P.encre; } else { o.gBarre = true; o.discFill = P.papier; } }
+    return o;
+  }
+
+  move(dc, dr) {
+    const [c, r] = this.parse(this.state.focus);
+    const nc = Math.max(0, Math.min(5, c + dc)), nr = Math.max(0, Math.min(5, r + dr));
+    if (nc === c && nr === r) { this.setState({ msg: 'Bord de parcelle : impossible d’aller plus loin dans cette direction.' }); return; }
+    this.setState({ focus: this.mk(nc, nr), msg: '' }, () => this.focusCell());
+  }
+  focusCell() {
+    const n = this.gridRef.current && this.gridRef.current.querySelector('[data-id="' + this.state.focus + '"]');
+    if (n) n.focus();
+  }
+  start = () => {
+    if (this.state.mode === 'placement') { this.cancel(); return; }
+    const v = { mode: 'placement' };
+    this.setState(v, () => this.setState({ msg: 'Placement démarré. Cuve de Bave d’étoiles niveau 1, emprise en ' + this.SHAPES[this.state.shape].nom + '. Flèches pour déplacer, R pour pivoter, Entrée pour poser, Échap pour annuler.' }, () => this.focusCell()));
+  };
+  rot = () => {
+    if (this.state.mode !== 'placement') return;
+    this.setState(s => ({ rot: s.rot + 1 }), () => {
+      const v = this.validite();
+      this.setState({ msg: 'Pivoté : ' + this.ORIENT[((this.state.rot % 4) + 4) % 4] + '. Occupe ' + v.cells.join(', ') + '. ' + (v.ok ? 'Placement valide, ' + this.listeGis(v.couverts) + '.' : 'Placement refusé : ' + v.raison + '.') });
+    });
+  };
+  gis = () => {
+    const v = this.validite();
+    if (this.state.mode !== 'placement') return;
+    this.setState({ msg: 'Emprise sur ' + v.cells.join(', ') + ' : ' + this.listeGis(v.couverts) + '.' });
+  };
+  poser = () => {
+    if (this.state.mode !== 'placement') return;
+    const v = this.validite();
+    if (!v.ok) { this.setState(s => ({ msg: 'Refusé : ' + v.raison + '.', frappe: s.frappe + 1 })); return; }
+    const b = { id: 'N' + this.state.poses.length, nom: 'Cuve de Bave d’étoiles', niv: 1, res: 'bave', cells: v.cells, statut: 'chantier', emprise: v.cells.join(', '), restant: '3 minutes' };
+    this.setState(s => ({ poses: s.poses.concat([b]), mode: 'normal', frappe: s.frappe + 1, msg: 'Posé. Cuve de Bave d’étoiles niveau 1 en chantier sur ' + v.cells.join(', ') + ', ' + this.listeGis(v.couverts) + '. Fin dans 3 minutes.' }));
+  };
+  cancel = () => {
+    this.setState({ mode: 'normal', msg: 'Placement annulé. Rien n’a été posé.' }, () => this.focusCell());
+  };
+  onKey = (e) => {
+    const k = e.key;
+    if (k === 'ArrowRight') { e.preventDefault(); this.move(1, 0); }
+    else if (k === 'ArrowLeft') { e.preventDefault(); this.move(-1, 0); }
+    else if (k === 'ArrowDown') { e.preventDefault(); this.move(0, 1); }
+    else if (k === 'ArrowUp') { e.preventDefault(); this.move(0, -1); }
+    else if (k === 'Home') { e.preventDefault(); const [, r] = this.parse(this.state.focus); this.setState({ focus: this.mk(e.ctrlKey ? 0 : 0, e.ctrlKey ? 0 : r) }, () => this.focusCell()); }
+    else if (k === 'End') { e.preventDefault(); const [, r] = this.parse(this.state.focus); this.setState({ focus: this.mk(5, e.ctrlKey ? 5 : r) }, () => this.focusCell()); }
+    else if (k === 'r' || k === 'R') { e.preventDefault(); this.rot(); }
+    else if (k === 'g' || k === 'G') { e.preventDefault(); this.gis(); }
+    else if (k === 'Enter' || k === ' ') {
+      e.preventDefault();
+      if (this.state.mode === 'placement') this.poser();
+      else this.start();
+    } else if (k === 'Escape') { e.preventDefault(); this.cancel(); }
+  };
+
+  renderVals() {
+    const B = v => v === true || v === 'true';
+    const P = this.pal(), px = Number(this.props.cell) || 56, ts = Number(this.props.ts) || 1;
+    const interactive = B(this.props.interactive);
+    const cible = this.state.mode === 'placement';
+    const v = this.validite();
+    const empIds = cible ? v.cells : [];
+    const rows = [];
+    for (let r = 0; r < 6; r++) {
+      const cells = [];
+      for (let c = 0; c < 6; c++) {
+        const id = this.mk(c, r);
+        const isCible = cible && empIds.indexOf(id) >= 0;
+        const st = this.style(id, isCible, v.ok);
+        const foc = this.state.focus === id;
+        if (foc) {
+          st.boxShadow = (st.boxShadow ? st.boxShadow + ',' : '') + '0 0 0 3px ' + P.papier + ',0 0 0 6px ' + P.encre;
+          st.zIndex = 6;
+        }
+        const b = this.batOf(id), e = this.etat(id);
+        const anchor = b && b.cells[0] === id;
+        const g = this.glyphes(id, isCible, v.ok);
+        cells.push(Object.assign({
+          id: id,
+          tab: foc ? 0 : -1,
+          sel: isCible ? 'true' : 'false',
+          annonce: this.annonce(id, isCible),
+          td: { padding: 0, margin: 0, width: px + 'px', height: px + 'px', minWidth: px + 'px', border: 0, position: 'relative', overflow: 'visible', outline: 'none' },
+          inner: st,
+          addrStyle: { position: 'absolute', top: '2px', left: '2px', font: '500 ' + Math.round(10 * ts) + 'px/1.1 "JetBrains Mono",ui-monospace,monospace', fontVariantNumeric: 'tabular-nums', color: P.encre, background: e === 'libre' && !isCible ? 'transparent' : P.papier, padding: e === 'libre' && !isCible ? 0 : '0 2px', letterSpacing: '.02em', pointerEvents: 'none', zIndex: 3 },
+          nivTxt: anchor ? 'N' + b.niv : null,
+          chipStyle: { position: 'absolute', right: '2px', bottom: '2px', font: '400 ' + Math.round(10 * ts) + 'px/1.15 "Saira Stencil One",system-ui', color: P.encre, background: P.papier, border: '1.5px solid ' + P.encre, padding: '1px 3px', letterSpacing: '.04em', pointerEvents: 'none' },
+          tampon: anchor && b.statut === 'chantier' ? 'CHANTIER' : null,
+          tamponStyle: {
+            position: 'absolute', left: '3px', top: '58%', transformOrigin: 'left center', transform: 'translateY(-50%) rotate(-6deg)', whiteSpace: 'nowrap', zIndex: 8,
+            font: '400 ' + Math.round(8.5 * ts) + 'px/1 "Saira Stencil One",system-ui', letterSpacing: '.04em',
+            color: P.encre, background: P.papier, border: '2px solid ' + P.encre, boxShadow: '2px 2px 0 ' + P.encre, padding: '2px 5px', pointerEvents: 'none'
+          },
+          onClick: () => { this.setState({ focus: id }, () => this.focusCell()); },
+          onFocus: () => { if (this.state.focus !== id) this.setState({ focus: id }); }
+        }, g));
+      }
+      rows.push({ num: r + 1, cells: cells });
+    }
+
+    const legDefs = [
+      ['1', 'Libre', 'A3'], ['2', 'Obstruée — gravats', 'E5'], ['3', 'Obstruée — dôme cristallisé', 'D6'],
+      ['4', 'Veine de Camelote, libre', 'C1'], ['5', 'Geyser de Jus, libre', 'F2'], ['6', 'Récif de Bave d’étoiles, libre', 'A5'],
+      ['7', 'Gisement productif', 'A1'], ['8', 'Gisement stérile — mauvais bâtiment', 'E2'],
+      ['9', 'Bâtiment actif · limite d’emprise et pastille de niveau', 'A2'], ['10', 'Bâtiment en chantier', 'C4'],
+      ['11', 'Cible de placement — valide', 'X'],
+      ['11', 'Cible de placement — refusée, avec sa raison écrite', 'Y']
+    ];
+    const legende = legDefs.map(d => {
+      if (d[2] === 'X' || d[2] === 'Y') {
+        const ok = d[2] === 'X';
+        const s = this.style('B3', true, ok), g = this.glyphes('B3', true, ok);
+        g.discFill = P.papier;
+        if (ok) { g.gOk = true; g.gInk = P.encre; } else { g.gBarre = true; }
+        s.width = '100%'; s.height = '100%';
+        return Object.assign({ n: d[0], titre: d[1], td: { display: 'block', width: '34px', height: '34px', flex: '0 0 auto' }, inner: s, nivTxt: null }, g);
+      }
+      const s = this.style(d[2], false, true), g = this.glyphes(d[2], false, true);
+      const b = this.batOf(d[2]);
+      return Object.assign({
+        n: d[0], titre: d[1], td: { display: 'block', width: '34px', height: '34px', flex: '0 0 auto' }, inner: s,
+        nivTxt: null,
+        chipStyle: { position: 'absolute', right: '1px', bottom: '1px', font: '400 8px/1 "Saira Stencil One",system-ui', color: P.encre, background: P.papier, border: '1px solid ' + P.encre, padding: '0 2px' }
+      }, g);
+    });
+
+    return {
+      uid: this.props.uid || 'p',
+      cols: this.COLS,
+      rows: rows,
+      gSize: Math.round(px * 0.4),
+      gridRef: this.gridRef,
+      onKey: this.onKey,
+      msg: this.state.msg,
+      bandeau: this.state.msg || (cible
+        ? 'Emprise en ' + this.SHAPES[this.state.shape].nom + ', ' + this.ORIENT[((this.state.rot % 4) + 4) % 4] + ', ancrée en ' + this.state.focus + '. Occupe ' + (v.cells.length ? v.cells.join(', ') : 'aucune case du plan') + '. ' + (v.ok ? 'Placement valide, ' + this.listeGis(v.couverts) + '. Entrée pour poser.' : 'Placement refusé : ' + v.raison + '.')
+        : this.annonce(this.state.focus, false) + '. Entrée pour démarrer un placement.'),
+      srOnly: { position: 'absolute', width: '1px', height: '1px', overflow: 'hidden', clipPath: 'inset(50%)', whiteSpace: 'nowrap', margin: 0 },
+      interactive: interactive,
+      legend: B(this.props.legend),
+      legende: legende,
+      notPlacing: this.state.mode === 'placement' ? 'false' : 'true',
+      startLabel: this.state.mode === 'placement' ? 'Quitter le placement' : 'Poser une Cuve de Bave (emprise en L)',
+      onStart: this.start, onRot: this.rot, onGis: this.gis, onPoser: this.poser, onCancel: this.cancel,
+      caption: this.props.caption || 'Parcelle 4-B — colonnes A à F, rangées 1 à 6',
+      aide: interactive
+        ? 'Grille de 36 cases. Tab pour y entrer, flèches pour vous déplacer de case en case, Entrée pour démarrer un placement, R pour pivoter, Échap pour annuler, Tab pour sortir.'
+        : 'Grille de 36 cases. Tab pour y entrer, flèches pour vous déplacer, Tab pour sortir.',
+      root: { background: P.papier, color: P.encre, padding: this.props.pad || '14px', font: '400 ' + Math.round(13 * ts) + 'px/1.45 Archivo,"Archivo Narrow",system-ui,sans-serif', boxSizing: 'border-box', display: 'inline-block', maxWidth: '100%' },
+      aideStyle: B(this.props.showAide)
+        ? { margin: '0 0 10px', maxWidth: '46ch', font: '400 ' + Math.round(11.5 * ts) + 'px/1.5 Archivo,system-ui', color: P.encre, opacity: .85 }
+        : { position: 'absolute', width: '1px', height: '1px', overflow: 'hidden', clip: 'rect(0 0 0 0)', clipPath: 'inset(50%)', whiteSpace: 'nowrap', margin: 0 },
+      tableStyle: { borderCollapse: 'separate', borderSpacing: '2px', margin: 0, tableLayout: 'fixed' },
+      capStyle: { captionSide: 'top', textAlign: 'left', font: '600 ' + Math.round(10.5 * ts) + 'px/1.3 Archivo,system-ui', letterSpacing: '.14em', textTransform: 'uppercase', color: P.encre, padding: '0 0 7px 0', marginBottom: '4px', borderBottom: '2px solid ' + P.encre },
+      corner: { width: Math.round(20 * ts) + 'px', padding: 0, border: 0, background: P.encre },
+      headStyle: { font: '600 ' + Math.round(11 * ts) + 'px/1 "JetBrains Mono",ui-monospace,monospace', fontVariantNumeric: 'tabular-nums', color: P.papier, background: P.encre, padding: '3px 2px', textAlign: 'center', border: 0, letterSpacing: '.04em' },
+      statusStyle: interactive
+        ? { marginTop: '10px', minHeight: Math.round(38 * ts) + 'px', maxWidth: (px * 6 + 40) + 'px', padding: '8px 10px', border: '2px solid ' + P.encre, background: P.papier, color: P.encre, font: '400 ' + Math.round(12.5 * ts) + 'px/1.45 Archivo,system-ui' }
+        : { position: 'absolute', width: '1px', height: '1px', overflow: 'hidden', clipPath: 'inset(50%)', whiteSpace: 'nowrap' },
+      btn: { minHeight: '44px', padding: '10px 12px', background: P.papier, color: P.encre, border: '2px solid ' + P.encre, font: '600 ' + Math.round(12 * ts) + 'px/1.2 Archivo,system-ui', letterSpacing: '.02em', cursor: 'pointer' },
+      btnFort: { minHeight: '44px', padding: '10px 14px', background: P.encre, color: P.papier, border: '2px solid ' + P.encre, font: '600 ' + Math.round(12 * ts) + 'px/1.2 Archivo,system-ui', letterSpacing: '.04em', cursor: 'pointer' },
+      legWrap: { marginTop: '16px', paddingTop: '12px', borderTop: '2px solid ' + P.encre, maxWidth: (px * 6 + 60) + 'px' },
+      legTitle: { margin: '0 0 10px', font: '600 ' + Math.round(11 * ts) + 'px/1.2 Archivo,system-ui', letterSpacing: '.08em', textTransform: 'uppercase', color: P.encre },
+      legTxt: { font: '400 ' + Math.round(11.5 * ts) + 'px/1.35 Archivo,system-ui', color: P.encre },
+      legNum: { font: '500 ' + Math.round(11 * ts) + 'px/1 "JetBrains Mono",monospace', fontVariantNumeric: 'tabular-nums', marginRight: '2px' }
+    };
+  }
+}
+</script>
+</body>
+</html>

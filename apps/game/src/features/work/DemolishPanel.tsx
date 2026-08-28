@@ -45,7 +45,7 @@ export interface DemolishPanelProps {
 /** Le nom d'un bâtiment posé : son type, son niveau **et** où il est. */
 function describeBuilding(building: BuildingView): string {
   const label = BUILDING_LABELS[building.typeId] ?? building.typeId
-  return `${label} niveau ${building.level}, ${describePosition(building.anchor).toLowerCase()}`
+  return `${label} niveau ${building.level}, ${describePosition(building.anchor)}`
 }
 
 function describeAmounts(amounts: readonly ResourceAmount[]): string {
@@ -206,7 +206,7 @@ function DemolishPreview({
             : effect.depositsPreserved
                 .map(
                   (deposit) =>
-                    `${DEPOSIT_LABELS[deposit.depositOf] ?? deposit.depositOf} en ${describePosition(deposit).toLowerCase()}`,
+                    `${DEPOSIT_LABELS[deposit.depositOf] ?? deposit.depositOf} en ${describePosition(deposit)}`,
                 )
                 .join(', ')}
         </dd>

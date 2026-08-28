@@ -58,9 +58,18 @@ function renderAt(path: string, info: SessionInfo | null = INFO) {
 }
 
 describe('les deux routes de 001 existent', () => {
+  /**
+   * *Réécrit par 002.* Le titre était « Ma planète ». FR-008 veut que la plaque
+   * d'en-tête porte **l'identité** de la planète, et le nom d'archétype tient ce
+   * rôle tant qu'il n'y a pas de nom propre : « Ma planète » ne disait pas *où* le
+   * joueur se trouvait.
+   *
+   * Aucune tâche ne listait ces cinq attentes : T017 ne relevait que les
+   * assertions de position.
+   */
   it('rend la planète sur /planet', async () => {
     renderAt('/planet')
-    expect(await screen.findByRole('heading', { name: /planète/i })).toBeDefined()
+    expect(await screen.findByRole('heading', { level: 1, name: /berceau/i })).toBeDefined()
   })
 
   it('rend les règles sur /rules', async () => {
@@ -74,7 +83,7 @@ describe('les deux routes de 001 existent', () => {
    */
   it('mène à la planète depuis la racine', async () => {
     renderAt('/')
-    expect(await screen.findByRole('heading', { name: /planète/i })).toBeDefined()
+    expect(await screen.findByRole('heading', { level: 1, name: /berceau/i })).toBeDefined()
   })
 })
 
@@ -103,7 +112,7 @@ describe('la navigation est annoncée aux technologies d’assistance', () => {
    */
   it('expose une navigation et un contenu mainRegion', async () => {
     renderAt('/planet')
-    await screen.findByRole('heading', { name: /planète/i })
+    await screen.findByRole('heading', { level: 1, name: /berceau/i })
 
     expect(screen.getByRole('navigation')).toBeDefined()
     expect(screen.getByRole('main')).toBeDefined()
@@ -111,7 +120,7 @@ describe('la navigation est annoncée aux technologies d’assistance', () => {
 
   it('donne accès aux deux routes depuis la navigation', async () => {
     renderAt('/planet')
-    await screen.findByRole('heading', { name: /planète/i })
+    await screen.findByRole('heading', { level: 1, name: /berceau/i })
 
     const navigation = screen.getByRole('navigation')
     expect(navigation.querySelectorAll('a')).toHaveLength(2)
@@ -132,7 +141,7 @@ describe('la planète est derrière la session, les règles ne le sont pas', () 
 
   it('affiche la planète une fois la session établie', async () => {
     renderAt('/planet')
-    expect(await screen.findByRole('heading', { name: /ma planète/i })).toBeDefined()
+    expect(await screen.findByRole('heading', { level: 1, name: /berceau/i })).toBeDefined()
   })
 
   /**

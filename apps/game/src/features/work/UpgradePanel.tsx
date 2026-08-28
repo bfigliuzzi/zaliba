@@ -38,7 +38,7 @@ export interface UpgradePanelProps {
 /** Le nom d'un bâtiment posé : son type, son niveau **et** où il est. */
 function describeBuilding(building: BuildingView): string {
   const label = BUILDING_LABELS[building.typeId] ?? building.typeId
-  return `${label} niveau ${building.level}, ${describePosition(building.anchor).toLowerCase()}`
+  return `${label} niveau ${building.level}, ${describePosition(building.anchor)}`
 }
 
 export function UpgradePanel({ building, preview, pending, onConfirm }: UpgradePanelProps) {

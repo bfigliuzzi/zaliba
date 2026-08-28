@@ -1,0 +1,1063 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=Archivo+Narrow:wght@400;600;700&family=JetBrains+Mono:wght@400;500;700&family=Saira+Stencil+One&display=swap">
+<style>
+body{margin:0;background:#D6DBD0;color:#1B2220;font-family:Archivo,system-ui,sans-serif;text-wrap:pretty}
+a{color:#1B2220;text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:2px}
+a:hover{color:#C4552A}
+:focus-visible{outline:3px solid #C4552A;outline-offset:2px}
+@media (prefers-reduced-motion: reduce){*{animation-duration:1ms !important;transition-duration:1ms !important}}
+</style>
+</helmet>
+
+<section id="t6" style="padding:40px 40px 34px;border-bottom:2px solid #1B2220">
+  <div style="display:flex;align-items:baseline;gap:10px;margin:0 0 6px">
+    <a href="#t6" style="font:600 10px/1 'JetBrains Mono',monospace;padding:4px 7px;background:#1B2220;color:#E2E6DC;text-decoration:none;letter-spacing:.08em">6</a>
+    <span style="font:600 13px/1.2 Archivo,system-ui;letter-spacing:.04em">La Régie approximative — reprise de <a href="#4b">4b</a>, mobile et desktop, plus une sortie de route</span>
+  </div>
+  <p style="margin:0 0 8px;max-width:92ch;font:400 14px/1.6 Archivo,system-ui">Le vrai gisement comique n'était pas dans les couleurs, il était dans la <b>fiction</b> : cette interface est produite par la Régie elle-même, une administration d'amateurs. Donc elle est <b>tracée à la main</b> — les traits dépassent aux angles comme un tableau fait à la règle —, elle <b>se corrige devant vous</b> (l'ancienne valeur est rayée, la nouvelle écrite à côté), et elle glisse des <b>notes de bas de page</b> que personne n'a relues. Les hachures sont supprimées partout : la redondance passe désormais par la <b>silhouette</b> (<a href="#5c">5c</a>) et le <b>trait</b> (<a href="#5b">5b</a>).</p>
+  <p style="margin:0 0 8px;max-width:92ch;font:400 14px/1.6 Archivo,system-ui"><b>La loi qui rend ça soutenable : l'approximation ne touche jamais la donnée.</b> Elle vit dans le décor — cadres, étiquettes, tampons, notes en corps 9. Les chiffres restent d'aplomb, en mono tabulaire, sur papier, à 12,8:1. Une rature ne porte <i>jamais</i> l'information courante : elle porte l'ancienne, et le texte rayé est retiré de l'arbre d'accessibilité et remplacé par une phrase explicite (« ancien relevé, rayé : 17 980, corrigé en 18 420 »), pour qu'aucun lecteur d'écran n'énonce « niveau 2 3 ». Les rotations plafonnent à 1,5°, jamais sur un bloc de texte long, jamais au focus. Aucune blague n'est nécessaire pour jouer : on peut toutes les rater et gagner quand même.</p>
+  <p style="margin:0 0 24px;max-width:92ch;font:400 14px/1.6 Archivo,system-ui"><b>La déclinaison desktop</b> n'est pas la version mobile étirée : la métaphore gagne son <b>guichet</b>. Colonne de gauche, le registre des planètes (avec une rayée, perdue mardi) ; au centre, le plan de parcelle avec ses bandes de coordonnées ; à droite, le comptoir — ressources, chantier, et le bloc de signature du contrôleur.</p>
+
+  <div style="display:flex;flex-wrap:wrap;gap:30px;align-items:flex-start">
+
+    <div id="6a" style="scroll-margin-top:16px;flex:none;display:flex;flex-direction:column;gap:9px">
+      <div style="display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 Archivo,system-ui;max-width:430px"><a href="#6a" style="font:600 10.5px/1 'JetBrains Mono',monospace;padding:3px 7px;background:rgba(27,34,32,.1);text-decoration:none">6a</a><span><b>La Régie approximative</b> · mobile · 430 px</span></div>
+
+      <div style="width:430px;background:#D6DBD0;border:3px solid #1B2220;padding:16px 15px 15px;display:flex;flex-direction:column;gap:15px;position:relative;overflow:hidden">
+        <span aria-hidden="true" style="position:absolute;left:74%;top:31%;width:4px;height:4px;background:#1B2220;border-radius:50%;opacity:.45"></span>
+        <span aria-hidden="true" style="position:absolute;left:12%;top:57%;width:2.5px;height:2.5px;background:#1B2220;border-radius:50%;opacity:.4"></span>
+        <span aria-hidden="true" style="position:absolute;left:88%;top:73%;width:3px;height:3px;background:#1B2220;border-radius:50%;opacity:.35"></span>
+
+        <div style="position:relative;background:#E2E6DC;padding:11px 12px 12px">
+          <span aria-hidden="true" style="position:absolute;left:-7px;right:-4px;top:0;height:2.5px;background:#1B2220"></span>
+          <span aria-hidden="true" style="position:absolute;left:-4px;right:-7px;bottom:0;height:2.5px;background:#1B2220"></span>
+          <span aria-hidden="true" style="position:absolute;top:-6px;bottom:-3px;left:0;width:2.5px;background:#1B2220"></span>
+          <span aria-hidden="true" style="position:absolute;top:-3px;bottom:-6px;right:0;width:2.5px;background:#1B2220"></span>
+          <p style="margin:0;font:600 8.5px/1.35 Archivo,system-ui;letter-spacing:.14em;text-transform:uppercase;max-width:24ch">Régie interplanétaire des matières qui coulent · guichet 4</p>
+          <p style="margin:6px 0 0;font:400 15px/1 Archivo,system-ui;color:#1B2220"><span style="position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap">Ancien nom, rayé : Trou du Cul du Monde. Corrigé en Fond de Tiroir.</span><span aria-hidden="true" style="position:relative;display:inline-block;opacity:.72">Trou du Cul du Monde<span style="position:absolute;left:-3px;right:-4px;top:54%;height:2px;background:#C4552A;transform:rotate(-1.1deg)"></span></span></p>
+          <p style="margin:2px 0 0;font:400 34px/.95 'Saira Stencil One',Archivo,system-ui">FOND DE TIROIR</p>
+          <div style="display:flex;align-items:baseline;gap:7px;margin-top:7px">
+            <p style="margin:0;font:700 12px/1 'JetBrains Mono',monospace;background:#1B2220;color:#E2E6DC;padding:4px 6px;font-variant-numeric:tabular-nums">1:204:6</p>
+            <p style="margin:0;font:400 9.5px/1.2 Archivo,system-ui;opacity:.75">vérifié une fois</p>
+          </div>
+          <p aria-hidden="true" style="margin:0;position:absolute;right:6px;bottom:8px;transform:rotate(-6deg);font:400 11px/1.1 'Saira Stencil One',Archivo,system-ui;color:#C4552A;border:2px solid #C4552A;padding:3px 5px;text-align:center;letter-spacing:.04em">VU, MAIS<br>PAS LU</p>
+        </div>
+
+        <ul style="list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px">
+          <li style="border:2.5px solid #1B2220;background:#C4552A;padding:0">
+            <div style="height:44px;display:grid;place-items:center;border-bottom:2.5px solid #1B2220"><svg width="30" height="30" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="display:block"><polygon points="12,3 21,19.5 3,19.5" fill="#1B2220"></polygon><rect x="2.5" y="20.5" width="19" height="2.4" fill="#1B2220"></rect></svg></div>
+            <div style="background:#E2E6DC;padding:5px 5px 6px;transform:rotate(-.7deg);margin:4px 3px 3px;border:1.5px solid #1B2220">
+              <p style="margin:0;font:600 8px/1.2 Archivo,system-ui;letter-spacing:.1em;text-transform:uppercase">Camelote</p>
+              <p style="margin:1px 0 0;font:400 9.5px/1.1 'JetBrains Mono',monospace"><span style="position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap">Ancien relevé, rayé : 17 980. Corrigé en 18 420.</span><span aria-hidden="true" style="position:relative;display:inline-block;opacity:.72">17 980<span style="position:absolute;left:-2px;right:-2px;top:52%;height:1.5px;background:#C4552A"></span></span></p>
+              <p style="margin:0;font:700 16px/1.05 'JetBrains Mono',monospace;font-variant-numeric:tabular-nums">18 420</p>
+              <p style="margin:1px 0 0;font:500 9.5px/1.2 'JetBrains Mono',monospace">+540/h *</p>
+            </div>
+          </li>
+          <li style="border:2.5px solid #1B2220;background:#E8B21C;padding:0">
+            <div style="height:44px;display:grid;place-items:center;border-bottom:2.5px solid #1B2220"><svg width="30" height="30" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="display:block"><polygon points="12,2 21.5,12 12,22 2.5,12" fill="#1B2220"></polygon><rect x="10.7" y="6.5" width="2.6" height="11" fill="#E8B21C"></rect></svg></div>
+            <div style="background:#E2E6DC;padding:5px 5px 6px;transform:rotate(.6deg);margin:4px 3px 3px;border:1.5px solid #1B2220">
+              <p style="margin:0;font:600 8px/1.2 Archivo,system-ui;letter-spacing:.1em;text-transform:uppercase">Jus</p>
+              <p style="margin:1px 0 0;font:400 9.5px/1.1 Archivo,system-ui;opacity:.7">de quoi ?</p>
+              <p style="margin:0;font:700 16px/1.05 'JetBrains Mono',monospace;font-variant-numeric:tabular-nums">9 105</p>
+              <p style="margin:1px 0 0;font:500 9.5px/1.2 'JetBrains Mono',monospace">+220/h *</p>
+            </div>
+          </li>
+          <li style="border:2.5px solid #1B2220;background:#8E4BA8;padding:0">
+            <div style="height:44px;display:grid;place-items:center;border-bottom:2.5px solid #1B2220"><svg width="30" height="30" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="display:block"><circle cx="12" cy="12" r="10" fill="#1B2220"></circle><circle cx="12" cy="12" r="4" fill="#8E4BA8"></circle></svg></div>
+            <div style="background:#E2E6DC;padding:5px 5px 6px;transform:rotate(-.5deg);margin:4px 3px 3px;border:1.5px solid #1B2220">
+              <p style="margin:0;font:600 8px/1.2 Archivo,system-ui;letter-spacing:.1em;text-transform:uppercase">Bave</p>
+              <p style="margin:1px 0 0;font:400 9.5px/1.1 Archivo,system-ui;opacity:.7">ne pas goûter</p>
+              <p style="margin:0;font:700 16px/1.05 'JetBrains Mono',monospace;font-variant-numeric:tabular-nums">1 260</p>
+              <p style="margin:1px 0 0;font:500 9.5px/1.2 'JetBrains Mono',monospace">+45/h *</p>
+            </div>
+          </li>
+        </ul>
+        <p style="margin:-8px 0 0;font:400 9.5px/1.4 Archivo,system-ui;opacity:.8">* Les débits sont une estimation de l'estimateur, lui-même estimé.</p>
+
+        <div style="position:relative;background:#E2E6DC;padding:12px 12px 11px">
+          <span aria-hidden="true" style="position:absolute;left:-6px;right:-3px;top:0;height:2.5px;background:#1B2220"></span>
+          <span aria-hidden="true" style="position:absolute;left:-3px;right:-6px;bottom:0;height:2.5px;background:#1B2220"></span>
+          <span aria-hidden="true" style="position:absolute;top:-5px;bottom:-3px;left:0;width:2.5px;background:#1B2220"></span>
+          <span aria-hidden="true" style="position:absolute;top:-3px;bottom:-5px;right:0;width:2.5px;background:#1B2220"></span>
+          <div style="display:flex;align-items:flex-end;gap:11px">
+            <div style="flex:1 1 auto;min-width:0">
+              <p style="margin:0;font:600 8.5px/1.2 Archivo,system-ui;letter-spacing:.16em;text-transform:uppercase">Chantier en cours <span style="opacity:.7;letter-spacing:0;text-transform:none;font-weight:400">(depuis mardi)</span></p>
+              <p style="margin:3px 0 0;font:700 16px/1.2 Archivo,system-ui">Cuve de Bave d'étoiles</p>
+              <p style="margin:3px 0 0;font:400 11.5px/1.3 Archivo,system-ui"><span style="position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap">Niveau 3, anciennement niveau 2.</span><span aria-hidden="true">niveau <span style="position:relative;display:inline-block;opacity:.72">2<span style="position:absolute;left:-2px;right:-2px;top:52%;height:1.5px;background:#C4552A"></span></span> <b>3</b></span></p>
+              <div aria-hidden="true" style="margin-top:8px;height:15px;border:2.5px solid #1B2220;background:#D6DBD0"><span style="display:block;height:100%;width:61%;background:#E8B21C;border-right:2.5px solid #1B2220"></span></div>
+            </div>
+            <div style="flex:0 0 auto;text-align:right">
+              <p style="margin:0;font:700 21px/1 'JetBrains Mono',monospace;font-variant-numeric:tabular-nums">04:12:09</p>
+              <p style="margin:2px 0 0;font:400 9.5px/1.2 Archivo,system-ui;opacity:.8">restant (environ)</p>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin:0 0 8px">
+            <p style="margin:0;font:700 10px/1.2 Archivo,system-ui;letter-spacing:.14em;text-transform:uppercase">Parcelle n° 4-B bis <span style="font-weight:400;letter-spacing:0;text-transform:none;opacity:.75">(ter)</span></p>
+            <p style="margin:0;font:400 9.5px/1.2 Archivo,system-ui;opacity:.8">25 cases, dont 25 en pente</p>
+          </div>
+          <div style="display:grid;grid-template-columns:16px 1fr;gap:3px">
+            <div aria-hidden="true" style="display:grid;grid-template-rows:repeat(5,1fr);gap:5px;font:700 10px/1 'JetBrains Mono',monospace">
+              <span style="display:grid;place-items:center">1</span><span style="display:grid;place-items:center">2</span><span style="display:grid;place-items:center">3</span><span style="display:grid;place-items:center">4</span><span style="display:grid;place-items:center">5</span>
+            </div>
+            <div>
+              <div role="grid" aria-label="Plan de parcelle 4-B bis, 25 cases" style="display:grid;grid-template-columns:repeat(5,1fr);gap:5px;background:#1B2220;padding:5px;border:2.5px solid #1B2220">
+                <span role="gridcell" aria-label="A1 libre" style="aspect-ratio:1;background:#D6DBD0"></span>
+                <span role="gridcell" aria-label="B1 gisement de Camelote" style="aspect-ratio:1;background:#C4552A;display:grid;place-items:center"><svg width="32" height="32" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="display:block"><polygon points="12,3 21,19.5 3,19.5" fill="#1B2220"></polygon><rect x="2.5" y="20.5" width="19" height="2.4" fill="#1B2220"></rect></svg></span>
+                <span role="gridcell" aria-label="C1 atelier de bricole, niveau 3" style="aspect-ratio:1;background:#E2E6DC;display:grid;place-items:center;font:800 24px/1 'Archivo Narrow',Archivo,system-ui">3</span>
+                <span role="gridcell" aria-label="D1 libre" style="aspect-ratio:1;background:#D6DBD0"></span>
+                <span role="gridcell" aria-label="E1 relief infranchissable" style="aspect-ratio:1;background:#1B2220;display:grid;place-items:center"><svg width="30" height="30" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="display:block"><polygon points="12,4 22,20 2,20" fill="#96A09B"></polygon></svg></span>
+                <span role="gridcell" aria-label="A2 libre" style="aspect-ratio:1;background:#D6DBD0"></span>
+                <span role="gridcell" aria-label="B2 gisement de Camelote" style="aspect-ratio:1;background:#C4552A;display:grid;place-items:center"><svg width="32" height="32" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="display:block"><polygon points="12,3 21,19.5 3,19.5" fill="#1B2220"></polygon><rect x="2.5" y="20.5" width="19" height="2.4" fill="#1B2220"></rect></svg></span>
+                <span role="gridcell" aria-label="C2 chantier en cours" style="aspect-ratio:1;background:#E8B21C;display:grid;place-items:center"><svg width="28" height="28" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="display:block"><path d="M5 3 H19 L13 12 L19 21 H5 L11 12 Z" fill="#1B2220"></path></svg></span>
+                <span role="gridcell" aria-label="D2 libre" style="aspect-ratio:1;background:#D6DBD0"></span>
+                <span role="gridcell" aria-label="E2 relief infranchissable" style="aspect-ratio:1;background:#1B2220;display:grid;place-items:center"><svg width="30" height="30" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="display:block"><polygon points="12,4 22,20 2,20" fill="#96A09B"></polygon></svg></span>
+                <span role="gridcell" aria-label="A3 libre" style="aspect-ratio:1;background:#D6DBD0"></span>
+                <span role="gridcell" aria-label="B3 libre" style="aspect-ratio:1;background:#D6DBD0"></span>
+                <span role="gridcell" aria-label="C3 case visée, pose valide" style="aspect-ratio:1;background:#E2E6DC;display:grid;place-items:center;box-shadow:inset 0 0 0 5px #1B2220"><svg width="28" height="28" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="display:block"><path d="M12 3 V21 M3 12 H21" stroke="#1B2220" stroke-width="4" fill="none"></path></svg></span>
+                <span role="gridcell" aria-label="D3 libre" style="aspect-ratio:1;background:#D6DBD0"></span>
+                <span role="gridcell" aria-label="E3 libre" style="aspect-ratio:1;background:#D6DBD0"></span>
+                <span role="gridcell" aria-label="A4 cuve de Bave, niveau 1" style="aspect-ratio:1;background:#E2E6DC;display:grid;place-items:center;font:800 24px/1 'Archivo Narrow',Archivo,system-ui">1</span>
+                <span role="gridcell" aria-label="B4 libre" style="aspect-ratio:1;background:#D6DBD0"></span>
+                <span role="gridcell" aria-label="C4 gisement de Bave d’étoiles" style="aspect-ratio:1;background:#8E4BA8;display:grid;place-items:center"><svg width="32" height="32" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="display:block"><circle cx="12" cy="12" r="10" fill="#1B2220"></circle><circle cx="12" cy="12" r="4" fill="#8E4BA8"></circle></svg></span>
+                <span role="gridcell" aria-label="D4 libre" style="aspect-ratio:1;background:#D6DBD0"></span>
+                <span role="gridcell" aria-label="E4 libre" style="aspect-ratio:1;background:#D6DBD0"></span>
+                <span role="gridcell" aria-label="A5 libre" style="aspect-ratio:1;background:#D6DBD0"></span>
+                <span role="gridcell" aria-label="B5 libre" style="aspect-ratio:1;background:#D6DBD0"></span>
+                <span role="gridcell" aria-label="C5 libre" style="aspect-ratio:1;background:#D6DBD0"></span>
+                <span role="gridcell" aria-label="D5 pose refusée, trop près du relief" style="aspect-ratio:1;background:#D6DBD0;display:grid;place-items:center"><svg width="32" height="32" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="display:block"><circle cx="12" cy="12" r="10.5" fill="#1B2220"></circle><path d="M6.5 6.5 L17.5 17.5 M17.5 6.5 L6.5 17.5" stroke="#E2E6DC" stroke-width="3" fill="none"></path></svg></span>
+                <span role="gridcell" aria-label="E5 relief infranchissable" style="aspect-ratio:1;background:#1B2220;display:grid;place-items:center"><svg width="30" height="30" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="display:block"><polygon points="12,4 22,20 2,20" fill="#96A09B"></polygon></svg></span>
+              </div>
+              <div aria-hidden="true" style="display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin-top:3px;font:700 10px/1 'JetBrains Mono',monospace;text-align:center">
+                <span>A</span><span>B</span><span>C</span><span>D</span><span>E</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:10px">
+          <button type="button" style="flex:1 1 auto;font:400 19px/1 'Saira Stencil One',Archivo,system-ui;padding:14px 8px;min-height:48px;background:#E8B21C;color:#1B2220;border:2.5px solid #1B2220;box-shadow:5px 5px 0 #1B2220;cursor:pointer" style-hover="background:#C4552A">JE POSE ÇA</button>
+          <button type="button" style="flex:0 0 auto;font:700 12px/1.2 Archivo,system-ui;letter-spacing:.1em;text-transform:uppercase;padding:14px 13px;min-height:48px;background:#E2E6DC;color:#1B2220;border:2.5px solid #1B2220;cursor:pointer" style-hover="background:#D6DBD0">Relevé</button>
+        </div>
+        <p style="margin:-6px 0 0;font:400 9.5px/1.4 Archivo,system-ui;opacity:.8">Toute pose est définitive, sauf réclamation dans les cinq minutes, ce qui n'arrive jamais.</p>
+      </div>
+
+      <p style="margin:0;max-width:430px;font:400 12px/1.55 Archivo,system-ui"><b>Les blagues, par ordre de discrétion :</b> le nom de planète rayé (elle s'appelait « Trou du Cul du Monde »), le tampon <i>VU, MAIS PAS LU</i>, « n° 4-B bis (ter) », « 25 cases, dont 25 en pente », l'astérisque du débit, « Jus — de quoi ? », « Bave — ne pas goûter », « restant (environ) », et la mention de réclamation en bas. <b>Aucune n'est cliquable et aucune ne porte d'information</b> : on peut jouer sans en lire une seule.</p>
+    </div>
+
+    <div id="6b" style="scroll-margin-top:16px;flex:none;display:flex;flex-direction:column;gap:9px">
+      <div style="display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 Archivo,system-ui"><a href="#6b" style="font:600 10.5px/1 'JetBrains Mono',monospace;padding:3px 7px;background:rgba(27,34,32,.1);text-decoration:none">6b</a><span><b>La Régie approximative</b> · desktop · 1180 px — le guichet</span></div>
+
+      <div style="width:1180px;background:#D6DBD0;border:3px solid #1B2220;padding:18px;display:flex;flex-direction:column;gap:16px;position:relative;overflow:hidden">
+        <span aria-hidden="true" style="position:absolute;left:41%;top:12%;width:4px;height:4px;background:#1B2220;border-radius:50%;opacity:.4"></span>
+        <span aria-hidden="true" style="position:absolute;left:67%;top:64%;width:3px;height:3px;background:#1B2220;border-radius:50%;opacity:.35"></span>
+
+        <div style="position:relative;background:#E2E6DC;padding:13px 15px 14px;display:flex;align-items:flex-end;justify-content:space-between;gap:20px">
+          <span aria-hidden="true" style="position:absolute;left:-8px;right:-4px;top:0;height:3px;background:#1B2220"></span>
+          <span aria-hidden="true" style="position:absolute;left:-4px;right:-8px;bottom:0;height:3px;background:#1B2220"></span>
+          <span aria-hidden="true" style="position:absolute;top:-7px;bottom:-3px;left:0;width:3px;background:#1B2220"></span>
+          <span aria-hidden="true" style="position:absolute;top:-3px;bottom:-7px;right:0;width:3px;background:#1B2220"></span>
+          <div>
+            <p style="margin:0;font:600 9px/1.3 Archivo,system-ui;letter-spacing:.2em;text-transform:uppercase">Régie interplanétaire des matières qui coulent · service des parcelles · guichet 4</p>
+            <p style="margin:6px 0 0;font:400 16px/1 Archivo,system-ui"><span style="position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap">Ancien nom, rayé : Trou du Cul du Monde. Corrigé en Fond de Tiroir.</span><span aria-hidden="true" style="position:relative;display:inline-block;opacity:.72">Trou du Cul du Monde<span style="position:absolute;left:-3px;right:-4px;top:54%;height:2px;background:#C4552A;transform:rotate(-.8deg)"></span></span></p>
+            <p style="margin:2px 0 0;font:400 46px/.95 'Saira Stencil One',Archivo,system-ui">FOND DE TIROIR</p>
+          </div>
+          <div style="display:flex;align-items:flex-end;gap:14px;flex:0 0 auto">
+            <div style="text-align:right">
+              <p style="margin:0;font:700 15px/1 'JetBrains Mono',monospace;background:#1B2220;color:#E2E6DC;padding:6px 8px;display:inline-block;font-variant-numeric:tabular-nums">1:204:6</p>
+              <p style="margin:4px 0 0;font:400 10px/1.2 Archivo,system-ui;opacity:.75">vérifié une fois, en 2387</p>
+            </div>
+            <p aria-hidden="true" style="margin:0 0 2px;transform:rotate(-5deg);font:400 15px/1.1 'Saira Stencil One',Archivo,system-ui;color:#C4552A;border:2.5px solid #C4552A;padding:5px 8px;text-align:center;letter-spacing:.04em">VU, MAIS<br>PAS LU</p>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:268px 1fr 320px;gap:16px;align-items:start">
+
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <div style="position:relative;background:#E2E6DC;padding:11px 12px 12px">
+              <span aria-hidden="true" style="position:absolute;left:-6px;right:-3px;top:0;height:2.5px;background:#1B2220"></span>
+              <span aria-hidden="true" style="position:absolute;left:-3px;right:-6px;bottom:0;height:2.5px;background:#1B2220"></span>
+              <span aria-hidden="true" style="position:absolute;top:-5px;bottom:-3px;left:0;width:2.5px;background:#1B2220"></span>
+              <span aria-hidden="true" style="position:absolute;top:-3px;bottom:-5px;right:0;width:2.5px;background:#1B2220"></span>
+              <p style="margin:0 0 9px;font:700 10px/1.2 Archivo,system-ui;letter-spacing:.16em;text-transform:uppercase">Registre des possessions</p>
+              <ul style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px">
+                <li><a href="#6b" style="display:flex;align-items:center;gap:8px;background:#1B2220;color:#E2E6DC;padding:8px 9px;min-height:44px;box-sizing:border-box;text-decoration:none;font:700 13px/1.2 Archivo,system-ui"><span aria-hidden="true" style="font:700 12px/1 'JetBrains Mono',monospace">▶</span>Fond de Tiroir</a></li>
+                <li><a href="#6b" style="display:flex;align-items:center;justify-content:space-between;gap:8px;border:2px solid #1B2220;padding:8px 9px;min-height:44px;box-sizing:border-box;text-decoration:none;font:600 13px/1.2 Archivo,system-ui">Bout du Couloir<span style="font:500 10px/1 'JetBrains Mono',monospace;opacity:.75">1:204:9</span></a></li>
+                <li><a href="#6b" style="display:flex;align-items:center;justify-content:space-between;gap:8px;border:2px solid #1B2220;padding:8px 9px;min-height:44px;box-sizing:border-box;text-decoration:none;font:600 13px/1.2 Archivo,system-ui">Cul-de-Sac 2<span style="font:500 10px/1 'JetBrains Mono',monospace;opacity:.75">1:211:1</span></a></li>
+                <li style="display:flex;align-items:center;justify-content:space-between;gap:8px;border:2px dotted #1B2220;padding:8px 9px;min-height:44px;box-sizing:border-box;font:400 13px/1.2 Archivo,system-ui;opacity:.75"><span style="position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap">Possession perdue mardi, rayée du registre : Bel Horizon.</span><span aria-hidden="true" style="position:relative;display:inline-block">Bel Horizon<span style="position:absolute;left:-3px;right:-3px;top:53%;height:2px;background:#C4552A;transform:rotate(-1deg)"></span></span><span aria-hidden="true" style="font:400 9.5px/1.2 Archivo,system-ui">perdue mardi</span></li>
+              </ul>
+            </div>
+
+            <div style="position:relative;background:#E2E6DC;padding:11px 12px 12px">
+              <span aria-hidden="true" style="position:absolute;left:-3px;right:-6px;top:0;height:2.5px;background:#1B2220"></span>
+              <span aria-hidden="true" style="position:absolute;left:-6px;right:-3px;bottom:0;height:2.5px;background:#1B2220"></span>
+              <span aria-hidden="true" style="position:absolute;top:-3px;bottom:-5px;left:0;width:2.5px;background:#1B2220"></span>
+              <span aria-hidden="true" style="position:absolute;top:-5px;bottom:-3px;right:0;width:2.5px;background:#1B2220"></span>
+              <p style="margin:0 0 9px;font:700 10px/1.2 Archivo,system-ui;letter-spacing:.16em;text-transform:uppercase">Légende <span style="font-weight:400;letter-spacing:0;text-transform:none;opacity:.75">(approximative)</span></p>
+              <ul style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:7px;font:400 11.5px/1.35 Archivo,system-ui">
+                <li style="display:flex;align-items:center;gap:8px"><span aria-hidden="true" style="flex:0 0 auto;width:26px;height:26px;background:#C4552A;border:2px solid #1B2220;display:grid;place-items:center"><svg width="17" height="17" viewBox="0 0 24 24" style="display:block"><polygon points="12,3 21,19.5 3,19.5" fill="#1B2220"></polygon><rect x="2.5" y="20.5" width="19" height="2.4" fill="#1B2220"></rect></svg></span>Gisement de Camelote</li>
+                <li style="display:flex;align-items:center;gap:8px"><span aria-hidden="true" style="flex:0 0 auto;width:26px;height:26px;background:#8E4BA8;border:2px solid #1B2220;display:grid;place-items:center"><svg width="17" height="17" viewBox="0 0 24 24" style="display:block"><circle cx="12" cy="12" r="10" fill="#1B2220"></circle><circle cx="12" cy="12" r="4" fill="#8E4BA8"></circle></svg></span>Gisement de Bave</li>
+                <li style="display:flex;align-items:center;gap:8px"><span aria-hidden="true" style="flex:0 0 auto;width:26px;height:26px;background:#1B2220;border:2px solid #1B2220;display:grid;place-items:center"><svg width="17" height="17" viewBox="0 0 24 24" style="display:block"><polygon points="12,4 22,20 2,20" fill="#96A09B"></polygon></svg></span>Relief : ça monte</li>
+                <li style="display:flex;align-items:center;gap:8px"><span aria-hidden="true" style="flex:0 0 auto;width:26px;height:26px;background:#D6DBD0;border:2px solid #1B2220"></span>Case libre <span style="opacity:.75">(pour l'instant)</span></li>
+                <li style="display:flex;align-items:center;gap:8px"><span aria-hidden="true" style="flex:0 0 auto;width:26px;height:26px;background:#D6DBD0;border:2px solid #1B2220;display:grid;place-items:center"><svg width="18" height="18" viewBox="0 0 24 24" style="display:block"><circle cx="12" cy="12" r="10.5" fill="#1B2220"></circle><path d="M6.5 6.5 L17.5 17.5 M17.5 6.5 L6.5 17.5" stroke="#E2E6DC" stroke-width="3" fill="none"></path></svg></span>Refusé : trop près du bord</li>
+              </ul>
+            </div>
+          </div>
+
+          <div style="position:relative;background:#E2E6DC;padding:14px 15px 15px">
+            <span aria-hidden="true" style="position:absolute;left:-7px;right:-4px;top:0;height:3px;background:#1B2220"></span>
+            <span aria-hidden="true" style="position:absolute;left:-4px;right:-7px;bottom:0;height:3px;background:#1B2220"></span>
+            <span aria-hidden="true" style="position:absolute;top:-6px;bottom:-4px;left:0;width:3px;background:#1B2220"></span>
+            <span aria-hidden="true" style="position:absolute;top:-4px;bottom:-6px;right:0;width:3px;background:#1B2220"></span>
+            <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin:0 0 12px">
+              <p style="margin:0;font:700 12px/1.2 Archivo,system-ui;letter-spacing:.14em;text-transform:uppercase">Parcelle n° 4-B bis <span style="font-weight:400;letter-spacing:0;text-transform:none;opacity:.75">(ter)</span></p>
+              <p style="margin:0;font:400 10.5px/1.2 Archivo,system-ui;opacity:.8">25 cases, dont 25 en pente · relevé du 14 floréal</p>
+            </div>
+            <div style="display:grid;grid-template-columns:20px 1fr;gap:5px">
+              <div aria-hidden="true" style="display:grid;grid-template-rows:repeat(5,1fr);gap:6px;font:700 12px/1 'JetBrains Mono',monospace">
+                <span style="display:grid;place-items:center">1</span><span style="display:grid;place-items:center">2</span><span style="display:grid;place-items:center">3</span><span style="display:grid;place-items:center">4</span><span style="display:grid;place-items:center">5</span>
+              </div>
+              <div>
+                <div role="grid" aria-label="Plan de parcelle 4-B bis, 25 cases" style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;background:#1B2220;padding:6px;border:3px solid #1B2220">
+                  <span role="gridcell" aria-label="A1 libre" style="aspect-ratio:1;background:#D6DBD0"></span>
+                  <span role="gridcell" aria-label="B1 gisement de Camelote" style="aspect-ratio:1;background:#C4552A;display:grid;place-items:center"><svg width="44" height="44" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="display:block"><polygon points="12,3 21,19.5 3,19.5" fill="#1B2220"></polygon><rect x="2.5" y="20.5" width="19" height="2.4" fill="#1B2220"></rect></svg></span>
+                  <span role="gridcell" aria-label="C1 atelier de bricole, niveau 3" style="aspect-ratio:1;background:#E2E6DC;display:grid;place-items:center;font:800 34px/1 'Archivo Narrow',Archivo,system-ui">3</span>
+                  <span role="gridcell" aria-label="D1 libre" style="aspect-ratio:1;background:#D6DBD0"></span>
+                  <span role="gridcell" aria-label="E1 relief infranchissable" style="aspect-ratio:1;background:#1B2220;display:grid;place-items:center"><svg width="42" height="42" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="display:block"><polygon points="12,4 22,20 2,20" fill="#96A09B"></polygon></svg></span>
+                  <span role="gridcell" aria-label="A2 libre" style="aspect-ratio:1;background:#D6DBD0"></span>
+                  <span role="gridcell" aria-label="B2 gisement de Camelote" style="aspect-ratio:1;background:#C4552A;display:grid;place-items:center"><svg width="44" height="44" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="display:block"><polygon points="12,3 21,19.5 3,19.5" fill="#1B2220"></polygon><rect x="2.5" y="20.5" width="19" height="2.4" fill="#1B2220"></rect></svg></span>
+                  <span role="gridcell" aria-label="C2 chantier en cours" style="aspect-ratio:1;background:#E8B21C;display:grid;place-items:center"><svg width="40" height="40" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="display:block"><path d="M5 3 H19 L13 12 L19 21 H5 L11 12 Z" fill="#1B2220"></path></svg></span>
+                  <span role="gridcell" aria-label="D2 libre" style="aspect-ratio:1;background:#D6DBD0"></span>
+                  <span role="gridcell" aria-label="E2 relief infranchissable" style="aspect-ratio:1;background:#1B2220;display:grid;place-items:center"><svg width="42" height="42" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="display:block"><polygon points="12,4 22,20 2,20" fill="#96A09B"></polygon></svg></span>
+                  <span role="gridcell" aria-label="A3 libre" style="aspect-ratio:1;background:#D6DBD0"></span>
+                  <span role="gridcell" aria-label="B3 libre" style="aspect-ratio:1;background:#D6DBD0"></span>
+                  <span role="gridcell" aria-label="C3 case visée, pose valide" style="aspect-ratio:1;background:#E2E6DC;display:grid;place-items:center;box-shadow:inset 0 0 0 6px #1B2220"><svg width="40" height="40" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="display:block"><path d="M12 3 V21 M3 12 H21" stroke="#1B2220" stroke-width="4" fill="none"></path></svg></span>
+                  <span role="gridcell" aria-label="D3 libre" style="aspect-ratio:1;background:#D6DBD0"></span>
+                  <span role="gridcell" aria-label="E3 libre" style="aspect-ratio:1;background:#D6DBD0"></span>
+                  <span role="gridcell" aria-label="A4 cuve de Bave, niveau 1" style="aspect-ratio:1;background:#E2E6DC;display:grid;place-items:center;font:800 34px/1 'Archivo Narrow',Archivo,system-ui">1</span>
+                  <span role="gridcell" aria-label="B4 libre" style="aspect-ratio:1;background:#D6DBD0"></span>
+                  <span role="gridcell" aria-label="C4 gisement de Bave d’étoiles" style="aspect-ratio:1;background:#8E4BA8;display:grid;place-items:center"><svg width="44" height="44" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="display:block"><circle cx="12" cy="12" r="10" fill="#1B2220"></circle><circle cx="12" cy="12" r="4" fill="#8E4BA8"></circle></svg></span>
+                  <span role="gridcell" aria-label="D4 libre" style="aspect-ratio:1;background:#D6DBD0"></span>
+                  <span role="gridcell" aria-label="E4 libre" style="aspect-ratio:1;background:#D6DBD0"></span>
+                  <span role="gridcell" aria-label="A5 libre" style="aspect-ratio:1;background:#D6DBD0"></span>
+                  <span role="gridcell" aria-label="B5 libre" style="aspect-ratio:1;background:#D6DBD0"></span>
+                  <span role="gridcell" aria-label="C5 libre" style="aspect-ratio:1;background:#D6DBD0"></span>
+                  <span role="gridcell" aria-label="D5 pose refusée, trop près du relief" style="aspect-ratio:1;background:#D6DBD0;display:grid;place-items:center"><svg width="44" height="44" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="display:block"><circle cx="12" cy="12" r="10.5" fill="#1B2220"></circle><path d="M6.5 6.5 L17.5 17.5 M17.5 6.5 L6.5 17.5" stroke="#E2E6DC" stroke-width="3" fill="none"></path></svg></span>
+                  <span role="gridcell" aria-label="E5 relief infranchissable" style="aspect-ratio:1;background:#1B2220;display:grid;place-items:center"><svg width="42" height="42" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="display:block"><polygon points="12,4 22,20 2,20" fill="#96A09B"></polygon></svg></span>
+                </div>
+                <div aria-hidden="true" style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:4px;font:700 12px/1 'JetBrains Mono',monospace;text-align:center">
+                  <span>A</span><span>B</span><span>C</span><span>D</span><span>E</span>
+                </div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:12px;margin-top:14px">
+              <button type="button" style="flex:0 0 auto;font:400 22px/1 'Saira Stencil One',Archivo,system-ui;padding:14px 26px;min-height:48px;background:#E8B21C;color:#1B2220;border:3px solid #1B2220;box-shadow:6px 6px 0 #1B2220;cursor:pointer" style-hover="background:#C4552A">JE POSE ÇA</button>
+              <button type="button" style="flex:0 0 auto;font:700 13px/1.2 Archivo,system-ui;letter-spacing:.1em;text-transform:uppercase;padding:14px 16px;min-height:48px;background:#E2E6DC;color:#1B2220;border:3px solid #1B2220;cursor:pointer" style-hover="background:#D6DBD0">Relevé complet</button>
+              <button type="button" style="flex:0 0 auto;font:400 12px/1.2 Archivo,system-ui;padding:14px 14px;min-height:48px;background:#E2E6DC;color:#1B2220;border:2px dotted #1B2220;cursor:pointer" style-hover="background:#D6DBD0">Réclamer <span style="opacity:.75">(sans espoir)</span></button>
+            </div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <ul style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:9px">
+              <li style="display:flex;align-items:stretch;border:2.5px solid #1B2220;background:#C4552A;min-height:66px">
+                <span aria-hidden="true" style="flex:0 0 auto;width:60px;display:grid;place-items:center;border-right:2.5px solid #1B2220"><svg width="34" height="34" viewBox="0 0 24 24" style="display:block"><polygon points="12,3 21,19.5 3,19.5" fill="#1B2220"></polygon><rect x="2.5" y="20.5" width="19" height="2.4" fill="#1B2220"></rect></svg></span>
+                <div style="flex:1 1 auto;min-width:0;background:#E2E6DC;margin:4px;padding:5px 7px 6px;border:1.5px solid #1B2220;transform:rotate(-.5deg)">
+                  <div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px">
+                    <p style="margin:0;font:600 9px/1.2 Archivo,system-ui;letter-spacing:.12em;text-transform:uppercase">Camelote</p>
+                    <p style="margin:0;font:400 9.5px/1.1 'JetBrains Mono',monospace"><span style="position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap">Ancien relevé, rayé : 17 980. Corrigé en 18 420.</span><span aria-hidden="true" style="position:relative;display:inline-block;opacity:.72">17 980<span style="position:absolute;left:-2px;right:-2px;top:52%;height:1.5px;background:#C4552A"></span></span></p>
+                  </div>
+                  <div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px">
+                    <p style="margin:0;font:700 22px/1.05 'JetBrains Mono',monospace;font-variant-numeric:tabular-nums">18 420</p>
+                    <p style="margin:0;font:500 11px/1.2 'JetBrains Mono',monospace">+540/h *</p>
+                  </div>
+                </div>
+              </li>
+              <li style="display:flex;align-items:stretch;border:2.5px solid #1B2220;background:#E8B21C;min-height:66px">
+                <span aria-hidden="true" style="flex:0 0 auto;width:60px;display:grid;place-items:center;border-right:2.5px solid #1B2220"><svg width="34" height="34" viewBox="0 0 24 24" style="display:block"><polygon points="12,2 21.5,12 12,22 2.5,12" fill="#1B2220"></polygon><rect x="10.7" y="6.5" width="2.6" height="11" fill="#E8B21C"></rect></svg></span>
+                <div style="flex:1 1 auto;min-width:0;background:#E2E6DC;margin:4px;padding:5px 7px 6px;border:1.5px solid #1B2220;transform:rotate(.4deg)">
+                  <div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px">
+                    <p style="margin:0;font:600 9px/1.2 Archivo,system-ui;letter-spacing:.12em;text-transform:uppercase">Jus</p>
+                    <p style="margin:0;font:400 9.5px/1.2 Archivo,system-ui;opacity:.7">de quoi ?</p>
+                  </div>
+                  <div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px">
+                    <p style="margin:0;font:700 22px/1.05 'JetBrains Mono',monospace;font-variant-numeric:tabular-nums">9 105</p>
+                    <p style="margin:0;font:500 11px/1.2 'JetBrains Mono',monospace">+220/h *</p>
+                  </div>
+                </div>
+              </li>
+              <li style="display:flex;align-items:stretch;border:2.5px solid #1B2220;background:#8E4BA8;min-height:66px">
+                <span aria-hidden="true" style="flex:0 0 auto;width:60px;display:grid;place-items:center;border-right:2.5px solid #1B2220"><svg width="34" height="34" viewBox="0 0 24 24" style="display:block"><circle cx="12" cy="12" r="10" fill="#1B2220"></circle><circle cx="12" cy="12" r="4" fill="#8E4BA8"></circle></svg></span>
+                <div style="flex:1 1 auto;min-width:0;background:#E2E6DC;margin:4px;padding:5px 7px 6px;border:1.5px solid #1B2220;transform:rotate(-.4deg)">
+                  <div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px">
+                    <p style="margin:0;font:600 9px/1.2 Archivo,system-ui;letter-spacing:.12em;text-transform:uppercase">Bave d'étoiles</p>
+                    <p style="margin:0;font:400 9.5px/1.2 Archivo,system-ui;opacity:.7">ne pas goûter</p>
+                  </div>
+                  <div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px">
+                    <p style="margin:0;font:700 22px/1.05 'JetBrains Mono',monospace;font-variant-numeric:tabular-nums">1 260</p>
+                    <p style="margin:0;font:500 11px/1.2 'JetBrains Mono',monospace">+45/h *</p>
+                  </div>
+                </div>
+              </li>
+            </ul>
+            <p style="margin:-6px 0 0;font:400 10px/1.4 Archivo,system-ui;opacity:.8">* Les débits sont une estimation de l'estimateur, lui-même estimé.</p>
+
+            <div style="position:relative;background:#E2E6DC;padding:12px 13px 13px">
+              <span aria-hidden="true" style="position:absolute;left:-6px;right:-3px;top:0;height:2.5px;background:#1B2220"></span>
+              <span aria-hidden="true" style="position:absolute;left:-3px;right:-6px;bottom:0;height:2.5px;background:#1B2220"></span>
+              <span aria-hidden="true" style="position:absolute;top:-5px;bottom:-3px;left:0;width:2.5px;background:#1B2220"></span>
+              <span aria-hidden="true" style="position:absolute;top:-3px;bottom:-5px;right:0;width:2.5px;background:#1B2220"></span>
+              <p style="margin:0;font:600 9px/1.2 Archivo,system-ui;letter-spacing:.16em;text-transform:uppercase">Chantier en cours <span style="opacity:.7;letter-spacing:0;text-transform:none;font-weight:400">(depuis mardi)</span></p>
+              <p style="margin:4px 0 0;font:700 17px/1.2 Archivo,system-ui">Cuve de Bave d'étoiles</p>
+              <p style="margin:3px 0 0;font:400 12px/1.3 Archivo,system-ui"><span style="position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap">Niveau 3, anciennement niveau 2.</span><span aria-hidden="true">niveau <span style="position:relative;display:inline-block;opacity:.72">2<span style="position:absolute;left:-2px;right:-2px;top:52%;height:1.5px;background:#C4552A"></span></span> <b>3</b></span></p>
+              <div style="display:flex;align-items:flex-end;gap:12px;margin-top:9px">
+                <div aria-hidden="true" style="flex:1 1 auto;height:17px;border:2.5px solid #1B2220;background:#D6DBD0"><span style="display:block;height:100%;width:61%;background:#E8B21C;border-right:2.5px solid #1B2220"></span></div>
+                <div style="flex:0 0 auto;text-align:right">
+                  <p style="margin:0;font:700 24px/1 'JetBrains Mono',monospace;font-variant-numeric:tabular-nums">04:12:09</p>
+                  <p style="margin:2px 0 0;font:400 10px/1.2 Archivo,system-ui;opacity:.8">restant (environ)</p>
+                </div>
+              </div>
+            </div>
+
+            <div style="border:2px dotted #1B2220;padding:10px 12px 11px;display:flex;align-items:flex-end;justify-content:space-between;gap:12px">
+              <div>
+                <p style="margin:0;font:600 9px/1.2 Archivo,system-ui;letter-spacing:.14em;text-transform:uppercase">Signature du contrôleur</p>
+                <svg width="112" height="30" viewBox="0 0 112 30" aria-hidden="true" focusable="false" style="display:block;margin:3px 0 0"><path d="M3 22 C12 4 18 26 26 14 C32 5 38 25 46 15 C53 6 58 24 68 12 C76 3 84 24 95 9 L108 17" fill="none" stroke="#1B2220" stroke-width="2.2" stroke-linecap="round"></path></svg>
+                <p style="margin:1px 0 0;font:400 9.5px/1.2 Archivo,system-ui;opacity:.8">illisible</p>
+              </div>
+              <p style="margin:0;font:400 9.5px/1.35 Archivo,system-ui;opacity:.8;text-align:right;max-width:14ch">cachet de la poste faisant foi</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <p style="margin:0;max-width:1180px;font:400 12px/1.55 Archivo,system-ui"><b>Ce que le desktop gagne :</b> le registre des possessions (dont une planète rayée, « perdue mardi »), la légende — qui redevient <i>indispensable</i> depuis qu'on a supprimé les hachures et que tout tient à la silhouette —, un troisième bouton <i>Réclamer (sans espoir)</i>, et le bloc de signature. <b>Ce qui ne change pas :</b> les mêmes composants, le même plan, les mêmes cases à 44 px minimum ; le mobile n'est pas une amputation, c'est la même pile en une colonne.</p>
+    </div>
+
+    <div id="6c" style="scroll-margin-top:16px;flex:none;display:flex;flex-direction:column;gap:9px">
+      <div style="display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 Archivo,system-ui"><a href="#6c" style="font:600 10.5px/1 'JetBrains Mono',monospace;padding:3px 7px;background:rgba(27,34,32,.1);text-decoration:none">6c</a><span><b>Le pupitre</b> · sortie de route · desktop 1180 px — et si l'écran était une machine ?</span></div>
+
+      <div style="width:1180px;background:#1B2220;border:3px solid #1B2220;padding:20px;display:flex;flex-direction:column;gap:17px;color:#E2E6DC;position:relative;overflow:hidden">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:20px;border-bottom:3px solid #4A5450;padding-bottom:13px">
+          <div style="display:flex;align-items:center;gap:14px">
+            <span aria-hidden="true" style="width:46px;height:46px;border:3px solid #E2E6DC;border-radius:50%;display:grid;place-items:center;font:700 19px/1 'JetBrains Mono',monospace">◍</span>
+            <div>
+              <p style="margin:0;font:600 9px/1.2 Archivo,system-ui;letter-spacing:.22em;text-transform:uppercase;color:#96A09B">Pupitre de régie · modèle 4 bis · ne pas frapper dessus</p>
+              <p style="margin:3px 0 0;font:400 32px/.95 'Saira Stencil One',Archivo,system-ui">FOND DE TIROIR</p>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:13px">
+            <div style="background:#E2E6DC;color:#1B2220;padding:7px 11px;transform:rotate(-1.2deg);border:2px solid #1B2220">
+              <p style="margin:0;font:600 8px/1.2 Archivo,system-ui;letter-spacing:.16em;text-transform:uppercase">Secteur</p>
+              <p style="margin:1px 0 0;font:700 17px/1 'JetBrains Mono',monospace;font-variant-numeric:tabular-nums">1:204:6</p>
+            </div>
+            <div style="border:3px solid #E8B21C;padding:6px 12px;text-align:center">
+              <p style="margin:0;font:700 30px/1 'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;color:#E8B21C">04:12:09</p>
+              <p style="margin:1px 0 0;font:600 8.5px/1.2 Archivo,system-ui;letter-spacing:.18em;text-transform:uppercase;color:#96A09B">Restant (environ)</p>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:15px">
+          <div style="border:2.5px solid #E2E6DC;padding:12px;display:flex;align-items:center;gap:13px">
+            <svg width="104" height="62" viewBox="0 0 104 62" aria-hidden="true" focusable="false" style="display:block;flex:0 0 auto">
+              <path d="M8 56 A44 44 0 0 1 96 56" fill="none" stroke="#96A09B" stroke-width="3"></path>
+              <path d="M8 56 A44 44 0 0 1 52 12" fill="none" stroke="#C4552A" stroke-width="7"></path>
+              <line x1="18" y1="32" x2="24" y2="35" stroke="#96A09B" stroke-width="2"></line>
+              <line x1="52" y1="16" x2="52" y2="23" stroke="#96A09B" stroke-width="2"></line>
+              <line x1="86" y1="32" x2="80" y2="35" stroke="#96A09B" stroke-width="2"></line>
+              <line x1="52" y1="56" x2="76" y2="26" stroke="#E2E6DC" stroke-width="3.5" stroke-linecap="round"></line>
+              <circle cx="52" cy="56" r="6" fill="#E2E6DC"></circle>
+              <polygon points="52,26 60,42 44,42" fill="#C4552A" stroke="#E2E6DC" stroke-width="1.5"></polygon>
+            </svg>
+            <div style="flex:1 1 auto;min-width:0;background:#E2E6DC;color:#1B2220;padding:6px 8px 7px;border:2px solid #1B2220;transform:rotate(-.6deg)">
+              <p style="margin:0;font:600 9px/1.2 Archivo,system-ui;letter-spacing:.12em;text-transform:uppercase">Camelote</p>
+              <p style="margin:2px 0 0;font:700 21px/1 'JetBrains Mono',monospace;font-variant-numeric:tabular-nums">18 420</p>
+              <p style="margin:2px 0 0;font:500 10.5px/1.2 'JetBrains Mono',monospace">+540/h · 64 %</p>
+            </div>
+          </div>
+          <div style="border:2.5px solid #E2E6DC;padding:12px;display:flex;align-items:center;gap:13px">
+            <svg width="104" height="62" viewBox="0 0 104 62" aria-hidden="true" focusable="false" style="display:block;flex:0 0 auto">
+              <path d="M8 56 A44 44 0 0 1 96 56" fill="none" stroke="#96A09B" stroke-width="3"></path>
+              <path d="M8 56 A44 44 0 0 1 30 18" fill="none" stroke="#E8B21C" stroke-width="7"></path>
+              <line x1="18" y1="32" x2="24" y2="35" stroke="#96A09B" stroke-width="2"></line>
+              <line x1="52" y1="16" x2="52" y2="23" stroke="#96A09B" stroke-width="2"></line>
+              <line x1="86" y1="32" x2="80" y2="35" stroke="#96A09B" stroke-width="2"></line>
+              <line x1="52" y1="56" x2="34" y2="30" stroke="#E2E6DC" stroke-width="3.5" stroke-linecap="round"></line>
+              <circle cx="52" cy="56" r="6" fill="#E2E6DC"></circle>
+              <polygon points="52,24 61,38 52,52 43,38" fill="#E8B21C" stroke="#E2E6DC" stroke-width="1.5"></polygon>
+            </svg>
+            <div style="flex:1 1 auto;min-width:0;background:#E2E6DC;color:#1B2220;padding:6px 8px 7px;border:2px solid #1B2220;transform:rotate(.5deg)">
+              <p style="margin:0;font:600 9px/1.2 Archivo,system-ui;letter-spacing:.12em;text-transform:uppercase">Jus</p>
+              <p style="margin:2px 0 0;font:700 21px/1 'JetBrains Mono',monospace;font-variant-numeric:tabular-nums">9 105</p>
+              <p style="margin:2px 0 0;font:500 10.5px/1.2 'JetBrains Mono',monospace">+220/h · 38 %</p>
+            </div>
+          </div>
+          <div style="border:2.5px solid #E2E6DC;padding:12px;display:flex;align-items:center;gap:13px;position:relative">
+            <svg width="104" height="62" viewBox="0 0 104 62" aria-hidden="true" focusable="false" style="display:block;flex:0 0 auto">
+              <path d="M8 56 A44 44 0 0 1 96 56" fill="none" stroke="#96A09B" stroke-width="3"></path>
+              <path d="M8 56 A44 44 0 0 1 15 39" fill="none" stroke="#B072C8" stroke-width="7"></path>
+              <line x1="18" y1="32" x2="24" y2="35" stroke="#96A09B" stroke-width="2"></line>
+              <line x1="52" y1="16" x2="52" y2="23" stroke="#96A09B" stroke-width="2"></line>
+              <line x1="86" y1="32" x2="80" y2="35" stroke="#96A09B" stroke-width="2"></line>
+              <line x1="52" y1="56" x2="20" y2="46" stroke="#E2E6DC" stroke-width="3.5" stroke-linecap="round"></line>
+              <circle cx="52" cy="56" r="6" fill="#E2E6DC"></circle>
+              <circle cx="52" cy="38" r="10" fill="#B072C8" stroke="#E2E6DC" stroke-width="1.5"></circle>
+              <circle cx="52" cy="38" r="3.5" fill="#1B2220"></circle>
+            </svg>
+            <div style="flex:1 1 auto;min-width:0;background:#E2E6DC;color:#1B2220;padding:6px 8px 7px;border:2px solid #1B2220;transform:rotate(-.4deg)">
+              <p style="margin:0;font:600 9px/1.2 Archivo,system-ui;letter-spacing:.12em;text-transform:uppercase">Bave d'étoiles</p>
+              <p style="margin:2px 0 0;font:700 21px/1 'JetBrains Mono',monospace;font-variant-numeric:tabular-nums">1 260</p>
+              <p style="margin:2px 0 0;font:500 10.5px/1.2 'JetBrains Mono',monospace">+45/h · 14 %</p>
+            </div>
+            <p aria-hidden="true" style="margin:0;position:absolute;right:-3px;top:-11px;transform:rotate(2deg);background:#E2E6DC;color:#1B2220;border:2px solid #1B2220;padding:2px 6px;font:600 8.5px/1.2 Archivo,system-ui;letter-spacing:.1em;text-transform:uppercase">Jauge à réparer</p>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 384px;gap:16px;align-items:start">
+          <div style="border:2.5px solid #4A5450;padding:13px">
+            <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin:0 0 11px">
+              <p style="margin:0;font:600 10px/1.2 Archivo,system-ui;letter-spacing:.18em;text-transform:uppercase">Plateau · parcelle 4-B bis</p>
+              <p style="margin:0;font:400 10px/1.2 Archivo,system-ui;color:#96A09B">25 cases, dont 25 en pente</p>
+            </div>
+            <div role="grid" aria-label="Plan de parcelle 4-B bis, 25 cases" style="display:grid;grid-template-columns:repeat(5,1fr);gap:5px;background:#141A18;padding:5px;border:2.5px solid #4A5450">
+              <span role="gridcell" aria-label="A1 libre" style="aspect-ratio:1;background:#2A3230"></span>
+              <span role="gridcell" aria-label="B1 gisement de Camelote" style="aspect-ratio:1;background:#C4552A;display:grid;place-items:center"><svg width="40" height="40" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="display:block"><polygon points="12,3 21,19.5 3,19.5" fill="#1B2220"></polygon><rect x="2.5" y="20.5" width="19" height="2.4" fill="#1B2220"></rect></svg></span>
+              <span role="gridcell" aria-label="C1 atelier de bricole, niveau 3" style="aspect-ratio:1;background:#E2E6DC;color:#1B2220;display:grid;place-items:center;font:800 30px/1 'Archivo Narrow',Archivo,system-ui">3</span>
+              <span role="gridcell" aria-label="D1 libre" style="aspect-ratio:1;background:#2A3230"></span>
+              <span role="gridcell" aria-label="E1 relief infranchissable" style="aspect-ratio:1;background:#141A18;display:grid;place-items:center;box-shadow:inset 0 0 0 2px #4A5450"><svg width="38" height="38" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="display:block"><polygon points="12,4 22,20 2,20" fill="#96A09B"></polygon></svg></span>
+              <span role="gridcell" aria-label="A2 libre" style="aspect-ratio:1;background:#2A3230"></span>
+              <span role="gridcell" aria-label="B2 gisement de Camelote" style="aspect-ratio:1;background:#C4552A;display:grid;place-items:center"><svg width="40" height="40" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="display:block"><polygon points="12,3 21,19.5 3,19.5" fill="#1B2220"></polygon><rect x="2.5" y="20.5" width="19" height="2.4" fill="#1B2220"></rect></svg></span>
+              <span role="gridcell" aria-label="C2 chantier en cours" style="aspect-ratio:1;background:#E8B21C;display:grid;place-items:center"><svg width="36" height="36" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="display:block"><path d="M5 3 H19 L13 12 L19 21 H5 L11 12 Z" fill="#1B2220"></path></svg></span>
+              <span role="gridcell" aria-label="D2 libre" style="aspect-ratio:1;background:#2A3230"></span>
+              <span role="gridcell" aria-label="E2 relief infranchissable" style="aspect-ratio:1;background:#141A18;display:grid;place-items:center;box-shadow:inset 0 0 0 2px #4A5450"><svg width="38" height="38" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="display:block"><polygon points="12,4 22,20 2,20" fill="#96A09B"></polygon></svg></span>
+              <span role="gridcell" aria-label="A3 libre" style="aspect-ratio:1;background:#2A3230"></span>
+              <span role="gridcell" aria-label="B3 libre" style="aspect-ratio:1;background:#2A3230"></span>
+              <span role="gridcell" aria-label="C3 case visée, pose valide" style="aspect-ratio:1;background:#E2E6DC;display:grid;place-items:center;box-shadow:inset 0 0 0 5px #E8B21C"><svg width="36" height="36" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="display:block"><path d="M12 3 V21 M3 12 H21" stroke="#1B2220" stroke-width="4" fill="none"></path></svg></span>
+              <span role="gridcell" aria-label="D3 libre" style="aspect-ratio:1;background:#2A3230"></span>
+              <span role="gridcell" aria-label="E3 libre" style="aspect-ratio:1;background:#2A3230"></span>
+              <span role="gridcell" aria-label="A4 cuve de Bave, niveau 1" style="aspect-ratio:1;background:#E2E6DC;color:#1B2220;display:grid;place-items:center;font:800 30px/1 'Archivo Narrow',Archivo,system-ui">1</span>
+              <span role="gridcell" aria-label="B4 libre" style="aspect-ratio:1;background:#2A3230"></span>
+              <span role="gridcell" aria-label="C4 gisement de Bave d’étoiles" style="aspect-ratio:1;background:#B072C8;display:grid;place-items:center"><svg width="40" height="40" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="display:block"><circle cx="12" cy="12" r="10" fill="#1B2220"></circle><circle cx="12" cy="12" r="4" fill="#B072C8"></circle></svg></span>
+              <span role="gridcell" aria-label="D4 libre" style="aspect-ratio:1;background:#2A3230"></span>
+              <span role="gridcell" aria-label="E4 libre" style="aspect-ratio:1;background:#2A3230"></span>
+              <span role="gridcell" aria-label="A5 libre" style="aspect-ratio:1;background:#2A3230"></span>
+              <span role="gridcell" aria-label="B5 libre" style="aspect-ratio:1;background:#2A3230"></span>
+              <span role="gridcell" aria-label="C5 libre" style="aspect-ratio:1;background:#2A3230"></span>
+              <span role="gridcell" aria-label="D5 pose refusée, trop près du relief" style="aspect-ratio:1;background:#2A3230;display:grid;place-items:center"><svg width="40" height="40" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="display:block"><circle cx="12" cy="12" r="10.5" fill="#E2E6DC"></circle><path d="M6.5 6.5 L17.5 17.5 M17.5 6.5 L6.5 17.5" stroke="#1B2220" stroke-width="3" fill="none"></path></svg></span>
+              <span role="gridcell" aria-label="E5 relief infranchissable" style="aspect-ratio:1;background:#141A18;display:grid;place-items:center;box-shadow:inset 0 0 0 2px #4A5450"><svg width="38" height="38" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="display:block"><polygon points="12,4 22,20 2,20" fill="#96A09B"></polygon></svg></span>
+            </div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <div style="border:2.5px solid #E2E6DC;padding:12px 13px 13px">
+              <p style="margin:0;font:600 9px/1.2 Archivo,system-ui;letter-spacing:.18em;text-transform:uppercase;color:#96A09B">Chantier · depuis mardi</p>
+              <p style="margin:4px 0 0;font:700 17px/1.2 Archivo,system-ui">Cuve de Bave d'étoiles</p>
+              <p style="margin:3px 0 0;font:400 12px/1.3 Archivo,system-ui;color:#96A09B"><span style="position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap">Niveau 3, anciennement niveau 2.</span><span aria-hidden="true">niveau <span style="position:relative;display:inline-block">2<span style="position:absolute;left:-2px;right:-2px;top:52%;height:1.5px;background:#C4552A"></span></span> <b style="color:#E2E6DC">3</b></span></p>
+              <div aria-hidden="true" style="margin-top:9px;display:grid;grid-template-columns:repeat(10,1fr);gap:3px">
+                <span style="height:13px;background:#E8B21C;border:1.5px solid #E2E6DC"></span><span style="height:13px;background:#E8B21C;border:1.5px solid #E2E6DC"></span><span style="height:13px;background:#E8B21C;border:1.5px solid #E2E6DC"></span><span style="height:13px;background:#E8B21C;border:1.5px solid #E2E6DC"></span><span style="height:13px;background:#E8B21C;border:1.5px solid #E2E6DC"></span><span style="height:13px;background:#E8B21C;border:1.5px solid #E2E6DC"></span><span style="height:13px;background:transparent;border:1.5px solid #96A09B"></span><span style="height:13px;background:transparent;border:1.5px solid #96A09B"></span><span style="height:13px;background:transparent;border:1.5px solid #96A09B"></span><span style="height:13px;background:transparent;border:1.5px solid #96A09B"></span>
+              </div>
+              <p style="margin:6px 0 0;font:500 10.5px/1.2 'JetBrains Mono',monospace;color:#96A09B">6 crans sur 10 · 61 %</p>
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:11px">
+              <button type="button" style="grid-column:span 2;font:400 24px/1 'Saira Stencil One',Archivo,system-ui;padding:17px 8px;min-height:56px;background:#E8B21C;color:#1B2220;border:3px solid #E2E6DC;box-shadow:0 6px 0 #96A09B;cursor:pointer" style-hover="background:#E2E6DC">POSER LA TUILE</button>
+              <button type="button" style="font:700 12px/1.2 Archivo,system-ui;letter-spacing:.1em;text-transform:uppercase;padding:14px 8px;min-height:48px;background:#1B2220;color:#E2E6DC;border:2.5px solid #E2E6DC;box-shadow:0 4px 0 #4A5450;cursor:pointer" style-hover="background:#2A3230">Relevé</button>
+              <button type="button" style="font:700 12px/1.2 Archivo,system-ui;letter-spacing:.1em;text-transform:uppercase;padding:14px 8px;min-height:48px;background:#1B2220;color:#E2E6DC;border:2.5px dotted #E2E6DC;box-shadow:0 4px 0 #4A5450;cursor:pointer" style-hover="background:#2A3230">Réclamer</button>
+            </div>
+
+            <p style="margin:0;font:400 10px/1.45 Archivo,system-ui;color:#96A09B">Le voyant vert a été retiré par le service technique : il donnait de faux espoirs.</p>
+          </div>
+        </div>
+      </div>
+
+      <p style="margin:0;max-width:1180px;font:400 12px/1.55 Archivo,system-ui"><b>Pourquoi cette sortie de route :</b> une machine, c'est du jeu immédiatement — aiguilles, gros bouton à relief, compteur jaune. Et l'aiguille est un excellent canal accessible : une <b>position</b> se lit sans couleur, à toute distance, doublée du chiffre exact sur l'étiquette de papier. <b>Le risque :</b> le pupitre est un décor plus rigide que le papier — il tient mal l'ajout d'un douzième état, et il rend la blague plus difficile (une machine ne rature pas ; elle a juste une étiquette « jauge à réparer »).</p>
+    </div>
+
+  </div>
+
+  <p style="margin:24px 0 0;font:400 12.5px/1.6 Archivo,system-ui;max-width:92ch">Piste suivante : « garde <a href="#6b">6b</a> et pousse les ratures plus loin », « <a href="#6c">6c</a> mais en papier », « décline <a href="#6b">6b</a> sur l'écran de combat », ou « montre-moi <a href="#6a">6a</a> à 320 px et en zoom 200 % ».</p>
+</section>
+
+<section id="t5" style="padding:40px 40px 34px;border-bottom:2px solid #1B2220">
+  <div style="display:flex;align-items:baseline;gap:10px;margin:0 0 6px">
+    <a href="#t5" style="font:600 10px/1 'JetBrains Mono',monospace;padding:4px 7px;background:#1B2220;color:#E2E6DC;text-decoration:none;letter-spacing:.08em">5</a>
+    <span style="font:600 13px/1.2 Archivo,system-ui;letter-spacing:.04em">Sortir de la hachure — trois autres canaux de redondance</span>
+  </div>
+  <p style="margin:0 0 8px;max-width:92ch;font:400 14px/1.6 Archivo,system-ui">La hachure n'est pas <i>la</i> solution, c'est <b>une</b> solution : celle que j'ai prise parce qu'elle laissait la palette intacte. La règle réelle est plus large — une information ne doit jamais tenir à la teinte seule. La teinte peut être doublée par la <b>valeur</b>, la <b>forme</b>, le <b>trait</b>, la <b>position</b> ou le <b>mot</b>. Voici les trois substituts qui tiennent, testés sur la grille, là où la hachure travaillait le plus.</p>
+  <p style="margin:0 0 24px;max-width:92ch;font:400 14px/1.6 Archivo,system-ui">Chaque piste porte sa <b>bande de preuve</b> : les six états passés en niveaux de gris, sans toggle. Chaque pastille y est rendue exactement comme la case réelle — glyphe, chiffre et liseré compris. Si les six restent distincts là, la couleur ne portait rien de vital.</p>
+
+  <div style="display:flex;flex-wrap:wrap;gap:30px;align-items:flex-start">
+
+    <div id="5a" style="scroll-margin-top:16px;flex:none;display:flex;flex-direction:column;gap:9px">
+      <div style="display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 Archivo,system-ui;max-width:430px"><a href="#5a" style="font:600 10.5px/1 'JetBrains Mono',monospace;padding:3px 7px;background:rgba(27,34,32,.1);text-decoration:none">5a</a><span><b>Échelle de valeurs</b> — la teinte porte aussi une clarté</span></div>
+      <div style="width:430px;background:#E2E6DC;border:3px solid #1B2220;padding:14px;display:flex;flex-direction:column;gap:13px">
+        <p style="margin:0;font:400 12.5px/1.5 Archivo,system-ui">On recalibre les trois ressources pour qu'elles s'échelonnent en <b>clarté</b> et pas seulement en teinte : Camelote sombre, Bave moyenne, Jus claire. Plus aucun aplat texturé — la distinction survit en gris parce qu'elle est <i>dedans</i>.</p>
+        <ul style="list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px">
+          <li style="border:2.5px solid #1B2220">
+            <div aria-hidden="true" style="height:52px;background:#8E3B1B;display:grid;place-items:center;border-bottom:2.5px solid #1B2220"><svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="display:block"><polygon points="12,3 21,19.5 3,19.5" fill="#E2E6DC"></polygon><rect x="2.5" y="20.5" width="19" height="2.4" fill="#E2E6DC"></rect></svg></div>
+            <div style="padding:6px 6px 7px">
+              <p style="margin:0;font:600 8.5px/1.2 Archivo,system-ui;letter-spacing:.12em;text-transform:uppercase">Camelote</p>
+              <p style="margin:2px 0 0;font:700 17px/1 'JetBrains Mono',monospace;font-variant-numeric:tabular-nums">18 420</p>
+            </div>
+          </li>
+          <li style="border:2.5px solid #1B2220">
+            <div aria-hidden="true" style="height:52px;background:#9C63B4;display:grid;place-items:center;border-bottom:2.5px solid #1B2220"><svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="display:block"><circle cx="12" cy="12" r="10" fill="#E2E6DC"></circle><circle cx="12" cy="12" r="4" fill="#9C63B4"></circle></svg></div>
+            <div style="padding:6px 6px 7px">
+              <p style="margin:0;font:600 8.5px/1.2 Archivo,system-ui;letter-spacing:.12em;text-transform:uppercase">Bave</p>
+              <p style="margin:2px 0 0;font:700 17px/1 'JetBrains Mono',monospace;font-variant-numeric:tabular-nums">1 260</p>
+            </div>
+          </li>
+          <li style="border:2.5px solid #1B2220">
+            <div aria-hidden="true" style="height:52px;background:#E8B21C;display:grid;place-items:center;border-bottom:2.5px solid #1B2220"><svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="display:block"><polygon points="12,2 21.5,12 12,22 2.5,12" fill="#1B2220"></polygon><rect x="10.7" y="6.5" width="2.6" height="11" fill="#E8B21C"></rect></svg></div>
+            <div style="padding:6px 6px 7px">
+              <p style="margin:0;font:600 8.5px/1.2 Archivo,system-ui;letter-spacing:.12em;text-transform:uppercase">Jus</p>
+              <p style="margin:2px 0 0;font:700 17px/1 'JetBrains Mono',monospace;font-variant-numeric:tabular-nums">9 105</p>
+            </div>
+          </li>
+        </ul>
+        <div role="grid" aria-label="Parcelle 4-B, échelle de valeurs" style="display:grid;grid-template-columns:repeat(5,1fr);gap:4px;background:#1B2220;border:2.5px solid #1B2220;padding:4px">
+          <span role="gridcell" aria-label="A1 libre" style="aspect-ratio:1;background:#D6DBD0"></span>
+          <span role="gridcell" aria-label="B1 gisement de Camelote" style="aspect-ratio:1;background:#8E3B1B;display:grid;place-items:center"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="display:block"><polygon points="12,3 21,19.5 3,19.5" fill="#E2E6DC"></polygon><rect x="2.5" y="20.5" width="19" height="2.4" fill="#E2E6DC"></rect></svg></span>
+          <span role="gridcell" aria-label="C1 atelier niveau 3" style="aspect-ratio:1;background:#E2E6DC;display:grid;place-items:center;font:800 19px/1 'Archivo Narrow',Archivo,system-ui;box-shadow:inset 0 0 0 3px #1B2220">3</span>
+          <span role="gridcell" aria-label="D1 libre" style="aspect-ratio:1;background:#D6DBD0"></span>
+          <span role="gridcell" aria-label="E1 relief infranchissable" style="aspect-ratio:1;background:#1B2220;display:grid;place-items:center"><svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="display:block"><polygon points="12,5 21,19 3,19" fill="none" stroke="#96A09B" stroke-width="2.5"></polygon></svg></span>
+          <span role="gridcell" aria-label="A2 libre" style="aspect-ratio:1;background:#D6DBD0"></span>
+          <span role="gridcell" aria-label="B2 gisement de Camelote" style="aspect-ratio:1;background:#8E3B1B;display:grid;place-items:center"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="display:block"><polygon points="12,3 21,19.5 3,19.5" fill="#E2E6DC"></polygon><rect x="2.5" y="20.5" width="19" height="2.4" fill="#E2E6DC"></rect></svg></span>
+          <span role="gridcell" aria-label="C2 chantier en cours" style="aspect-ratio:1;background:#E8B21C;display:grid;place-items:center;font:700 20px/1 'JetBrains Mono',monospace;color:#1B2220">⧗</span>
+          <span role="gridcell" aria-label="D2 libre" style="aspect-ratio:1;background:#D6DBD0"></span>
+          <span role="gridcell" aria-label="E2 relief infranchissable" style="aspect-ratio:1;background:#1B2220;display:grid;place-items:center"><svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="display:block"><polygon points="12,5 21,19 3,19" fill="none" stroke="#96A09B" stroke-width="2.5"></polygon></svg></span>
+          <span role="gridcell" aria-label="A3 libre" style="aspect-ratio:1;background:#D6DBD0"></span>
+          <span role="gridcell" aria-label="B3 libre" style="aspect-ratio:1;background:#D6DBD0"></span>
+          <span role="gridcell" aria-label="C3 case visée, pose valide" style="aspect-ratio:1;background:#E2E6DC;display:grid;place-items:center;font:800 24px/1 'Archivo Narrow',Archivo,system-ui;box-shadow:inset 0 0 0 4px #E8B21C,inset 0 0 0 6px #1B2220">+</span>
+          <span role="gridcell" aria-label="D3 libre" style="aspect-ratio:1;background:#D6DBD0"></span>
+          <span role="gridcell" aria-label="E3 libre" style="aspect-ratio:1;background:#D6DBD0"></span>
+          <span role="gridcell" aria-label="A4 cuve niveau 1" style="aspect-ratio:1;background:#E2E6DC;display:grid;place-items:center;font:800 19px/1 'Archivo Narrow',Archivo,system-ui;box-shadow:inset 0 0 0 3px #1B2220">1</span>
+          <span role="gridcell" aria-label="B4 libre" style="aspect-ratio:1;background:#D6DBD0"></span>
+          <span role="gridcell" aria-label="C4 gisement de Bave" style="aspect-ratio:1;background:#9C63B4;display:grid;place-items:center"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="display:block"><circle cx="12" cy="12" r="10" fill="#E2E6DC"></circle><circle cx="12" cy="12" r="4" fill="#9C63B4"></circle></svg></span>
+          <span role="gridcell" aria-label="D4 libre" style="aspect-ratio:1;background:#D6DBD0"></span>
+          <span role="gridcell" aria-label="E4 libre" style="aspect-ratio:1;background:#D6DBD0"></span>
+          <span role="gridcell" aria-label="A5 libre" style="aspect-ratio:1;background:#D6DBD0"></span>
+          <span role="gridcell" aria-label="B5 libre" style="aspect-ratio:1;background:#D6DBD0"></span>
+          <span role="gridcell" aria-label="C5 libre" style="aspect-ratio:1;background:#D6DBD0"></span>
+          <span role="gridcell" aria-label="D5 pose refusée, trop près du relief" style="aspect-ratio:1;background:#D6DBD0;display:grid;place-items:center;box-shadow:inset 0 0 0 4px #1B2220"><svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="display:block"><path d="M5 5 L19 19 M19 5 L5 19" stroke="#1B2220" stroke-width="3.5" fill="none"></path></svg></span>
+          <span role="gridcell" aria-label="E5 relief infranchissable" style="aspect-ratio:1;background:#1B2220;display:grid;place-items:center"><svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="display:block"><polygon points="12,5 21,19 3,19" fill="none" stroke="#96A09B" stroke-width="2.5"></polygon></svg></span>
+        </div>
+        <div>
+          <p style="margin:0 0 5px;font:600 9px/1.2 Archivo,system-ui;letter-spacing:.16em;text-transform:uppercase">Bande de preuve · niveaux de gris</p>
+          <div aria-hidden="true" style="filter:grayscale(1);display:grid;grid-template-columns:repeat(6,1fr);gap:4px">
+            <span style="aspect-ratio:1;background:#8E3B1B;border:2px solid #1B2220;display:grid;place-items:center"><svg width="24" height="24" viewBox="0 0 24 24" style="display:block"><polygon points="12,3 21,19.5 3,19.5" fill="#E2E6DC"></polygon><rect x="2.5" y="20.5" width="19" height="2.4" fill="#E2E6DC"></rect></svg></span>
+            <span style="aspect-ratio:1;background:#9C63B4;border:2px solid #1B2220;display:grid;place-items:center"><svg width="24" height="24" viewBox="0 0 24 24" style="display:block"><circle cx="12" cy="12" r="10" fill="#E2E6DC"></circle><circle cx="12" cy="12" r="4" fill="#9C63B4"></circle></svg></span>
+            <span style="aspect-ratio:1;background:#E8B21C;border:2px solid #1B2220;display:grid;place-items:center;color:#1B2220;font:700 20px/1 'JetBrains Mono',monospace">⧗</span>
+            <span style="aspect-ratio:1;background:#D6DBD0;border:2px solid #1B2220"></span>
+            <span style="aspect-ratio:1;background:#E2E6DC;border:2px solid #1B2220;box-shadow:inset 0 0 0 3px #1B2220;display:grid;place-items:center;font:800 19px/1 'Archivo Narrow',Archivo,system-ui">3</span>
+            <span style="aspect-ratio:1;background:#1B2220;border:2px solid #1B2220;display:grid;place-items:center"><svg width="24" height="24" viewBox="0 0 24 24" style="display:block"><polygon points="12,5 21,19 3,19" fill="none" stroke="#96A09B" stroke-width="2.5"></polygon></svg></span>
+          </div>
+        </div>
+      </div>
+      <p style="margin:0;max-width:430px;font:400 12px/1.55 Archivo,system-ui"><b>Le compte honnête :</b> en gris, l'écart entre deux ressources voisines tombe à <b>1,75:1</b> et <b>2,18:1</b> — visible comme « deux gris différents », mais bien plus faible que la hachure. C'est pourquoi le <b>glyphe reste obligatoire</b> ici : il devient le canal principal, la valeur n'est que le renfort. <b>Ce qu'on perd :</b> la Camelote orange vif, qui devient une brique sombre.</p>
+    </div>
+
+    <div id="5b" style="scroll-margin-top:16px;flex:none;display:flex;flex-direction:column;gap:9px">
+      <div style="display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 Archivo,system-ui;max-width:430px"><a href="#5b" style="font:600 10.5px/1 'JetBrains Mono',monospace;padding:3px 7px;background:rgba(27,34,32,.1);text-decoration:none">5b</a><span><b>Trait, pas remplissage</b> — l'état vit dans la bordure</span></div>
+      <div style="width:430px;background:#E2E6DC;border:3px solid #1B2220;padding:14px;display:flex;flex-direction:column;gap:13px">
+        <p style="margin:0;font:400 12.5px/1.5 Archivo,system-ui">La couleur quitte la surface pour aller dans le <b>trait</b> et le glyphe. L'état s'encode en <b>style de bordure</b> — simple, double, épais, interrompu — un canal que la hachure ne pouvait pas offrir : il <b>survit au mode contrastes forcés</b>, et clôt le point ouvert du dossier 2.</p>
+        <ul style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:7px">
+          <li style="display:flex;align-items:center;gap:9px;background:#E2E6DC;border:3px solid #C4552A;padding:7px 9px">
+            <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="display:block;flex:0 0 auto"><polygon points="12,3 21,19.5 3,19.5" fill="#1B2220"></polygon><rect x="2.5" y="20.5" width="19" height="2.4" fill="#1B2220"></rect></svg>
+            <span style="flex:1 1 auto;font:600 10px/1.2 Archivo,system-ui;letter-spacing:.12em;text-transform:uppercase">Camelote</span>
+            <span style="font:700 17px/1 'JetBrains Mono',monospace;font-variant-numeric:tabular-nums">18 420</span>
+          </li>
+          <li style="display:flex;align-items:center;gap:9px;background:#E2E6DC;border:3px double #1B2220;padding:7px 9px">
+            <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="display:block;flex:0 0 auto"><polygon points="12,2 21.5,12 12,22 2.5,12" fill="#E8B21C" stroke="#1B2220" stroke-width="1.6"></polygon><rect x="10.7" y="6.5" width="2.6" height="11" fill="#1B2220"></rect></svg>
+            <span style="flex:1 1 auto;font:600 10px/1.2 Archivo,system-ui;letter-spacing:.12em;text-transform:uppercase">Jus</span>
+            <span style="font:700 17px/1 'JetBrains Mono',monospace;font-variant-numeric:tabular-nums">9 105</span>
+          </li>
+          <li style="display:flex;align-items:center;gap:9px;background:#E2E6DC;border:3px solid #1B2220;border-left-width:10px;border-left-color:#8E4BA8;padding:7px 9px">
+            <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="display:block;flex:0 0 auto"><circle cx="12" cy="12" r="10" fill="#8E4BA8" stroke="#1B2220" stroke-width="1.6"></circle><circle cx="12" cy="12" r="4" fill="#E2E6DC"></circle></svg>
+            <span style="flex:1 1 auto;font:600 10px/1.2 Archivo,system-ui;letter-spacing:.12em;text-transform:uppercase">Bave d'étoiles</span>
+            <span style="font:700 17px/1 'JetBrains Mono',monospace;font-variant-numeric:tabular-nums">1 260</span>
+          </li>
+        </ul>
+        <div role="grid" aria-label="Parcelle 4-B, encodage par le trait" style="display:grid;grid-template-columns:repeat(5,1fr);gap:5px">
+          <span role="gridcell" aria-label="A1 libre" style="aspect-ratio:1;background:#E2E6DC;border:2px solid #6E7873"></span>
+          <span role="gridcell" aria-label="B1 gisement de Camelote" style="aspect-ratio:1;background:#E2E6DC;border:4px solid #C4552A;display:grid;place-items:center"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="display:block"><polygon points="12,3 21,19.5 3,19.5" fill="#1B2220"></polygon><rect x="2.5" y="20.5" width="19" height="2.4" fill="#1B2220"></rect></svg></span>
+          <span role="gridcell" aria-label="C1 atelier niveau 3" style="aspect-ratio:1;background:#1B2220;color:#E2E6DC;display:grid;place-items:center;font:800 19px/1 'Archivo Narrow',Archivo,system-ui">3</span>
+          <span role="gridcell" aria-label="D1 libre" style="aspect-ratio:1;background:#E2E6DC;border:2px solid #6E7873"></span>
+          <span role="gridcell" aria-label="E1 relief infranchissable" style="aspect-ratio:1;background:#E2E6DC;border:4px dotted #1B2220;display:grid;place-items:center"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="display:block"><polygon points="12,5 21,19 3,19" fill="none" stroke="#1B2220" stroke-width="2.5"></polygon></svg></span>
+          <span role="gridcell" aria-label="A2 libre" style="aspect-ratio:1;background:#E2E6DC;border:2px solid #6E7873"></span>
+          <span role="gridcell" aria-label="B2 gisement de Camelote" style="aspect-ratio:1;background:#E2E6DC;border:4px solid #C4552A;display:grid;place-items:center"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="display:block"><polygon points="12,3 21,19.5 3,19.5" fill="#1B2220"></polygon><rect x="2.5" y="20.5" width="19" height="2.4" fill="#1B2220"></rect></svg></span>
+          <span role="gridcell" aria-label="C2 chantier en cours" style="aspect-ratio:1;background:#E2E6DC;border:4px dashed #1B2220;display:grid;place-items:center;font:700 20px/1 'JetBrains Mono',monospace">⧗</span>
+          <span role="gridcell" aria-label="D2 libre" style="aspect-ratio:1;background:#E2E6DC;border:2px solid #6E7873"></span>
+          <span role="gridcell" aria-label="E2 relief infranchissable" style="aspect-ratio:1;background:#E2E6DC;border:4px dotted #1B2220;display:grid;place-items:center"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="display:block"><polygon points="12,5 21,19 3,19" fill="none" stroke="#1B2220" stroke-width="2.5"></polygon></svg></span>
+          <span role="gridcell" aria-label="A3 libre" style="aspect-ratio:1;background:#E2E6DC;border:2px solid #6E7873"></span>
+          <span role="gridcell" aria-label="B3 libre" style="aspect-ratio:1;background:#E2E6DC;border:2px solid #6E7873"></span>
+          <span role="gridcell" aria-label="C3 case visée, pose valide" style="aspect-ratio:1;background:#E2E6DC;border:4px double #1B2220;outline:3px solid #E8B21C;outline-offset:-11px;display:grid;place-items:center;font:800 24px/1 'Archivo Narrow',Archivo,system-ui">+</span>
+          <span role="gridcell" aria-label="D3 libre" style="aspect-ratio:1;background:#E2E6DC;border:2px solid #6E7873"></span>
+          <span role="gridcell" aria-label="E3 libre" style="aspect-ratio:1;background:#E2E6DC;border:2px solid #6E7873"></span>
+          <span role="gridcell" aria-label="A4 cuve niveau 1" style="aspect-ratio:1;background:#1B2220;color:#E2E6DC;display:grid;place-items:center;font:800 19px/1 'Archivo Narrow',Archivo,system-ui">1</span>
+          <span role="gridcell" aria-label="B4 libre" style="aspect-ratio:1;background:#E2E6DC;border:2px solid #6E7873"></span>
+          <span role="gridcell" aria-label="C4 gisement de Bave" style="aspect-ratio:1;background:#E2E6DC;border:4px solid #8E4BA8;display:grid;place-items:center"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="display:block"><circle cx="12" cy="12" r="10" fill="#1B2220"></circle><circle cx="12" cy="12" r="4" fill="#E2E6DC"></circle></svg></span>
+          <span role="gridcell" aria-label="D4 libre" style="aspect-ratio:1;background:#E2E6DC;border:2px solid #6E7873"></span>
+          <span role="gridcell" aria-label="E4 libre" style="aspect-ratio:1;background:#E2E6DC;border:2px solid #6E7873"></span>
+          <span role="gridcell" aria-label="A5 libre" style="aspect-ratio:1;background:#E2E6DC;border:2px solid #6E7873"></span>
+          <span role="gridcell" aria-label="B5 libre" style="aspect-ratio:1;background:#E2E6DC;border:2px solid #6E7873"></span>
+          <span role="gridcell" aria-label="C5 libre" style="aspect-ratio:1;background:#E2E6DC;border:2px solid #6E7873"></span>
+          <span role="gridcell" aria-label="D5 pose refusée, trop près du relief" style="aspect-ratio:1;background:#E2E6DC;border:4px solid #1B2220;display:grid;place-items:center"><svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="display:block"><path d="M5 5 L19 19 M19 5 L5 19" stroke="#1B2220" stroke-width="3.5" fill="none"></path></svg></span>
+          <span role="gridcell" aria-label="E5 relief infranchissable" style="aspect-ratio:1;background:#E2E6DC;border:4px dotted #1B2220;display:grid;place-items:center"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="display:block"><polygon points="12,5 21,19 3,19" fill="none" stroke="#1B2220" stroke-width="2.5"></polygon></svg></span>
+        </div>
+        <div>
+          <p style="margin:0 0 5px;font:600 9px/1.2 Archivo,system-ui;letter-spacing:.16em;text-transform:uppercase">Bande de preuve · niveaux de gris</p>
+          <div aria-hidden="true" style="filter:grayscale(1);display:grid;grid-template-columns:repeat(6,1fr);gap:4px">
+            <span style="aspect-ratio:1;background:#E2E6DC;border:4px solid #C4552A;display:grid;place-items:center"><svg width="22" height="22" viewBox="0 0 24 24" style="display:block"><polygon points="12,3 21,19.5 3,19.5" fill="#1B2220"></polygon><rect x="2.5" y="20.5" width="19" height="2.4" fill="#1B2220"></rect></svg></span>
+            <span style="aspect-ratio:1;background:#E2E6DC;border:4px solid #8E4BA8;display:grid;place-items:center"><svg width="22" height="22" viewBox="0 0 24 24" style="display:block"><circle cx="12" cy="12" r="10" fill="#1B2220"></circle><circle cx="12" cy="12" r="4" fill="#E2E6DC"></circle></svg></span>
+            <span style="aspect-ratio:1;background:#E2E6DC;border:4px dashed #1B2220;display:grid;place-items:center;font:700 20px/1 'JetBrains Mono',monospace">⧗</span>
+            <span style="aspect-ratio:1;background:#E2E6DC;border:4px dotted #1B2220;display:grid;place-items:center"><svg width="20" height="20" viewBox="0 0 24 24" style="display:block"><polygon points="12,5 21,19 3,19" fill="none" stroke="#1B2220" stroke-width="2.5"></polygon></svg></span>
+            <span style="aspect-ratio:1;background:#E2E6DC;border:4px double #1B2220;display:grid;place-items:center;font:800 22px/1 'Archivo Narrow',Archivo,system-ui">+</span>
+            <span style="aspect-ratio:1;background:#1B2220;border:4px solid #1B2220;display:grid;place-items:center;color:#E2E6DC;font:800 19px/1 'Archivo Narrow',Archivo,system-ui">1</span>
+          </div>
+        </div>
+      </div>
+      <p style="margin:0;max-width:430px;font:400 12px/1.55 Archivo,system-ui"><b>Le compte honnête :</b> le style de trait est le seul canal de la liste qui traverse <b>gris, daltonismes et contrastes forcés</b> sans rien perdre. En gris, Camelote et Bave se ressemblent — c'est le glyphe qui tranche, pas le trait. <b>Ce qu'on perd :</b> les aplats de couleur ; l'écran devient clair et léger, moins « plateau », plus « plan d'architecte ».</p>
+    </div>
+
+    <div id="5c" style="scroll-margin-top:16px;flex:none;display:flex;flex-direction:column;gap:9px">
+      <div style="display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 Archivo,system-ui;max-width:430px"><a href="#5c" style="font:600 10.5px/1 'JetBrains Mono',monospace;padding:3px 7px;background:rgba(27,34,32,.1);text-decoration:none">5c</a><span><b>Silhouette</b> — le glyphe devient l'objet</span></div>
+      <div style="width:430px;background:#E2E6DC;border:3px solid #1B2220;padding:14px;display:flex;flex-direction:column;gap:13px">
+        <p style="margin:0;font:400 12.5px/1.5 Archivo,system-ui">On assume l'inverse : plus de motif <i>ni</i> de trait porteur, la <b>forme fait tout</b>. Chaque ressource et chaque état ont une silhouette pleine, grande, reconnaissable à un coup d'œil et de loin. La couleur redevient ce qu'elle devrait être — un plaisir, pas une information.</p>
+        <ul style="list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px">
+          <li style="border:2.5px solid #1B2220;background:#C4552A;padding:8px 7px 8px;text-align:center">
+            <svg width="38" height="38" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="display:block;margin:0 auto"><polygon points="12,3 21,19.5 3,19.5" fill="#1B2220"></polygon><rect x="2.5" y="20.5" width="19" height="2.4" fill="#1B2220"></rect></svg>
+            <div style="background:#E2E6DC;border:2px solid #1B2220;margin-top:7px;padding:3px 3px 4px">
+              <p style="margin:0;font:700 15px/1 'JetBrains Mono',monospace;font-variant-numeric:tabular-nums">18 420</p>
+            </div>
+          </li>
+          <li style="border:2.5px solid #1B2220;background:#E8B21C;padding:8px 7px 8px;text-align:center">
+            <svg width="38" height="38" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="display:block;margin:0 auto"><polygon points="12,2 21.5,12 12,22 2.5,12" fill="#1B2220"></polygon><rect x="10.7" y="6.5" width="2.6" height="11" fill="#E8B21C"></rect></svg>
+            <div style="background:#E2E6DC;border:2px solid #1B2220;margin-top:7px;padding:3px 3px 4px">
+              <p style="margin:0;font:700 15px/1 'JetBrains Mono',monospace;font-variant-numeric:tabular-nums">9 105</p>
+            </div>
+          </li>
+          <li style="border:2.5px solid #1B2220;background:#8E4BA8;padding:8px 7px 8px;text-align:center">
+            <svg width="38" height="38" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="display:block;margin:0 auto"><circle cx="12" cy="12" r="10" fill="#1B2220"></circle><circle cx="12" cy="12" r="4" fill="#8E4BA8"></circle></svg>
+            <div style="background:#E2E6DC;border:2px solid #1B2220;margin-top:7px;padding:3px 3px 4px">
+              <p style="margin:0;font:700 15px/1 'JetBrains Mono',monospace;font-variant-numeric:tabular-nums">1 260</p>
+            </div>
+          </li>
+        </ul>
+        <div role="grid" aria-label="Parcelle 4-B, encodage par la silhouette" style="display:grid;grid-template-columns:repeat(5,1fr);gap:5px;background:#1B2220;border:2.5px solid #1B2220;padding:5px">
+          <span role="gridcell" aria-label="A1 libre" style="aspect-ratio:1;background:#D6DBD0"></span>
+          <span role="gridcell" aria-label="B1 gisement de Camelote" style="aspect-ratio:1;background:#C4552A;display:grid;place-items:center"><svg width="34" height="34" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="display:block"><polygon points="12,3 21,19.5 3,19.5" fill="#1B2220"></polygon><rect x="2.5" y="20.5" width="19" height="2.4" fill="#1B2220"></rect></svg></span>
+          <span role="gridcell" aria-label="C1 atelier niveau 3" style="aspect-ratio:1;background:#E2E6DC;display:grid;place-items:center;font:800 26px/1 'Archivo Narrow',Archivo,system-ui">3</span>
+          <span role="gridcell" aria-label="D1 libre" style="aspect-ratio:1;background:#D6DBD0"></span>
+          <span role="gridcell" aria-label="E1 relief infranchissable" style="aspect-ratio:1;background:#1B2220;display:grid;place-items:center"><svg width="32" height="32" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="display:block"><polygon points="12,4 22,20 2,20" fill="#96A09B"></polygon></svg></span>
+          <span role="gridcell" aria-label="A2 libre" style="aspect-ratio:1;background:#D6DBD0"></span>
+          <span role="gridcell" aria-label="B2 gisement de Camelote" style="aspect-ratio:1;background:#C4552A;display:grid;place-items:center"><svg width="34" height="34" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="display:block"><polygon points="12,3 21,19.5 3,19.5" fill="#1B2220"></polygon><rect x="2.5" y="20.5" width="19" height="2.4" fill="#1B2220"></rect></svg></span>
+          <span role="gridcell" aria-label="C2 chantier en cours" style="aspect-ratio:1;background:#E8B21C;display:grid;place-items:center"><svg width="30" height="30" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="display:block"><path d="M5 3 H19 L13 12 L19 21 H5 L11 12 Z" fill="#1B2220"></path></svg></span>
+          <span role="gridcell" aria-label="D2 libre" style="aspect-ratio:1;background:#D6DBD0"></span>
+          <span role="gridcell" aria-label="E2 relief infranchissable" style="aspect-ratio:1;background:#1B2220;display:grid;place-items:center"><svg width="32" height="32" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="display:block"><polygon points="12,4 22,20 2,20" fill="#96A09B"></polygon></svg></span>
+          <span role="gridcell" aria-label="A3 libre" style="aspect-ratio:1;background:#D6DBD0"></span>
+          <span role="gridcell" aria-label="B3 libre" style="aspect-ratio:1;background:#D6DBD0"></span>
+          <span role="gridcell" aria-label="C3 case visée, pose valide" style="aspect-ratio:1;background:#E2E6DC;display:grid;place-items:center;box-shadow:inset 0 0 0 5px #1B2220"><svg width="30" height="30" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="display:block"><path d="M12 3 V21 M3 12 H21" stroke="#1B2220" stroke-width="4" fill="none"></path></svg></span>
+          <span role="gridcell" aria-label="D3 libre" style="aspect-ratio:1;background:#D6DBD0"></span>
+          <span role="gridcell" aria-label="E3 libre" style="aspect-ratio:1;background:#D6DBD0"></span>
+          <span role="gridcell" aria-label="A4 cuve niveau 1" style="aspect-ratio:1;background:#E2E6DC;display:grid;place-items:center;font:800 26px/1 'Archivo Narrow',Archivo,system-ui">1</span>
+          <span role="gridcell" aria-label="B4 libre" style="aspect-ratio:1;background:#D6DBD0"></span>
+          <span role="gridcell" aria-label="C4 gisement de Bave" style="aspect-ratio:1;background:#8E4BA8;display:grid;place-items:center"><svg width="34" height="34" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="display:block"><circle cx="12" cy="12" r="10" fill="#1B2220"></circle><circle cx="12" cy="12" r="4" fill="#8E4BA8"></circle></svg></span>
+          <span role="gridcell" aria-label="D4 libre" style="aspect-ratio:1;background:#D6DBD0"></span>
+          <span role="gridcell" aria-label="E4 libre" style="aspect-ratio:1;background:#D6DBD0"></span>
+          <span role="gridcell" aria-label="A5 libre" style="aspect-ratio:1;background:#D6DBD0"></span>
+          <span role="gridcell" aria-label="B5 libre" style="aspect-ratio:1;background:#D6DBD0"></span>
+          <span role="gridcell" aria-label="C5 libre" style="aspect-ratio:1;background:#D6DBD0"></span>
+          <span role="gridcell" aria-label="D5 pose refusée, trop près du relief" style="aspect-ratio:1;background:#D6DBD0;display:grid;place-items:center"><svg width="34" height="34" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="display:block"><circle cx="12" cy="12" r="10.5" fill="#1B2220"></circle><path d="M6.5 6.5 L17.5 17.5 M17.5 6.5 L6.5 17.5" stroke="#E2E6DC" stroke-width="3" fill="none"></path></svg></span>
+          <span role="gridcell" aria-label="E5 relief infranchissable" style="aspect-ratio:1;background:#1B2220;display:grid;place-items:center"><svg width="32" height="32" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="display:block"><polygon points="12,4 22,20 2,20" fill="#96A09B"></polygon></svg></span>
+        </div>
+        <div>
+          <p style="margin:0 0 5px;font:600 9px/1.2 Archivo,system-ui;letter-spacing:.16em;text-transform:uppercase">Bande de preuve · niveaux de gris</p>
+          <div aria-hidden="true" style="filter:grayscale(1);display:grid;grid-template-columns:repeat(6,1fr);gap:4px">
+            <span style="aspect-ratio:1;background:#C4552A;border:2px solid #1B2220;display:grid;place-items:center"><svg width="24" height="24" viewBox="0 0 24 24" style="display:block"><polygon points="12,3 21,19.5 3,19.5" fill="#1B2220"></polygon></svg></span>
+            <span style="aspect-ratio:1;background:#E8B21C;border:2px solid #1B2220;display:grid;place-items:center"><svg width="24" height="24" viewBox="0 0 24 24" style="display:block"><polygon points="12,2 21.5,12 12,22 2.5,12" fill="#1B2220"></polygon></svg></span>
+            <span style="aspect-ratio:1;background:#8E4BA8;border:2px solid #1B2220;display:grid;place-items:center"><svg width="24" height="24" viewBox="0 0 24 24" style="display:block"><circle cx="12" cy="12" r="10" fill="#1B2220"></circle></svg></span>
+            <span style="aspect-ratio:1;background:#E8B21C;border:2px solid #1B2220;display:grid;place-items:center"><svg width="22" height="22" viewBox="0 0 24 24" style="display:block"><path d="M5 3 H19 L13 12 L19 21 H5 L11 12 Z" fill="#1B2220"></path></svg></span>
+            <span style="aspect-ratio:1;background:#D6DBD0;border:2px solid #1B2220;display:grid;place-items:center"><svg width="24" height="24" viewBox="0 0 24 24" style="display:block"><circle cx="12" cy="12" r="10.5" fill="#1B2220"></circle><path d="M6.5 6.5 L17.5 17.5 M17.5 6.5 L6.5 17.5" stroke="#E2E6DC" stroke-width="3" fill="none"></path></svg></span>
+            <span style="aspect-ratio:1;background:#1B2220;border:2px solid #1B2220;display:grid;place-items:center"><svg width="24" height="24" viewBox="0 0 24 24" style="display:block"><polygon points="12,4 22,20 2,20" fill="#96A09B"></polygon></svg></span>
+          </div>
+        </div>
+      </div>
+      <p style="margin:0;max-width:430px;font:400 12px/1.55 Archivo,system-ui"><b>Le compte honnête :</b> c'est le canal le plus robuste et le plus lisible de loin — une forme se reconnaît à 4 px de large et sous n'importe quel filtre. <b>Ce qu'on perd :</b> le nombre d'états distinguables. Cinq à sept silhouettes, pas plus, avant que le vocabulaire ne devienne du charabia — la hachure, elle, se combinait avec l'aplat pour en produire onze. Si l'écran de combat multiplie les états, il faudra remettre un canal ailleurs (le mot, la position).</p>
+    </div>
+
+  </div>
+
+  <p style="margin:24px 0 0;font:400 12.5px/1.6 Archivo,system-ui;max-width:92ch">Mon avis, si vous le voulez : <a href="#5c">5c</a> pour la grille (la forme est le canal qui vieillit le mieux) et <a href="#5b">5b</a> pour les listes et tableaux, où le trait est discret et l'aplat serait bruyant. <a href="#5a">5a</a> est le seul qui vous force à renoncer à l'orange. Piste suivante : « applique <a href="#5c">5c</a> à <a href="#4c">4c</a> », « montre <a href="#5b">5b</a> en contrastes forcés », ou « mélange 5b et 5c ».</p>
+</section>
+
+<section id="t4" style="padding:40px 40px 34px;border-bottom:2px solid #1B2220">
+  <div style="display:flex;align-items:baseline;gap:10px;margin:0 0 6px">
+    <a href="#t4" style="font:600 10px/1 'JetBrains Mono',monospace;padding:4px 7px;background:#1B2220;color:#E2E6DC;text-decoration:none;letter-spacing:.08em">4</a>
+    <span style="font:600 13px/1.2 Archivo,system-ui;letter-spacing:.04em">Trois pistes pour que ça fasse jeu, pas prototype</span>
+  </div>
+  <p style="margin:0 0 8px;max-width:92ch;font:400 14px/1.6 Archivo,system-ui">Le diagnostic est juste. Le dossier 3 est un <b>document administratif bien dessiné</b> : tout y a la même densité, la même échelle, la même température. Un jeu, lui, a une <b>hiérarchie dramatique</b> — un objet énorme, des objets minuscules, un endroit où on a envie de poser le doigt — et il a un <b>ton</b> assumé au lieu d'une neutralité de formulaire.</p>
+  <p style="margin:0 0 24px;max-width:92ch;font:400 14px/1.6 Archivo,system-ui">Les trois pistes gardent la colonne vertébrale d'accessibilité (motif + glyphe + liseré d'encre, jamais la couleur seule, chiffres en mono tabulaire) et changent ce qui n'était jamais négociable : <b>l'échelle, la matière et l'humour</b>. Même contenu dans les trois, même largeur de 430 px, pour comparer à armes égales.</p>
+
+  <div style="display:flex;flex-wrap:wrap;gap:30px;align-items:flex-start">
+
+    <div id="4a" style="scroll-margin-top:16px;flex:none;display:flex;flex-direction:column;gap:9px">
+      <div style="display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 Archivo,system-ui;max-width:430px"><a href="#4a" style="font:600 10.5px/1 'JetBrains Mono',monospace;padding:3px 7px;background:rgba(27,34,32,.1);text-decoration:none">4a</a><span><b>Nuit de hangar</b> — la console qu'on pilote</span></div>
+
+      <div style="width:430px;background:#141A18;border:3px solid #1B2220;box-shadow:0 0 0 1px #4A5450;padding:14px;display:flex;flex-direction:column;gap:12px;color:#E2E6DC">
+        <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:10px;border-bottom:2px solid #4A5450;padding-bottom:9px">
+          <div>
+            <p style="margin:0;font:600 9px/1.2 Archivo,system-ui;letter-spacing:.2em;text-transform:uppercase;color:#96A09B">Régie · univers 4</p>
+            <p style="margin:2px 0 0;font:400 30px/.92 'Saira Stencil One',Archivo,system-ui;letter-spacing:.01em;color:#E2E6DC">FOND DE TIROIR</p>
+          </div>
+          <p style="margin:0;font:700 13px/1 'JetBrains Mono',monospace;padding:5px 7px;border:2px solid #E2E6DC;font-variant-numeric:tabular-nums">1:204:6</p>
+        </div>
+
+        <ul style="list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px">
+          <li style="border:2px solid #E2E6DC;background:#1B2220;padding:0;display:flex;flex-direction:column">
+            <div aria-hidden="true" style="height:74px;position:relative;border-bottom:2px solid #E2E6DC;overflow:hidden;background:repeating-linear-gradient(0deg,#2A3230 0 1px,transparent 1px 9px)">
+              <span style="position:absolute;left:0;right:0;bottom:0;height:64%;background:#C4552A;border-top:2px solid #E2E6DC;background-image:repeating-linear-gradient(45deg,#1B2220 0 2px,transparent 2px 8px)"></span>
+            </div>
+            <div style="padding:6px 7px 7px">
+              <div style="display:flex;align-items:center;gap:4px">
+                <svg width="12" height="12" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="display:block;flex:0 0 auto"><polygon points="12,3 21,19.5 3,19.5" fill="#E2E6DC"></polygon><rect x="2.5" y="20.5" width="19" height="2.4" fill="#E2E6DC"></rect></svg>
+                <span style="font:600 9px/1.2 Archivo,system-ui;letter-spacing:.14em;text-transform:uppercase;color:#96A09B">Camelote</span>
+              </div>
+              <p style="margin:3px 0 0;font:700 21px/1 'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;color:#E2E6DC">18 420</p>
+              <p style="margin:2px 0 0;font:500 11px/1.2 'JetBrains Mono',monospace;color:#96A09B">+540/h · 64 %</p>
+            </div>
+          </li>
+          <li style="border:2px solid #E2E6DC;background:#1B2220;padding:0;display:flex;flex-direction:column">
+            <div aria-hidden="true" style="height:74px;position:relative;border-bottom:2px solid #E2E6DC;overflow:hidden;background:repeating-linear-gradient(0deg,#2A3230 0 1px,transparent 1px 9px)">
+              <span style="position:absolute;left:0;right:0;bottom:0;height:38%;background:#E8B21C;border-top:2px solid #E2E6DC;background-image:repeating-linear-gradient(-45deg,#1B2220 0 2px,transparent 2px 8px)"></span>
+            </div>
+            <div style="padding:6px 7px 7px">
+              <div style="display:flex;align-items:center;gap:4px">
+                <svg width="12" height="12" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="display:block;flex:0 0 auto"><polygon points="12,2 21.5,12 12,22 2.5,12" fill="#E2E6DC"></polygon><rect x="10.7" y="6.5" width="2.6" height="11" fill="#1B2220"></rect></svg>
+                <span style="font:600 9px/1.2 Archivo,system-ui;letter-spacing:.14em;text-transform:uppercase;color:#96A09B">Jus</span>
+              </div>
+              <p style="margin:3px 0 0;font:700 21px/1 'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;color:#E2E6DC">9 105</p>
+              <p style="margin:2px 0 0;font:500 11px/1.2 'JetBrains Mono',monospace;color:#96A09B">+220/h · 38 %</p>
+            </div>
+          </li>
+          <li style="border:2px solid #E2E6DC;background:#1B2220;padding:0;display:flex;flex-direction:column">
+            <div aria-hidden="true" style="height:74px;position:relative;border-bottom:2px solid #E2E6DC;overflow:hidden;background:repeating-linear-gradient(0deg,#2A3230 0 1px,transparent 1px 9px)">
+              <span style="position:absolute;left:0;right:0;bottom:0;height:14%;background:#B072C8;border-top:2px solid #E2E6DC;background-image:repeating-linear-gradient(45deg,#E2E6DC 0 2px,transparent 2px 8px)"></span>
+              <span style="position:absolute;left:-2px;right:-2px;bottom:22%;height:2px;background:#C4552A"></span>
+            </div>
+            <div style="padding:6px 7px 7px">
+              <div style="display:flex;align-items:center;gap:4px">
+                <svg width="12" height="12" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="display:block;flex:0 0 auto"><circle cx="12" cy="12" r="10" fill="#E2E6DC"></circle><circle cx="12" cy="12" r="4" fill="#1B2220"></circle></svg>
+                <span style="font:600 9px/1.2 Archivo,system-ui;letter-spacing:.14em;text-transform:uppercase;color:#96A09B">Bave</span>
+              </div>
+              <p style="margin:3px 0 0;font:700 21px/1 'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;color:#E2E6DC">1 260</p>
+              <p style="margin:2px 0 0;font:500 11px/1.2 'JetBrains Mono',monospace;color:#96A09B">+45/h · 14 %</p>
+            </div>
+          </li>
+        </ul>
+
+        <div style="border:2px solid #E8B21C;background:#1B2220;padding:9px 10px;display:flex;align-items:center;gap:11px">
+          <div style="flex:1 1 auto;min-width:0">
+            <p style="margin:0;font:600 9px/1.2 Archivo,system-ui;letter-spacing:.18em;text-transform:uppercase;color:#E8B21C">Chantier en cours</p>
+            <p style="margin:3px 0 0;font:700 15px/1.15 Archivo,system-ui;color:#E2E6DC">Cuve de Bave d'étoiles <span style="font:700 10px/1 'JetBrains Mono',monospace;border:1.5px solid #96A09B;padding:2px 4px;vertical-align:1px;color:#96A09B">NIV 2</span></p>
+            <div aria-hidden="true" style="margin-top:7px;height:12px;border:2px solid #E2E6DC;background:repeating-linear-gradient(45deg,#2A3230 0 3px,transparent 3px 9px)"><span style="display:block;height:100%;width:61%;background:#E8B21C;background-image:repeating-linear-gradient(-45deg,#1B2220 0 2px,transparent 2px 7px)"></span></div>
+          </div>
+          <p style="margin:0;font:700 24px/1 'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;color:#E2E6DC;flex:0 0 auto">04:12<span style="font-size:14px;color:#96A09B">:09</span></p>
+        </div>
+
+        <div style="border:2px solid #4A5450;padding:9px">
+          <p style="margin:0 0 7px;font:600 9px/1.2 Archivo,system-ui;letter-spacing:.18em;text-transform:uppercase;color:#96A09B">Parcelle 4-B · 25 cases</p>
+          <div role="grid" aria-label="Plan de parcelle 4-B" style="display:grid;grid-template-columns:repeat(5,1fr);gap:3px;background:#4A5450;padding:3px">
+            <span role="gridcell" aria-label="A1 libre" style="aspect-ratio:1;background:#1B2220"></span>
+            <span role="gridcell" aria-label="B1 gisement de Camelote" style="aspect-ratio:1;background:#C4552A;background-image:repeating-linear-gradient(45deg,#1B2220 0 2px,transparent 2px 7px);display:grid;place-items:center"><span style="background:#E2E6DC;border:2px solid #1B2220;width:28px;height:28px;display:grid;place-items:center;color:#1B2220;font:700 18px/1 'JetBrains Mono',monospace">▲</span></span>
+            <span role="gridcell" aria-label="C1 atelier niveau 3" style="aspect-ratio:1;background:#E2E6DC;color:#1B2220;display:grid;place-items:center;font:700 13px/1 'JetBrains Mono',monospace">3</span>
+            <span role="gridcell" aria-label="D1 libre" style="aspect-ratio:1;background:#1B2220"></span>
+            <span role="gridcell" aria-label="E1 relief infranchissable" style="aspect-ratio:1;background:#141A18;background-image:repeating-linear-gradient(90deg,#96A09B 0 2px,transparent 2px 6px);border:1px solid #96A09B"></span>
+            <span role="gridcell" aria-label="A2 libre" style="aspect-ratio:1;background:#1B2220"></span>
+            <span role="gridcell" aria-label="B2 gisement de Camelote" style="aspect-ratio:1;background:#C4552A;background-image:repeating-linear-gradient(45deg,#1B2220 0 2px,transparent 2px 7px);display:grid;place-items:center"><span style="background:#E2E6DC;border:2px solid #1B2220;width:28px;height:28px;display:grid;place-items:center;color:#1B2220;font:700 18px/1 'JetBrains Mono',monospace">▲</span></span>
+            <span role="gridcell" aria-label="C2 chantier en cours" style="aspect-ratio:1;background:#E8B21C;background-image:repeating-linear-gradient(-45deg,#1B2220 0 3px,transparent 3px 9px);display:grid;place-items:center"><span style="background:#E2E6DC;border:2px solid #1B2220;width:28px;height:28px;display:grid;place-items:center;color:#1B2220;font:700 18px/1 'JetBrains Mono',monospace">⧗</span></span>
+            <span role="gridcell" aria-label="D2 libre" style="aspect-ratio:1;background:#1B2220"></span>
+            <span role="gridcell" aria-label="E2 relief infranchissable" style="aspect-ratio:1;background:#141A18;background-image:repeating-linear-gradient(90deg,#96A09B 0 2px,transparent 2px 6px);border:1px solid #96A09B"></span>
+            <span role="gridcell" aria-label="A3 libre" style="aspect-ratio:1;background:#1B2220"></span>
+            <span role="gridcell" aria-label="B3 libre" style="aspect-ratio:1;background:#1B2220"></span>
+            <span role="gridcell" aria-label="C3 case visée, pose valide" style="aspect-ratio:1;background:#1B2220;outline:3px solid #E2E6DC;outline-offset:-3px;display:grid;place-items:center;color:#E2E6DC;font:700 15px/1 'JetBrains Mono',monospace">+</span>
+            <span role="gridcell" aria-label="D3 libre" style="aspect-ratio:1;background:#1B2220"></span>
+            <span role="gridcell" aria-label="E3 libre" style="aspect-ratio:1;background:#1B2220"></span>
+            <span role="gridcell" aria-label="A4 cuve niveau 1" style="aspect-ratio:1;background:#E2E6DC;color:#1B2220;display:grid;place-items:center;font:700 13px/1 'JetBrains Mono',monospace">1</span>
+            <span role="gridcell" aria-label="B4 libre" style="aspect-ratio:1;background:#1B2220"></span>
+            <span role="gridcell" aria-label="C4 gisement de Bave" style="aspect-ratio:1;background:#B072C8;background-image:repeating-linear-gradient(45deg,#E2E6DC 0 2px,transparent 2px 7px);display:grid;place-items:center"><span style="background:#E2E6DC;border:2px solid #1B2220;width:28px;height:28px;display:grid;place-items:center;color:#1B2220;font:700 18px/1 'JetBrains Mono',monospace">●</span></span>
+            <span role="gridcell" aria-label="D4 libre" style="aspect-ratio:1;background:#1B2220"></span>
+            <span role="gridcell" aria-label="E4 libre" style="aspect-ratio:1;background:#1B2220"></span>
+            <span role="gridcell" aria-label="A5 libre" style="aspect-ratio:1;background:#1B2220"></span>
+            <span role="gridcell" aria-label="B5 libre" style="aspect-ratio:1;background:#1B2220"></span>
+            <span role="gridcell" aria-label="C5 libre" style="aspect-ratio:1;background:#1B2220"></span>
+            <span role="gridcell" aria-label="D5 pose refusée, trop près du relief" style="aspect-ratio:1;background:#1B2220;background-image:repeating-linear-gradient(-45deg,#96A09B 0 2px,transparent 2px 7px);outline:3px solid #C4552A;outline-offset:-3px;display:grid;place-items:center"><span style="background:#E2E6DC;border:2px solid #1B2220;width:28px;height:28px;display:grid;place-items:center;color:#1B2220;font:700 18px/1 'JetBrains Mono',monospace">✕</span></span>
+            <span role="gridcell" aria-label="E5 relief infranchissable" style="aspect-ratio:1;background:#141A18;background-image:repeating-linear-gradient(90deg,#96A09B 0 2px,transparent 2px 6px);border:1px solid #96A09B"></span>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px">
+          <button type="button" style="font:400 17px/1 'Saira Stencil One',Archivo,system-ui;letter-spacing:.03em;padding:13px 8px;min-height:48px;background:#E8B21C;color:#1B2220;border:2px solid #E2E6DC;cursor:pointer" style-hover="background:#E2E6DC">POSER</button>
+          <button type="button" style="font:400 17px/1 'Saira Stencil One',Archivo,system-ui;letter-spacing:.03em;padding:13px 8px;min-height:48px;background:#1B2220;color:#E2E6DC;border:2px solid #E2E6DC;cursor:pointer" style-hover="background:#2A3230">RELEVÉ</button>
+        </div>
+      </div>
+
+      <sc-if value="{{ notes }}" hint-placeholder-val="{{ true }}">
+        <p style="margin:0;max-width:430px;font:400 12px/1.55 Archivo,system-ui"><b>Ce qui fait jeu :</b> les ressources deviennent des <b>cuves qu'on lit à vue</b> — hauteur de remplissage, trait de seuil rouge, chiffre énorme. Le chrono est l'objet le plus gros de l'écran. <b>Coût a11y :</b> aucun — le fond d'encre monte tous les contrastes ; la hauteur de jauge est toujours doublée du pourcentage écrit.</p>
+      </sc-if>
+    </div>
+
+    <div id="4b" style="scroll-margin-top:16px;flex:none;display:flex;flex-direction:column;gap:9px">
+      <div style="display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 Archivo,system-ui;max-width:430px"><a href="#4b" style="font:600 10.5px/1 'JetBrains Mono',monospace;padding:3px 7px;background:rgba(27,34,32,.1);text-decoration:none">4b</a><span><b>Foire spatiale</b> — l'album de vignettes à collectionner</span></div>
+
+      <div style="width:430px;background:#E2E6DC;border:3px solid #1B2220;padding:0;display:flex;flex-direction:column">
+        <div style="position:relative;padding:15px 14px 13px;border-bottom:3px solid #1B2220;background:#C4552A;overflow:hidden">
+          <span aria-hidden="true" style="position:absolute;inset:0;background:repeating-conic-gradient(from 0deg at 78% 40%,#1B2220 0deg 3deg,transparent 3deg 12deg);opacity:.16"></span>
+          <p style="margin:0;position:relative;display:inline-block;font:600 9px/1.2 Archivo,system-ui;letter-spacing:.24em;text-transform:uppercase;color:#E2E6DC;background:#1B2220;padding:4px 7px">Grande régie interplanétaire · univers 4</p>
+          <p style="margin:2px 0 0;position:relative;font:400 40px/.86 'Saira Stencil One',Archivo,system-ui;color:#1B2220">FOND<br>DE TIROIR</p>
+          <p style="margin:7px 0 0;position:relative;display:inline-block;font:700 12px/1 'JetBrains Mono',monospace;background:#E2E6DC;border:2px solid #1B2220;padding:4px 7px;font-variant-numeric:tabular-nums;transform:rotate(-1.5deg)">SECTEUR 1:204:6</p>
+        </div>
+
+        <div style="padding:13px 14px 14px;display:flex;flex-direction:column;gap:13px">
+          <ul style="list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+            <li style="background:#C4552A;background-image:repeating-linear-gradient(45deg,#1B2220 0 2px,transparent 2px 9px);border:2.5px dashed #1B2220;padding:7px 6px 7px;transform:rotate(-1.2deg);box-shadow:3px 3px 0 rgba(27,34,32,.25)">
+              <div style="display:flex;align-items:center;gap:4px;background:#E2E6DC;border:2px solid #1B2220;padding:2px 4px;margin:0 0 5px">
+                <svg width="12" height="12" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="display:block;flex:0 0 auto"><polygon points="12,3 21,19.5 3,19.5" fill="#1B2220"></polygon><rect x="2.5" y="20.5" width="19" height="2.4" fill="#1B2220"></rect></svg>
+                <span style="font:700 8.5px/1.2 Archivo,system-ui;letter-spacing:.1em;text-transform:uppercase">Camelote</span>
+              </div>
+              <div style="background:#E2E6DC;border:2px solid #1B2220;padding:5px 5px 6px">
+                <p style="margin:0;font:400 22px/1 'Saira Stencil One',Archivo,system-ui;color:#1B2220;font-variant-numeric:tabular-nums">18 420</p>
+                <p style="margin:4px 0 0;font:700 10.5px/1.2 'JetBrains Mono',monospace;color:#1B2220">+540/h</p>
+              </div>
+            </li>
+            <li style="background:#E8B21C;background-image:repeating-linear-gradient(-45deg,#1B2220 0 2px,transparent 2px 9px);border:2.5px dashed #1B2220;padding:7px 6px 7px;transform:rotate(.8deg);box-shadow:3px 3px 0 rgba(27,34,32,.25)">
+              <div style="display:flex;align-items:center;gap:4px;background:#E2E6DC;border:2px solid #1B2220;padding:2px 4px;margin:0 0 5px">
+                <svg width="12" height="12" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="display:block;flex:0 0 auto"><polygon points="12,2 21.5,12 12,22 2.5,12" fill="#1B2220"></polygon><rect x="10.7" y="6.5" width="2.6" height="11" fill="#E8B21C"></rect></svg>
+                <span style="font:700 8.5px/1.2 Archivo,system-ui;letter-spacing:.1em;text-transform:uppercase">Jus</span>
+              </div>
+              <div style="background:#E2E6DC;border:2px solid #1B2220;padding:5px 5px 6px">
+                <p style="margin:0;font:400 22px/1 'Saira Stencil One',Archivo,system-ui;color:#1B2220;font-variant-numeric:tabular-nums">9 105</p>
+                <p style="margin:4px 0 0;font:700 10.5px/1.2 'JetBrains Mono',monospace;color:#1B2220">+220/h</p>
+              </div>
+            </li>
+            <li style="background:#8E4BA8;background-image:repeating-linear-gradient(45deg,#E2E6DC 0 2px,transparent 2px 9px);border:2.5px dashed #1B2220;padding:7px 6px 7px;transform:rotate(-.6deg);box-shadow:3px 3px 0 rgba(27,34,32,.25)">
+              <div style="display:flex;align-items:center;gap:4px;background:#E2E6DC;border:2px solid #1B2220;padding:2px 4px;margin:0 0 5px">
+                <svg width="12" height="12" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="display:block;flex:0 0 auto"><circle cx="12" cy="12" r="10" fill="#1B2220"></circle><circle cx="12" cy="12" r="4" fill="#8E4BA8"></circle></svg>
+                <span style="font:700 8.5px/1.2 Archivo,system-ui;letter-spacing:.1em;text-transform:uppercase">Bave</span>
+              </div>
+              <div style="background:#E2E6DC;border:2px solid #1B2220;padding:5px 5px 6px">
+                <p style="margin:0;font:400 22px/1 'Saira Stencil One',Archivo,system-ui;color:#1B2220;font-variant-numeric:tabular-nums">1 260</p>
+                <p style="margin:4px 0 0;font:700 10.5px/1.2 'JetBrains Mono',monospace;color:#1B2220">+45/h</p>
+              </div>
+            </li>
+          </ul>
+
+          <div style="border:2.5px solid #1B2220;background:#D6DBD0;position:relative">
+            <p style="margin:0;position:absolute;top:-11px;left:9px;font:400 13px/1 'Saira Stencil One',Archivo,system-ui;background:#1B2220;color:#E2E6DC;padding:3px 7px;transform:rotate(-1deg)">EN CHANTIER !</p>
+            <div style="padding:16px 11px 11px;display:flex;align-items:flex-end;gap:10px">
+              <div style="flex:1 1 auto;min-width:0">
+                <p style="margin:0;font:700 15px/1.2 Archivo,system-ui">Cuve de Bave d'étoiles</p>
+                <p style="margin:3px 0 0;font:400 11.5px/1.4 Archivo,system-ui">niveau 2 · on remue depuis mardi</p>
+                <div aria-hidden="true" style="margin-top:8px;height:14px;border:2px solid #1B2220;background:repeating-linear-gradient(45deg,rgba(27,34,32,.22) 0 3px,transparent 3px 9px)"><span style="display:block;height:100%;width:61%;background:#E8B21C;background-image:repeating-linear-gradient(-45deg,#1B2220 0 2px,transparent 2px 7px);border-right:2px solid #1B2220"></span></div>
+              </div>
+              <p style="margin:0;flex:0 0 auto;font:400 26px/.9 'Saira Stencil One',Archivo,system-ui;font-variant-numeric:tabular-nums">61 %</p>
+            </div>
+          </div>
+
+          <div>
+            <p style="margin:0 0 7px;font:700 10px/1.2 Archivo,system-ui;letter-spacing:.16em;text-transform:uppercase">Ta parcelle · 25 cases</p>
+            <div role="grid" aria-label="Plan de parcelle 4-B" style="display:grid;grid-template-columns:repeat(5,1fr);gap:4px">
+              <span role="gridcell" aria-label="A1 libre" style="aspect-ratio:1;background:#D6DBD0;border:2px solid #1B2220"></span>
+              <span role="gridcell" aria-label="B1 gisement de Camelote" style="aspect-ratio:1;border:2px solid #1B2220;background:#C4552A;background-image:repeating-linear-gradient(45deg,#1B2220 0 2px,transparent 2px 7px);display:grid;place-items:center"><span style="background:#E2E6DC;border:2px solid #1B2220;width:28px;height:28px;display:grid;place-items:center;color:#1B2220;font:700 18px/1 'JetBrains Mono',monospace">▲</span></span>
+              <span role="gridcell" aria-label="C1 atelier niveau 3" style="aspect-ratio:1;border:2px solid #1B2220;background:#1B2220;color:#E2E6DC;display:grid;place-items:center;font:400 15px/1 'Saira Stencil One',Archivo,system-ui">3</span>
+              <span role="gridcell" aria-label="D1 libre" style="aspect-ratio:1;background:#D6DBD0;border:2px solid #1B2220"></span>
+              <span role="gridcell" aria-label="E1 relief infranchissable" style="aspect-ratio:1;border:2px solid #1B2220;background:repeating-linear-gradient(90deg,#1B2220 0 2px,transparent 2px 6px)"></span>
+              <span role="gridcell" aria-label="A2 libre" style="aspect-ratio:1;background:#D6DBD0;border:2px solid #1B2220"></span>
+              <span role="gridcell" aria-label="B2 gisement de Camelote" style="aspect-ratio:1;border:2px solid #1B2220;background:#C4552A;background-image:repeating-linear-gradient(45deg,#1B2220 0 2px,transparent 2px 7px);display:grid;place-items:center"><span style="background:#E2E6DC;border:2px solid #1B2220;width:28px;height:28px;display:grid;place-items:center;color:#1B2220;font:700 18px/1 'JetBrains Mono',monospace">▲</span></span>
+              <span role="gridcell" aria-label="C2 chantier en cours" style="aspect-ratio:1;border:2px solid #1B2220;background:#E8B21C;background-image:repeating-linear-gradient(-45deg,#1B2220 0 3px,transparent 3px 9px);display:grid;place-items:center"><span style="background:#E2E6DC;border:2px solid #1B2220;width:28px;height:28px;display:grid;place-items:center;color:#1B2220;font:700 18px/1 'JetBrains Mono',monospace">⧗</span></span>
+              <span role="gridcell" aria-label="D2 libre" style="aspect-ratio:1;background:#D6DBD0;border:2px solid #1B2220"></span>
+              <span role="gridcell" aria-label="E2 relief infranchissable" style="aspect-ratio:1;border:2px solid #1B2220;background:repeating-linear-gradient(90deg,#1B2220 0 2px,transparent 2px 6px)"></span>
+              <span role="gridcell" aria-label="A3 libre" style="aspect-ratio:1;background:#D6DBD0;border:2px solid #1B2220"></span>
+              <span role="gridcell" aria-label="B3 libre" style="aspect-ratio:1;background:#D6DBD0;border:2px solid #1B2220"></span>
+              <span role="gridcell" aria-label="C3 case visée, pose valide" style="aspect-ratio:1;border:3px solid #1B2220;background:#E2E6DC;display:grid;place-items:center;font:400 20px/1 'Saira Stencil One',Archivo,system-ui;box-shadow:0 0 0 3px #E8B21C">+</span>
+              <span role="gridcell" aria-label="D3 libre" style="aspect-ratio:1;background:#D6DBD0;border:2px solid #1B2220"></span>
+              <span role="gridcell" aria-label="E3 libre" style="aspect-ratio:1;background:#D6DBD0;border:2px solid #1B2220"></span>
+              <span role="gridcell" aria-label="A4 cuve niveau 1" style="aspect-ratio:1;border:2px solid #1B2220;background:#1B2220;color:#E2E6DC;display:grid;place-items:center;font:400 15px/1 'Saira Stencil One',Archivo,system-ui">1</span>
+              <span role="gridcell" aria-label="B4 libre" style="aspect-ratio:1;background:#D6DBD0;border:2px solid #1B2220"></span>
+              <span role="gridcell" aria-label="C4 gisement de Bave" style="aspect-ratio:1;border:2px solid #1B2220;background:#8E4BA8;background-image:repeating-linear-gradient(45deg,#E2E6DC 0 2px,transparent 2px 7px);display:grid;place-items:center"><span style="background:#E2E6DC;border:2px solid #1B2220;width:28px;height:28px;display:grid;place-items:center;color:#1B2220;font:700 18px/1 'JetBrains Mono',monospace">●</span></span>
+              <span role="gridcell" aria-label="D4 libre" style="aspect-ratio:1;background:#D6DBD0;border:2px solid #1B2220"></span>
+              <span role="gridcell" aria-label="E4 libre" style="aspect-ratio:1;background:#D6DBD0;border:2px solid #1B2220"></span>
+              <span role="gridcell" aria-label="A5 libre" style="aspect-ratio:1;background:#D6DBD0;border:2px solid #1B2220"></span>
+              <span role="gridcell" aria-label="B5 libre" style="aspect-ratio:1;background:#D6DBD0;border:2px solid #1B2220"></span>
+              <span role="gridcell" aria-label="C5 libre" style="aspect-ratio:1;background:#D6DBD0;border:2px solid #1B2220"></span>
+              <span role="gridcell" aria-label="D5 pose refusée, trop près du relief" style="aspect-ratio:1;border:3px solid #1B2220;background:repeating-linear-gradient(-45deg,#1B2220 0 2px,transparent 2px 7px);display:grid;place-items:center;font:700 14px/1 'JetBrains Mono',monospace"><span style="background:#E2E6DC;border:2px solid #1B2220;width:28px;height:28px;display:grid;place-items:center;color:#1B2220;font:700 18px/1 'JetBrains Mono',monospace">✕</span></span>
+              <span role="gridcell" aria-label="E5 relief infranchissable" style="aspect-ratio:1;border:2px solid #1B2220;background:repeating-linear-gradient(90deg,#1B2220 0 2px,transparent 2px 6px)"></span>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:10px">
+            <button type="button" style="flex:1 1 auto;font:400 19px/1 'Saira Stencil One',Archivo,system-ui;padding:13px 8px;min-height:48px;background:#E8B21C;color:#1B2220;border:2.5px solid #1B2220;box-shadow:4px 4px 0 #1B2220;cursor:pointer" style-hover="background:#C4552A">JE POSE ÇA</button>
+            <button type="button" style="flex:0 0 auto;font:700 12px/1.2 Archivo,system-ui;letter-spacing:.1em;text-transform:uppercase;padding:13px 14px;min-height:48px;background:#E2E6DC;color:#1B2220;border:2.5px solid #1B2220;cursor:pointer" style-hover="background:#D6DBD0">Relevé</button>
+          </div>
+        </div>
+      </div>
+
+      <sc-if value="{{ notes }}" hint-placeholder-val="{{ true }}">
+        <p style="margin:0;max-width:430px;font:400 12px/1.55 Archivo,system-ui"><b>Ce qui fait jeu :</b> le <b>ton</b>. Titre au pochoir sur aplat, vignettes découpées et légèrement de travers, copie qui blague (« on remue depuis mardi »), gros bouton à ombre portée. <b>Coût a11y :</b> c'est la piste qui demande le plus de discipline. Premier jet, les chiffres étaient posés à même l'aplat (3,6:1 sur la Camelote, 4,5:1 tout juste manqué sur la Bave) : il a fallu remettre la <b>plaquette de papier collée</b> du dossier 3 à l'intérieur de la vignette — l'aplat ne porte plus que couleur + hachure + glyphe, le papier porte les chiffres à 12,8:1. Le surtitre est passé sur pastille d'encre. Même logique appliquée dans la grille des trois pistes : les glyphes ▲ ● ⧗ ✕ sont posés sur une pastille de papier, sinon l'encre du glyphe se perdait dans l'encre de la hachure. Restent à surveiller : le grand pochoir sous zoom 200 %, et les rotations (≤ 1,5°, immobiles au focus).</p>
+      </sc-if>
+    </div>
+
+    <div id="4c" style="scroll-margin-top:16px;flex:none;display:flex;flex-direction:column;gap:9px">
+      <div style="display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 Archivo,system-ui;max-width:430px"><a href="#4c" style="font:600 10.5px/1 'JetBrains Mono',monospace;padding:3px 7px;background:rgba(27,34,32,.1);text-decoration:none">4c</a><span><b>Plateau</b> — des pièces de carton qu'on a envie de déplacer</span></div>
+
+      <div style="width:430px;background:#C9CEC2;border:3px solid #1B2220;padding:15px;display:flex;flex-direction:column;gap:14px">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+          <div>
+            <p style="margin:0;font:600 9px/1.2 Archivo,system-ui;letter-spacing:.2em;text-transform:uppercase">Plateau de régie · univers 4</p>
+            <p style="margin:2px 0 0;font:800 25px/1.05 'Archivo Narrow',Archivo,system-ui;letter-spacing:-.01em">Fond de Tiroir</p>
+          </div>
+          <p style="margin:0;font:700 12px/1 'JetBrains Mono',monospace;background:#E2E6DC;border:2.5px solid #1B2220;box-shadow:3px 3px 0 #1B2220;padding:6px 8px;font-variant-numeric:tabular-nums">1:204:6</p>
+        </div>
+
+        <ul style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px">
+          <li style="display:flex;align-items:center;gap:9px">
+            <span aria-hidden="true" style="flex:0 0 auto;width:38px;height:38px;border-radius:50%;background:#C4552A;background-image:repeating-linear-gradient(45deg,#1B2220 0 2px,transparent 2px 8px);border:2.5px solid #1B2220;box-shadow:3px 3px 0 #1B2220;display:grid;place-items:center">
+              <svg width="17" height="17" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="display:block"><polygon points="12,3 21,19.5 3,19.5" fill="#1B2220"></polygon><rect x="2.5" y="20.5" width="19" height="2.4" fill="#1B2220"></rect></svg>
+            </span>
+            <div style="flex:1 1 auto;min-width:0">
+              <div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px">
+                <span style="font:700 11px/1.2 Archivo,system-ui;letter-spacing:.12em;text-transform:uppercase">Camelote</span>
+                <span style="font:700 17px/1 'JetBrains Mono',monospace;font-variant-numeric:tabular-nums">18 420</span>
+              </div>
+              <div aria-hidden="true" style="margin-top:4px;display:grid;grid-template-columns:repeat(10,1fr);gap:2px">
+                <span style="height:9px;background:#C4552A;border:1.5px solid #1B2220"></span><span style="height:9px;background:#C4552A;border:1.5px solid #1B2220"></span><span style="height:9px;background:#C4552A;border:1.5px solid #1B2220"></span><span style="height:9px;background:#C4552A;border:1.5px solid #1B2220"></span><span style="height:9px;background:#C4552A;border:1.5px solid #1B2220"></span><span style="height:9px;background:#C4552A;border:1.5px solid #1B2220"></span><span style="height:9px;background:transparent;border:1.5px solid #1B2220"></span><span style="height:9px;background:transparent;border:1.5px solid #1B2220"></span><span style="height:9px;background:transparent;border:1.5px solid #1B2220"></span><span style="height:9px;background:transparent;border:1.5px solid #1B2220"></span>
+              </div>
+            </div>
+          </li>
+          <li style="display:flex;align-items:center;gap:9px">
+            <span aria-hidden="true" style="flex:0 0 auto;width:38px;height:38px;border-radius:50%;background:#E8B21C;background-image:repeating-linear-gradient(-45deg,#1B2220 0 2px,transparent 2px 8px);border:2.5px solid #1B2220;box-shadow:3px 3px 0 #1B2220;display:grid;place-items:center">
+              <svg width="17" height="17" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="display:block"><polygon points="12,2 21.5,12 12,22 2.5,12" fill="#1B2220"></polygon><rect x="10.7" y="6.5" width="2.6" height="11" fill="#E8B21C"></rect></svg>
+            </span>
+            <div style="flex:1 1 auto;min-width:0">
+              <div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px">
+                <span style="font:700 11px/1.2 Archivo,system-ui;letter-spacing:.12em;text-transform:uppercase">Jus</span>
+                <span style="font:700 17px/1 'JetBrains Mono',monospace;font-variant-numeric:tabular-nums">9 105</span>
+              </div>
+              <div aria-hidden="true" style="margin-top:4px;display:grid;grid-template-columns:repeat(10,1fr);gap:2px">
+                <span style="height:9px;background:#E8B21C;border:1.5px solid #1B2220"></span><span style="height:9px;background:#E8B21C;border:1.5px solid #1B2220"></span><span style="height:9px;background:#E8B21C;border:1.5px solid #1B2220"></span><span style="height:9px;background:#E8B21C;border:1.5px solid #1B2220"></span><span style="height:9px;background:transparent;border:1.5px solid #1B2220"></span><span style="height:9px;background:transparent;border:1.5px solid #1B2220"></span><span style="height:9px;background:transparent;border:1.5px solid #1B2220"></span><span style="height:9px;background:transparent;border:1.5px solid #1B2220"></span><span style="height:9px;background:transparent;border:1.5px solid #1B2220"></span><span style="height:9px;background:transparent;border:1.5px solid #1B2220"></span>
+              </div>
+            </div>
+          </li>
+          <li style="display:flex;align-items:center;gap:9px">
+            <span aria-hidden="true" style="flex:0 0 auto;width:38px;height:38px;border-radius:50%;background:#8E4BA8;background-image:repeating-linear-gradient(45deg,#E2E6DC 0 2px,transparent 2px 8px);border:2.5px solid #1B2220;box-shadow:3px 3px 0 #1B2220;display:grid;place-items:center">
+              <svg width="17" height="17" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="display:block"><circle cx="12" cy="12" r="10" fill="#E2E6DC"></circle><circle cx="12" cy="12" r="4" fill="#8E4BA8"></circle></svg>
+            </span>
+            <div style="flex:1 1 auto;min-width:0">
+              <div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px">
+                <span style="font:700 11px/1.2 Archivo,system-ui;letter-spacing:.12em;text-transform:uppercase">Bave d'étoiles</span>
+                <span style="font:700 17px/1 'JetBrains Mono',monospace;font-variant-numeric:tabular-nums">1 260</span>
+              </div>
+              <div aria-hidden="true" style="margin-top:4px;display:grid;grid-template-columns:repeat(10,1fr);gap:2px">
+                <span style="height:9px;background:#8E4BA8;border:1.5px solid #1B2220"></span><span style="height:9px;background:transparent;border:1.5px solid #1B2220"></span><span style="height:9px;background:transparent;border:1.5px solid #1B2220"></span><span style="height:9px;background:transparent;border:1.5px solid #1B2220"></span><span style="height:9px;background:transparent;border:1.5px solid #1B2220"></span><span style="height:9px;background:transparent;border:1.5px solid #1B2220"></span><span style="height:9px;background:transparent;border:1.5px solid #1B2220"></span><span style="height:9px;background:transparent;border:1.5px solid #1B2220"></span><span style="height:9px;background:transparent;border:1.5px solid #1B2220"></span><span style="height:9px;background:transparent;border:1.5px solid #1B2220"></span>
+              </div>
+            </div>
+          </li>
+        </ul>
+
+        <div style="background:#E2E6DC;border:2.5px solid #1B2220;box-shadow:4px 4px 0 #1B2220;padding:10px 11px;display:flex;align-items:center;gap:11px">
+          <span aria-hidden="true" style="flex:0 0 auto;width:44px;height:44px;background:#E8B21C;background-image:repeating-linear-gradient(-45deg,#1B2220 0 3px,transparent 3px 9px);border:2.5px solid #1B2220;display:grid;place-items:center;font:700 20px/1 'JetBrains Mono',monospace">⧗</span>
+          <div style="flex:1 1 auto;min-width:0">
+            <p style="margin:0;font:700 9.5px/1.2 Archivo,system-ui;letter-spacing:.16em;text-transform:uppercase">Tuile en construction</p>
+            <p style="margin:2px 0 0;font:700 14.5px/1.2 Archivo,system-ui">Cuve de Bave · niv. 2</p>
+          </div>
+          <p style="margin:0;flex:0 0 auto;text-align:right;font:700 18px/1 'JetBrains Mono',monospace;font-variant-numeric:tabular-nums">04:12<br><span style="font:600 9px/1.6 Archivo,system-ui;letter-spacing:.14em">RESTANT · 61 %</span></p>
+        </div>
+
+        <div>
+          <div style="display:flex;align-items:baseline;justify-content:space-between;margin:0 0 7px">
+            <p style="margin:0;font:700 10px/1.2 Archivo,system-ui;letter-spacing:.16em;text-transform:uppercase">Parcelle 4-B</p>
+            <p style="margin:0;font:600 10px/1.2 'JetBrains Mono',monospace">25 cases · 6 occupées</p>
+          </div>
+          <div role="grid" aria-label="Plan de parcelle 4-B" style="display:grid;grid-template-columns:repeat(5,1fr);gap:5px;background:#1B2220;border:2.5px solid #1B2220;padding:5px">
+            <span role="gridcell" aria-label="A1 libre" style="aspect-ratio:1;background:#D6DBD0;box-shadow:inset 0 0 0 2px #C9CEC2"></span>
+            <span role="gridcell" aria-label="B1 gisement de Camelote" style="aspect-ratio:1;background:#C4552A;background-image:repeating-linear-gradient(45deg,#1B2220 0 2px,transparent 2px 7px);display:grid;place-items:center"><span style="background:#E2E6DC;border:2px solid #1B2220;width:28px;height:28px;display:grid;place-items:center;color:#1B2220;font:700 18px/1 'JetBrains Mono',monospace">▲</span></span>
+            <span role="gridcell" aria-label="C1 atelier niveau 3" style="aspect-ratio:1;background:#E2E6DC;display:grid;place-items:center;font:800 17px/1 'Archivo Narrow',Archivo,system-ui;box-shadow:inset 0 0 0 3px #1B2220">3</span>
+            <span role="gridcell" aria-label="D1 libre" style="aspect-ratio:1;background:#D6DBD0;box-shadow:inset 0 0 0 2px #C9CEC2"></span>
+            <span role="gridcell" aria-label="E1 relief infranchissable" style="aspect-ratio:1;background:repeating-linear-gradient(90deg,#1B2220 0 3px,#C9CEC2 3px 7px)"></span>
+            <span role="gridcell" aria-label="A2 libre" style="aspect-ratio:1;background:#D6DBD0;box-shadow:inset 0 0 0 2px #C9CEC2"></span>
+            <span role="gridcell" aria-label="B2 gisement de Camelote" style="aspect-ratio:1;background:#C4552A;background-image:repeating-linear-gradient(45deg,#1B2220 0 2px,transparent 2px 7px);display:grid;place-items:center"><span style="background:#E2E6DC;border:2px solid #1B2220;width:28px;height:28px;display:grid;place-items:center;color:#1B2220;font:700 18px/1 'JetBrains Mono',monospace">▲</span></span>
+            <span role="gridcell" aria-label="C2 chantier en cours" style="aspect-ratio:1;background:#E8B21C;background-image:repeating-linear-gradient(-45deg,#1B2220 0 3px,transparent 3px 9px);display:grid;place-items:center"><span style="background:#E2E6DC;border:2px solid #1B2220;width:28px;height:28px;display:grid;place-items:center;color:#1B2220;font:700 18px/1 'JetBrains Mono',monospace">⧗</span></span>
+            <span role="gridcell" aria-label="D2 libre" style="aspect-ratio:1;background:#D6DBD0;box-shadow:inset 0 0 0 2px #C9CEC2"></span>
+            <span role="gridcell" aria-label="E2 relief infranchissable" style="aspect-ratio:1;background:repeating-linear-gradient(90deg,#1B2220 0 3px,#C9CEC2 3px 7px)"></span>
+            <span role="gridcell" aria-label="A3 libre" style="aspect-ratio:1;background:#D6DBD0;box-shadow:inset 0 0 0 2px #C9CEC2"></span>
+            <span role="gridcell" aria-label="B3 libre" style="aspect-ratio:1;background:#D6DBD0;box-shadow:inset 0 0 0 2px #C9CEC2"></span>
+            <span role="gridcell" aria-label="C3 case visée, pose valide" style="aspect-ratio:1;background:#E2E6DC;display:grid;place-items:center;font:800 22px/1 'Archivo Narrow',Archivo,system-ui;box-shadow:inset 0 0 0 4px #E8B21C,inset 0 0 0 6px #1B2220">+</span>
+            <span role="gridcell" aria-label="D3 libre" style="aspect-ratio:1;background:#D6DBD0;box-shadow:inset 0 0 0 2px #C9CEC2"></span>
+            <span role="gridcell" aria-label="E3 libre" style="aspect-ratio:1;background:#D6DBD0;box-shadow:inset 0 0 0 2px #C9CEC2"></span>
+            <span role="gridcell" aria-label="A4 cuve niveau 1" style="aspect-ratio:1;background:#E2E6DC;display:grid;place-items:center;font:800 17px/1 'Archivo Narrow',Archivo,system-ui;box-shadow:inset 0 0 0 3px #1B2220">1</span>
+            <span role="gridcell" aria-label="B4 libre" style="aspect-ratio:1;background:#D6DBD0;box-shadow:inset 0 0 0 2px #C9CEC2"></span>
+            <span role="gridcell" aria-label="C4 gisement de Bave" style="aspect-ratio:1;background:#8E4BA8;background-image:repeating-linear-gradient(45deg,#E2E6DC 0 2px,transparent 2px 7px);display:grid;place-items:center"><span style="background:#E2E6DC;border:2px solid #1B2220;width:28px;height:28px;display:grid;place-items:center;color:#1B2220;font:700 18px/1 'JetBrains Mono',monospace">●</span></span>
+            <span role="gridcell" aria-label="D4 libre" style="aspect-ratio:1;background:#D6DBD0;box-shadow:inset 0 0 0 2px #C9CEC2"></span>
+            <span role="gridcell" aria-label="E4 libre" style="aspect-ratio:1;background:#D6DBD0;box-shadow:inset 0 0 0 2px #C9CEC2"></span>
+            <span role="gridcell" aria-label="A5 libre" style="aspect-ratio:1;background:#D6DBD0;box-shadow:inset 0 0 0 2px #C9CEC2"></span>
+            <span role="gridcell" aria-label="B5 libre" style="aspect-ratio:1;background:#D6DBD0;box-shadow:inset 0 0 0 2px #C9CEC2"></span>
+            <span role="gridcell" aria-label="C5 libre" style="aspect-ratio:1;background:#D6DBD0;box-shadow:inset 0 0 0 2px #C9CEC2"></span>
+            <span role="gridcell" aria-label="D5 pose refusée, trop près du relief" style="aspect-ratio:1;background:#D6DBD0;background-image:repeating-linear-gradient(-45deg,#1B2220 0 2px,transparent 2px 7px);display:grid;place-items:center;box-shadow:inset 0 0 0 4px #1B2220"><span style="background:#E2E6DC;border:2px solid #1B2220;width:28px;height:28px;display:grid;place-items:center;color:#1B2220;font:700 18px/1 'JetBrains Mono',monospace">✕</span></span>
+            <span role="gridcell" aria-label="E5 relief infranchissable" style="aspect-ratio:1;background:repeating-linear-gradient(90deg,#1B2220 0 3px,#C9CEC2 3px 7px)"></span>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:9px">
+          <button type="button" style="flex:1 1 auto;font:800 15px/1 'Archivo Narrow',Archivo,system-ui;letter-spacing:.06em;text-transform:uppercase;padding:14px 8px;min-height:48px;background:#1B2220;color:#E2E6DC;border:2.5px solid #1B2220;box-shadow:4px 4px 0 rgba(27,34,32,.35);cursor:pointer" style-hover="background:#2A3230">Poser la tuile</button>
+          <button type="button" style="flex:0 0 auto;font:800 15px/1 'Archivo Narrow',Archivo,system-ui;letter-spacing:.06em;text-transform:uppercase;padding:14px 14px;min-height:48px;background:#E2E6DC;color:#1B2220;border:2.5px solid #1B2220;box-shadow:4px 4px 0 rgba(27,34,32,.35);cursor:pointer" style-hover="background:#D6DBD0">Relevé</button>
+        </div>
+      </div>
+
+      <sc-if value="{{ notes }}" hint-placeholder-val="{{ true }}">
+        <p style="margin:0;max-width:430px;font:400 12px/1.55 Archivo,system-ui"><b>Ce qui fait jeu :</b> les <b>composants</b>. Jetons ronds emboutis, tuiles à ombre dure de 4 px, et surtout les ressources en <b>piste de 10 crans</b> — on compte des cases comme sur un plateau au lieu de lire un nombre. <b>Coût a11y :</b> le meilleur des trois — les crans sont une redondance de plus, et le chiffre exact reste toujours écrit à côté.</p>
+      </sc-if>
+    </div>
+
+  </div>
+
+  <p style="margin:24px 0 0;font:400 12.5px/1.6 Archivo,system-ui;max-width:92ch">Piste suivante possible : « pousse <a href="#4a">4a</a> jusqu'à l'écran de combat », « garde la matière de <a href="#4c">4c</a> mais le ton de <a href="#4b">4b</a> », « fais une version desktop large de celle que je choisis », ou « nouvelles directions ».</p>
+</section>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;notes&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Lecture&quot;},&quot;simulation&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;normal&quot;,&quot;gris&quot;,&quot;protanopie&quot;,&quot;deuteranopie&quot;],&quot;default&quot;:&quot;normal&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Lecture&quot;}}">
+class Component extends DCLogic {
+  componentDidMount() { this.apply(); }
+  componentDidUpdate() { this.apply(); }
+  apply() {
+    const s = this.props.simulation || 'normal';
+    const f = { normal: 'none', gris: 'grayscale(1)', protanopie: 'url(#zaProtan)', deuteranopie: 'url(#zaDeutan)' }[s] || 'none';
+    document.body.style.filter = f;
+    if (!document.getElementById('zaFilters')) {
+      const d = document.createElement('div');
+      d.id = 'zaFilters';
+      d.style.cssText = 'position:absolute;width:0;height:0;overflow:hidden';
+      d.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg"><filter id="zaProtan" color-interpolation-filters="linearRGB"><feColorMatrix type="matrix" values="0.152 1.053 -0.205 0 0 0.115 0.786 0.099 0 0 -0.004 -0.048 1.052 0 0 0 0 0 1 0"/></filter><filter id="zaDeutan" color-interpolation-filters="linearRGB"><feColorMatrix type="matrix" values="0.367 0.861 -0.228 0 0 0.280 0.673 0.047 0 0 -0.012 0.043 0.969 0 0 0 0 0 1 0"/></filter></svg>';
+      document.body.appendChild(d);
+    }
+  }
+  renderVals() {
+    return { notes: this.props.notes ?? true };
+  }
+}
+</script>
+</body>
+</html>

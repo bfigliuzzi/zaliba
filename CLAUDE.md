@@ -13,8 +13,15 @@ d'OGame, modernisé, sans pay2win. Vision produit, personas et périmètre :
 
 ## État du dépôt
 
-La tranche **001 — La planète mère** est implémentée : deux applications, quatre
-paquets, la chaîne de portes de CI. Le monorepo pnpm et Turborepo est amorcé.
+Les tranches **001 — La planète mère** et **002 — La Régie approximative** sont
+implémentées : deux applications, quatre paquets, la chaîne de portes de CI. Le
+monorepo pnpm et Turborepo est amorcé.
+
+002 n'a touché qu'`apps/game` et la documentation : **aucun paquet, aucune règle de
+jeu**. Elle a livré le système visuel de l'écran de parcelle — jeu de valeurs unique
+tenu par trois portes, sept silhouettes qui identifient douze états sans la couleur,
+adresse courte de case, raison du refus portée par la case, région d'annonce unique
+et relevé à la demande, ratures, guichet à trois colonnes.
 
 | Emplacement | Ce qu'on y trouve |
 | --- | --- |
@@ -23,7 +30,8 @@ paquets, la chaîne de portes de CI. Le monorepo pnpm et Turborepo est amorcé.
 | `packages/contracts` | les schémas Zod et les routes `/v1` via `ts-rest`. **N'importe pas `domain`** : la duplication est volontaire |
 | `packages/db` | le schéma Drizzle, ses migrations et le dépôt d'instantané. N'importe ni `domain` ni `contracts` |
 | `apps/api` | Fastify, serveur autoritaire : greffons, routes, forme unique de commande, et le `mapping/` qui traduit entre persistance, domaine et contrat |
-| `apps/game` | le client Vite + React : écran de planète, grille au clavier, compteurs extrapolés, page de règles |
+| `apps/game` | le client Vite + React : écran de parcelle habillé, grille au clavier, compteurs extrapolés, page de règles. `src/design/` est le **système visuel** — `tokens.css` est la seule source de valeurs, et deux portes le tiennent ; `src/features/regie/` sont les blocs de la Régie |
+| `docs/design/2026-08-27-regie-approximative/` | le **dossier de design** de 002, archivé entier. `tokens.json` y est **normatif** : la porte de conformité le compare à `tokens.css`. Exclu de toutes les portes de lint |
 | `supabase/` | la configuration de la pile locale — base et authentification |
 | `scripts/` | l'outillage hors paquet : la clé de signature de la pile locale |
 
@@ -104,6 +112,17 @@ La numérotation des specs est séquentielle (`specs/001-*`, `002-*`, …).
   seulement validé. Un champ qu'on ne peut pas envoyer ne peut pas être exploité.
 - **Le canvas est une vue, jamais le contrôle.** L'interaction passe par des
   éléments du document focalisables, dont l'état est la source de vérité.
+- **Aucune valeur visuelle hors de `tokens.css`.** Ni hexadécimal, ni angle, ni
+  longueur en pixels — et **aucune taille de police en pixels nulle part**, ce qui
+  est ce qui rend WCAG 1.4.4 vrai. Deux portes le refusent, et l'une d'elles échoue
+  si elle a parcouru zéro fichier.
+- **Jamais la couleur seule.** Un état de case s'identifie par un canal non
+  chromatique — silhouette, style de trait, marque d'angle, cadre d'emprise —, et les
+  douze états portent douze quadruplets distincts. Retirer toute teinte doit les
+  laisser distinguables.
+- **Une seule région d'annonce polie**, écrite par des événements, jamais par un
+  compteur. Les refus de commande gardent leur canal assertif : c'est l'exception, et
+  elle est nommée.
 - **L'autorisation se vérifie dans la transaction de mutation**, sur l'état
   verrouillé. Les planètes changent d'occupant : vérifier puis muter ouvre une
   fenêtre de course qui est ici une mécanique de jeu, pas une hypothèse.

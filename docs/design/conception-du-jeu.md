@@ -421,11 +421,19 @@ d'architecture. Il mérite sa propre spécification, avant le marché lui-même.
 | Spéc. | Contenu | Motif de l'ordre |
 | --- | --- | --- |
 | **001** | **La planète mère** — grille à empreintes, gisements, obstacles déblayables, démolition, production dans le temps, transparence des coûts | Tout le jeu repose sur l'hypothèse que ranger des polyominos est amusant. La valider sur une planète avant d'en faire l'ossature de sept. |
-| **002** | **Le système solaire** — les sept archétypes, choix du berceau, installation sur les autres planètes | Rend la spécialisation réelle |
-| **003** | **La recherche** — laboratoire et arbre technologique | Prérequis de tout ce qui suit |
-| **004** | **Le Toboggan** — logistique interne | Rend la spécialisation *payante*. Doit suivre 002 de près, sinon 002 est une contrainte sans récompense. |
-| **005** | **L'adjacence** | Approfondissement, pas un prérequis. Relance si le puzzle s'essouffle. |
-| **006** | **Le Chamboule-Tout** | Après les flottes, dont dépendent ses verrous anti-exploit |
+| **002** | **La Régie approximative** — le système visuel de l'écran de parcelle : jeu de valeurs unique, silhouettes non chromatiques, adresse courte, raison du refus portée par la case, annonce unique et relevé, ratures, guichet à trois colonnes | *Interposée le 2026-08-27.* La direction artistique existe et elle est mesurée ; **sept planètes habillées par un écran sans identité coûteraient sept fois la même reprise**. Et sans elle, la refonte à venir serait une régression d'accessibilité par rapport aux caractères `▓ ■ · ◆` de 001, qui se lisaient en noir et blanc. Aucune règle de jeu ne change. |
+| **003** | **Le système solaire** — les sept archétypes, choix du berceau, installation sur les autres planètes | Rend la spécialisation réelle |
+| **004** | **La recherche** — laboratoire et arbre technologique | Prérequis de tout ce qui suit |
+| **005** | **Le Toboggan** — logistique interne | Rend la spécialisation *payante*. Doit suivre le système solaire de près, sinon celui-ci est une contrainte sans récompense. |
+| **006** | **L'adjacence** | Approfondissement, pas un prérequis. Relance si le puzzle s'essouffle. |
+| **007** | **Le Chamboule-Tout** | Après les flottes, dont dépendent ses verrous anti-exploit |
+
+*Décalage du 2026-08-27 (R18 de 002).* Le système solaire portait le numéro 002 ;
+il devient 003, et les quatre tranches suivantes se décalent d'autant. **Les motifs
+d'ordre sont inchangés** : seuls les numéros bougent, et la seule dépendance
+réordonnée est celle du Toboggan, qui suit toujours le système solaire.
+Laisser cette table dire autre chose que la réalité des branches est exactement
+l'écart implicite que le principe I de la constitution proscrit.
 
 Non encore ordonnancés : flottes, colonisation, combat, marché, alliances,
 échanges, diplomatie, mini-jeux, monétisation cosmétique.

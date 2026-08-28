@@ -9,10 +9,12 @@ import type { Cell } from '@zaliba/domain'
  * n'atteignent. Ici, chaque case porte sa propre marque, dans le même document
  * que son rôle et son nom accessible.
  *
- * **FR-060 : jamais la couleur seule.** La validité est portée par un caractère
- * — qui se voit en noir et blanc — et par un mot ajouté au nom accessible de la
- * case — qui s'entend. La teinte, quand il y en aura une, ne sera qu'un troisième
- * signal redondant.
+ * **FR-012 : jamais la couleur seule.** La validité est portée par une
+ * **silhouette** — `visee` ou `refus`, qui se lisent en noir et blanc comme sous
+ * n'importe quel filtre — et par la grammaire du nom accessible, qui s'entend. La
+ * teinte n'est qu'un troisième signal redondant.
+ *
+ * *002 a réduit ce fichier à ses deux pièces encore utiles ; le motif est en bas.*
  */
 
 /** L'empreinte armée sous le curseur, telle que l'écran doit la montrer. */
@@ -44,39 +46,33 @@ export function ghostMarkOf(ghost: GhostState | null, cell: Cell): GhostMark | n
   return ghost.valid ? 'valid' : 'invalid'
 }
 
-/** Le mot ajouté au nom accessible de la case. Vide si elle n'est pas dessous. */
-export function ghostSuffix(mark: GhostMark | null): string {
-  switch (mark) {
-    case 'valid':
-      return ', sous l’empreinte'
-    case 'invalid':
-      return ', sous l’empreinte, placement refusé'
-    case 'faulty':
-      return ', sous l’empreinte, case fautive'
-    default:
-      return ''
-  }
-}
-
-/** Le caractère du fantôme. Un signe, jamais une teinte seule (FR-060). */
-const GLYPHS: Readonly<Record<GhostMark, string>> = {
-  valid: '▢',
-  invalid: '▨',
-  faulty: '✕',
-}
-
-/**
- * Le repère visuel du fantôme dans une case.
+/*
+ * ─────────────────────────────────────────────────────────────────────────────
+ * Ce que 002 **retire** de ce fichier, et pourquoi.
+ * ─────────────────────────────────────────────────────────────────────────────
  *
- * `aria-hidden` : le nom accessible de la case porte déjà l'information, et la
- * région d'annonce la restitue à chaque déplacement. Le lire deux fois de plus
- * ferait de la navigation au lecteur d'écran une répétition.
+ * **`ghostSuffix` et le composant `FootprintGhost` sont supprimés.** T046
+ * demandait de réécrire le composant « pour employer les silhouettes `visee` et
+ * `refus` au lieu des caractères, sans changer `ghostMarkOf` ni `ghostSuffix` » ;
+ * l'implémentation les rend l'un et l'autre **sans objet**, et les garder aurait
+ * coûté plus que leur suppression.
+ *
+ * `ghostSuffix` rendait `, sous l’empreinte, placement refusé` et
+ * `, sous l’empreinte, case fautive`. Le § 2.3 du contrat d'interface prescrit
+ * désormais une **grammaire** — `{adresse} : {état}{, gisement}{, sous
+ * l’empreinte}{, refusé : raison}` — implémentée une fois dans `describeCell`.
+ * Conserver le suffixe aurait laissé **deux** façons de nommer une case visée,
+ * dont une que le contrat ne prescrit plus : exactement le « deux tables
+ * divergeraient » contre lequel `labels.ts` met en garde, et le lecteur d'écran
+ * aurait fini par énoncer une phrase que l'écran n'affiche pas.
+ *
+ * Le composant, lui, dessinait la marque du fantôme. `appearanceOf` range
+ * désormais une case visée dans « visée valide » ou « visée refusée », et la
+ * grille en rend la silhouette comme celle de n'importe quel autre état. Un second
+ * dessin aurait mis **deux** silhouettes dans la même case.
+ *
+ * **Ce qui reste, et qui est nécessaire** : `GhostState` et `ghostMarkOf`, qui
+ * produisent le crochet `data-ghost` que les parcours de bout en bout de 001
+ * lisent, et dont la disparition aurait fait rougir la porte 8 pour une raison
+ * sans rapport avec ce qu'elle mesure.
  */
-export function FootprintGhost({ mark }: { readonly mark: GhostMark | null }) {
-  if (mark === null) return null
-  return (
-    <span aria-hidden="true" data-ghost={mark}>
-      {GLYPHS[mark]}
-    </span>
-  )
-}

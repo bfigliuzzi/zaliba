@@ -114,8 +114,15 @@ jobs:
       - name: Porte — contrats et compatibilité (instantanés de JSON Schema)
         run: pnpm vitest run --project contracts --project db
 
-      - name: Porte — client (chemin clavier)
-        run: pnpm vitest run --project game --project api
+      # Les projets Vitest sont **nommés un par un** : celui qu'on oublie n'échoue
+      # pas, il disparaît. `game-dom` a manqué à cette liste jusqu'au 2026-08-28,
+      # et avec lui les vingt-six fichiers `.test.tsx` du client — l'ordre du
+      # document, le balisage de la rature, la légende des douze états, l'unicité
+      # de la région d'annonce. Une porte qui sort en succès sans avoir rien
+      # parcouru est pire qu'une porte absente (amendement 2.1.0). Tout nouveau
+      # projet déclaré dans `vitest.config.ts` s'ajoute ici.
+      - name: Porte — client (chemin clavier et rendu)
+        run: pnpm vitest run --project game --project game-dom --project api
 
       # La transparence promise à P4, publiée en artefact : le document est
       # **engendré** depuis les schémas Zod, jamais rédigé, et attaché à la

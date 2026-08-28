@@ -93,7 +93,22 @@ export async function signUp(page: Page, credentials = freshAccount()): Promise<
   await page.getByRole('button', { name: /créer un compte/i }).click()
   await submitSignUp(page, credentials)
 
-  const planet = page.getByRole('heading', { name: /ma planète/i })
+  /*
+    **Le titre de l'écran est l'identité de la planète, depuis 002** (FR-008).
+
+    Il portait « Ma planète », qui ne disait pas *où* le joueur se trouvait — la
+    première des quatre choses que l'écran doit dire en une seconde. Tant que la
+    planète n'a pas de nom propre, c'est le nom de son **archétype** qui tient ce
+    rôle, et tous les comptes neufs sont installés sur le Berceau (R7 de 001 :
+    « identique pour tous les joueurs, aucun tirage au sort »).
+
+    *Ce harnais n'était nommé par aucune tâche de 002* : T017a listait les trois
+    parcours qui affirment une position de case, et celui-ci affirme un titre. Or il
+    est appelé par **tous** les parcours, y compris ceux de 001 : l'oublier les aurait
+    tous fait échouer à l'inscription, pour une raison sans rapport avec ce qu'ils
+    mesurent.
+  */
+  const planet = page.getByRole('heading', { level: 1, name: /berceau/i })
   const alert = page.getByRole('alert')
 
   // La première des deux issues qui se présente : l'écran de planète, ou une alerte.
@@ -137,7 +152,8 @@ export async function signIn(page: Page, credentials: Credentials): Promise<void
 
   // Même patience que pour l'inscription, et pour la même raison : la chaîne est la
   // même, moins la création du compte.
-  await expect(page.getByRole('heading', { name: /ma planète/i })).toBeVisible({
+  // Même titre que pour l'inscription : l'identité de la planète (FR-008).
+  await expect(page.getByRole('heading', { level: 1, name: /berceau/i })).toBeVisible({
     timeout: ENTRY_TIMEOUT,
   })
 }
@@ -166,22 +182,42 @@ export function countingKeyboard(page: Page) {
 }
 
 /**
- * Amène le focus sur la grille, en tabulant.
+ * Amène le focus sur la grille, **par le chemin le plus court**.
  *
  * La garde n'est pas une précaution de style : sans elle, une régression qui
  * rendrait la grille inatteignable au clavier ferait tourner la boucle sans fin
  * au lieu d'échouer en nommant le défaut.
+ *
+ * ---
+ *
+ * **La direction est un paramètre depuis 002**, et le motif est un changement d'ordre
+ * du document, non une commodité de test.
+ *
+ * En 001, le panneau de construction précédait la grille : après avoir choisi un type,
+ * tabuler **vers l'avant** menait à la grille en une ou deux frappes. FR-006 met
+ * désormais le plan **avant** les actions (R16), et le chemin naturel depuis le
+ * sélecteur de type est donc `Maj+Tab` — c'est exactement l'aller-retour que R16
+ * décrit : « le joueur tabule à travers la grille avant d'atteindre le choix de
+ * bâtiment, puis **revient** à la grille pour placer ».
+ *
+ * Tabuler vers l'avant depuis le sélecteur obligerait à traverser les quatre
+ * mécaniques, le registre et la légende, puis à **boucler** sur le document entier :
+ * une dizaine de frappes pour un mouvement qu'une seule suffit à faire. Le compte de
+ * SC-001 mesurerait alors le harnais et non l'écran.
  */
 export async function tabToGrid(
   page: Page,
   keyboard: ReturnType<typeof countingKeyboard>,
+  direction: 'avant' | 'arriere' = 'avant',
 ): Promise<void> {
+  const touche = direction === 'avant' ? 'Tab' : 'Shift+Tab'
+
   for (let guard = 0; guard < 20; guard += 1) {
     const role = await page.evaluate(() => document.activeElement?.getAttribute('role'))
     if (role === 'gridcell') return
-    await keyboard.press('Tab')
+    await keyboard.press(touche)
   }
-  throw new Error('La grille n’a pas été atteinte au clavier en vingt tabulations.')
+  throw new Error(`La grille n’a pas été atteinte au clavier en vingt frappes de ${touche}.`)
 }
 
 /**

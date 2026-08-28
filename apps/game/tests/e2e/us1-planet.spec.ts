@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test'
 import { signUp } from './account.js'
+import { adresse } from './adresse.js'
 import { expectNoAccessibilityViolations } from './axe.js'
 
 /**
@@ -78,7 +79,7 @@ test.describe('un joueur neuf reçoit son Berceau', () => {
 
     for (const [x, y] of OBSTRUCTED) {
       const cell = page.getByRole('gridcell', {
-        name: new RegExp(`Colonne ${x + 1}, rangée ${y + 1}\\s*: obstruée`, 'i'),
+        name: new RegExp(`${adresse(x, y)}\\s*: obstruée`, 'i'),
       })
       await expect(cell, `case (${x},${y}) obstruée`).toHaveCount(1)
     }
@@ -89,7 +90,7 @@ test.describe('un joueur neuf reçoit son Berceau', () => {
 
     for (const [x, y, , label] of DEPOSITS) {
       const cell = page.getByRole('gridcell', {
-        name: new RegExp(`Colonne ${x + 1}, rangée ${y + 1}.*${label}`, 'i'),
+        name: new RegExp(`${adresse(x, y)}.*${label}`, 'i'),
       })
       await expect(cell, `${label} en (${x},${y})`).toHaveCount(1)
     }
@@ -172,7 +173,8 @@ test.describe('tout se fait au clavier (FR-058, SC-004)', () => {
     }
 
     const focused = await page.evaluate(() => document.activeElement?.getAttribute('aria-label'))
-    expect(focused).toMatch(/colonne/i)
+    // L'adresse courte de FR-016 : une lettre de colonne, un numéro de rangée.
+    expect(focused).toMatch(/^[A-Z]\d+\s*:/)
 
     await page.keyboard.press('ArrowRight')
     const moved = await page.evaluate(() => document.activeElement?.getAttribute('aria-label'))

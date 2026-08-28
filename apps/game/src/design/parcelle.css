@@ -1,0 +1,665 @@
+/*
+ * La mise en page de l'écran de parcelle.
+ *
+ * **La colonne unique de FR-006** : sept blocs empilés, chacun délimité, dans
+ * l'ordre du document. Le guichet à trois colonnes de FR-007 arrive en US6, dans
+ * ce même fichier, par des **zones de grille nommées** — jamais par `order`, qui
+ * dissocierait l'ordre de tabulation de l'ordre visuel.
+ *
+ * **Mobile d'abord**, et ce n'est pas une convention de style : la largeur qui
+ * décide de tout est 320 px, où le budget de R9 resserre le décor pour que chaque
+ * case tienne ses 44 px de côté. Ce qui est écrit ici est donc la version étroite,
+ * et le palier de 900 px ajoute — il ne corrige pas.
+ *
+ * **Aucune valeur littérale** (INV-V2). Tout passe par `tokens.css`.
+ */
+
+/* ── L'écran ────────────────────────────────────────────────────────────────── */
+
+/*
+ * Le pupitre : le fond de l'écran, encadré, et **`overflow: hidden`** parce que les
+ * cadres tracés à la main débordent délibérément de leurs blocs et n'ont aucune
+ * raison de déborder de l'écran.
+ */
+.ecran {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacement-large);
+  padding: var(--grille-rembourrage-ecran);
+  border: var(--trait-cadre) solid var(--couleur-encre);
+  background: var(--couleur-pupitre);
+  overflow: hidden;
+  position: relative;
+}
+
+/*
+ * La largeur est bornée pour que les lignes de texte restent lisibles sur grand
+ * écran, mais jamais au-delà de la fenêtre : `min()` fait les deux d'un trait.
+ * Au-delà du palier du guichet, c'est la grille à trois colonnes qui borne.
+ */
+main {
+  max-width: min(48rem, 100%);
+  margin-inline: auto;
+  padding: var(--espacement-moyen);
+}
+
+/* ── Le comptoir des ressources ─────────────────────────────────────────────── */
+
+/*
+ * Trois cartes de front sur écran étroit. À 320 px, chacune fait ≈ 96 px, dont
+ * ≈ 76 px utiles après les liserés et le rembourrage de l'étiquette : « Camelote »
+ * tient, « Jus » tient, « Bave d'étoiles » **passe sur deux lignes** — et c'est le
+ * comportement voulu, pas un défaut. R14 l'a calculé, et rien ici n'empêche le
+ * renvoi à la ligne.
+ */
+.comptoir {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--espacement-moyen);
+}
+
+.carte-ressource {
+  display: flex;
+  flex-direction: column;
+  border: var(--trait-fort) solid var(--couleur-encre);
+  /* Le fond est l'aplat de la ressource : c'est lui que l'étiquette recouvre. */
+  background: var(--couleur-pupitre);
+}
+
+.carte-ressource[data-ressource="camelote"] {
+  background: var(--couleur-camelote);
+}
+
+.carte-ressource[data-ressource="jus"] {
+  background: var(--couleur-jus);
+}
+
+.carte-ressource[data-ressource="bave-etoiles"] {
+  background: var(--couleur-bave);
+}
+
+/*
+ * Le bandeau supérieur : la silhouette, sur l'aplat, séparée par un trait.
+ *
+ * Elle est le canal non chromatique de la ressource (FR-012) : la teinte seule ne
+ * distingue rien pour qui ne la voit pas, et c'est la silhouette qui reste sous
+ * niveau de gris comme en contrastes forcés.
+ */
+.aplat {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--cible-minimum);
+  border-bottom: var(--trait-fort) solid var(--couleur-encre);
+  color: var(--couleur-encre);
+}
+
+.nom-ressource {
+  margin: 0;
+}
+
+/*
+ * Les grandeurs de la ressource, sur le papier. La quantité en gros — c'est le
+ * chiffre que le joueur cherche —, le reste en corps courant.
+ *
+ * `.valeur` et `.debit` portent la **prominence**, jamais un second nœud : la
+ * quantité est rendue une seule fois, et un lecteur d'écran ne l'énonce donc
+ * qu'une fois.
+ */
+.etiquette .valeur {
+  font-size: var(--typo-chiffre-s-taille);
+  line-height: var(--typo-chiffre-s-interligne);
+  font-weight: var(--typo-chiffre-s-graisse);
+}
+
+.etiquette .debit {
+  font-size: var(--typo-chiffre-xs-taille);
+  line-height: var(--typo-chiffre-xs-interligne);
+  font-weight: var(--typo-chiffre-xs-graisse);
+}
+
+/* ── Les blocs ──────────────────────────────────────────────────────────────── */
+
+/*
+ * **Chaque bloc est délimité**, ce qui est le test indépendant d'US1. La plaque et
+ * son cadre tracé à la main s'en chargent ; les blocs qui n'en portent pas —
+ * la note, la mention — sont du décor et n'ont rien à délimiter.
+ */
+[data-bloc="note"],
+[data-bloc="mention"] {
+  margin: 0;
+}
+
+/* La note remonte sous les compteurs : l'astérisque y renvoie. */
+[data-bloc="note"] {
+  margin-top: calc(-1 * var(--espacement-moyen));
+}
+
+[data-bloc="mention"] {
+  margin-top: calc(-1 * var(--espacement-fin));
+}
+
+.titre-chantier {
+  margin: 0;
+  font-size: var(--typo-fiche-taille);
+  line-height: var(--typo-fiche-interligne);
+  font-weight: var(--typo-fiche-graisse);
+}
+
+.chrono {
+  font-size: var(--typo-chiffre-m-taille);
+  line-height: var(--typo-chiffre-m-interligne);
+  font-weight: var(--typo-chiffre-m-graisse);
+}
+
+/* ── Les actions ────────────────────────────────────────────────────────────── */
+
+/*
+ * Les quatre mécaniques **toutes visibles** (FR-011), empilées sous le plan. Aucun
+ * repli derrière un menu, aucune navigation supplémentaire : c'est ce que la
+ * spécification exige, et c'est ce qui fait que le déplacement du panneau de
+ * construction après la grille (R16) ne coûte rien d'autre qu'un aller-retour par
+ * choix de bâtiment.
+ */
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacement-aise);
+}
+
+/* ── Le plan de parcelle ────────────────────────────────────────────────────── */
+
+/*
+ * La grille elle-même est habillée en US2, avec les silhouettes et les bandes de
+ * coordonnées. Ce qui est ici est son enveloppe : le plan est une plaque, et son
+ * cadre est celui du guichet parce que c'est le sujet visuel de l'écran.
+ */
+[data-bloc="plan"] {
+  background: var(--couleur-papier);
+  padding: var(--espacement-aise);
+}
+
+/* ── La géométrie de la case (R8, FR-014, FR-015, INV-C2, INV-S3) ───────────── */
+
+/*
+ * **Chaque case est un conteneur de dimensionnement**, et tout ce qu'elle porte
+ * est exprimé en `cqmin` — c'est-à-dire en proportion de son plus petit côté.
+ *
+ * FR-015 exige « environ 35 à 40 % de la case ». Exprimée en paliers de media
+ * queries, cette proportion serait vraie à trois largeurs et fausse entre les
+ * trois — c'est-à-dire fausse précisément là où vivent les vraies fenêtres.
+ *
+ * **Et le second effet est celui qui décide.** Au zoom texte de 200 %, la racine
+ * double mais la fenêtre en pixels ne change pas : une case reste à 44 px pendant
+ * que le numéro de niveau, s'il était en `rem`, passerait de 24 à 48 px et
+ * déborderait. En `cqmin`, le contenu suit la case. FR-034 et SC-002 sont alors
+ * tenus **par la géométrie**, non par une correction ad hoc.
+ *
+ * **Le plancher typographique reste vérifié** : à la case minimale de 44 px,
+ * `38cqmin` vaut 16,7 px et le numéro de niveau `40cqmin` vaut 17,6 px — tous deux
+ * au-dessus des 14 px qu'un texte porteur d'information exige.
+ */
+
+.plan {
+  display: grid;
+  /*
+   * La bande des rangées à gauche, la grille au centre, et la bande des colonnes
+   * dessous — sur toute la largeur de la seconde colonne. Les bandes sont **hors**
+   * de `role="grid"` : c'est la mise en page qui les rassemble, pas le document.
+   */
+  grid-template-columns: var(--grille-bande) 1fr;
+  grid-template-areas:
+    "rangees grille"
+    ".       colonnes";
+  gap: var(--espacement-ras);
+  align-items: stretch;
+}
+
+.bande {
+  display: grid;
+  gap: var(--grille-gouttiere);
+  font-size: var(--typo-label-taille);
+  line-height: var(--typo-label-interligne);
+  text-align: center;
+  color: var(--couleur-encre);
+}
+
+.bande--rangees {
+  grid-area: rangees;
+  grid-auto-rows: 1fr;
+  align-content: stretch;
+}
+
+.bande--colonnes {
+  grid-area: colonnes;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+}
+
+/*
+ * **Les gouttières d'encre font le quadrillage** : le fond de la grille est
+ * l'encre, et les cases posées dessus laissent voir les intervalles. Un liseré par
+ * case aurait doublé chaque trait intérieur.
+ */
+.grille {
+  grid-area: grille;
+  display: grid;
+  grid-template-columns: repeat(var(--colonnes, 6), minmax(var(--case-cote-min), 1fr));
+  gap: var(--grille-gouttiere);
+  padding: var(--grille-rembourrage);
+  border: var(--grille-encadrement) solid var(--couleur-encre);
+  background: var(--couleur-encre);
+}
+
+.grille [role="row"] {
+  display: contents;
+}
+
+.grille [role="gridcell"] {
+  /*
+   * **Carrée, et jamais sous son côté minimal** (INV-C2, FR-014). `aspect-ratio`
+   * garde le carré quand la case grandit sur un écran large ; `min-*` empêche
+   * qu'elle descende sous la taille du doigt, qui est ce qui ne peut pas céder.
+   */
+  aspect-ratio: 1;
+  min-width: var(--case-cote-min);
+  min-height: var(--case-cote-min);
+
+  /* Le conteneur de dimensionnement : c'est lui qui rend `cqmin` possible. */
+  container-type: size;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  background: var(--couleur-pupitre);
+  color: var(--couleur-encre);
+  cursor: pointer;
+  user-select: none;
+}
+
+/* La silhouette centrale : 38 % du plus petit côté de la case (INV-S3). */
+.grille [role="gridcell"] .silhouette {
+  display: block;
+  inline-size: 38cqmin;
+  block-size: 38cqmin;
+}
+
+/*
+ * La marque d'angle : une silhouette réduite, dans le coin. Elle **qualifie** une
+ * case sans consommer de forme du vocabulaire de sept (R5), et c'est elle qui
+ * distingue un gisement productif d'un gisement stérile — par son trait.
+ */
+.grille [role="gridcell"] .marque {
+  position: absolute;
+  inset-block-start: 8cqmin;
+  inset-inline-end: 8cqmin;
+  inline-size: 24cqmin;
+  block-size: 24cqmin;
+}
+
+/* Le numéro de niveau : rendu une seule fois par emprise (INV-C3). */
+.grille [role="gridcell"] .niveau {
+  font-family: var(--police-etroit);
+  font-size: 40cqmin;
+  font-weight: var(--typo-fiche-graisse);
+  line-height: 1;
+}
+
+/* ── Les fonds des douze états ──────────────────────────────────────────────── */
+
+/*
+ * **La teinte est le troisième signal, jamais le premier** (FR-012, INV-C4).
+ * Retirer tout ce bloc laisse les douze états distinguables : la silhouette, le
+ * trait, la marque et le cadre d'emprise portent l'information, et le quadruplet
+ * que la porte vérifie n'en contient aucune couleur.
+ */
+.grille [role="gridcell"][data-etat="gisement-camelote"] {
+  background: var(--couleur-camelote);
+}
+
+.grille [role="gridcell"][data-etat="gisement-jus"] {
+  background: var(--couleur-jus);
+}
+
+.grille [role="gridcell"][data-etat="gisement-bave"] {
+  background: var(--couleur-bave);
+}
+
+.grille [role="gridcell"][data-etat="obstacle-terrain-nu"],
+.grille [role="gridcell"][data-etat="obstacle-gisement"] {
+  background: var(--couleur-encre);
+  color: var(--couleur-mine);
+}
+
+.grille [role="gridcell"][data-etat="chantier"] {
+  background: var(--couleur-jus);
+}
+
+.grille [role="gridcell"][data-etat="visee-valide"] {
+  background: var(--couleur-papier);
+  box-shadow: var(--ombre-visee);
+}
+
+.grille [role="gridcell"][data-etat="visee-refusee"] {
+  background: var(--couleur-pupitre);
+}
+
+/* ── L'emprise, délimitée comme un seul objet (FR-017, INV-C3) ─────────────── */
+
+/*
+ * Le cadre **s'ouvre**, se poursuit et **se ferme** : il n'y a qu'un objet, et non
+ * quatre cases bordées côte à côte. C'est ce qui distingue « bâtiment posé » de
+ * « case libre » dans le quadruplet d'INV-C1, et c'est donc de l'information — pas
+ * du décor.
+ */
+.grille [role="gridcell"][data-emprise] {
+  background: var(--couleur-papier);
+  box-shadow: var(--ombre-batiment);
+}
+
+.grille [role="gridcell"][data-emprise="debut"],
+.grille [role="gridcell"][data-emprise="milieu"],
+.grille [role="gridcell"][data-emprise="fin"] {
+  /*
+   * L'ombre interne est retirée des cases intérieures de l'emprise : ce qui borde
+   * l'objet est la gouttière d'encre autour de l'ensemble, non un liseré par case.
+   * Un liseré par case aurait dessiné quatre carrés là où il y a un bâtiment.
+   */
+  box-shadow: none;
+}
+
+/* ── Le budget de largeur, sous 360 px (R9) ─────────────────────────────────── */
+
+/*
+ * Les valeurs resserrées vivent dans `tokens.css`, dans un `@media` de même seuil :
+ * la grille les lit par `var()` et n'a rien à redéclarer. C'est ce qui rend le
+ * budget vérifiable d'un seul endroit — et c'est ce que la porte du plancher
+ * mesure ensuite sur la boîte **rendue**, à 320 px.
+ */
+
+/* ── La barre d'actions (T058, FR-005, FR-031) ──────────────────────────────── */
+
+/*
+ * Les trois commandes de pose, en ligne, `JE POSE ÇA` occupant l'espace restant.
+ *
+ * **Aucun mouvement au survol ni à la prise de focus** (FR-005) : il n'y a aucun
+ * `transform`, aucun `scale`, aucune `rotate` ici — ni sur `:hover`, ni sur
+ * `:focus-visible`. La règle est tenue par l'**absence** de la propriété, et le
+ * parcours la mesure en comparant la boîte rendue avant et après (T053a). Une
+ * transition de couleur existe, et son plafond de 120 ms est déclaré une fois dans
+ * `base.css`.
+ *
+ * `flex-wrap` : à 320 px, quatre commandes de 48 px de haut ne tiennent pas sur une
+ * ligne, et les laisser se comprimer descendrait sous le plancher de FR-031. Elles
+ * passent donc à la ligne — la cible ne cède pas, la mise en page cède.
+ */
+.barre-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espacement-moyen);
+}
+
+.commande--releve {
+  font-family: var(--police-ui);
+}
+
+/* ── Le registre et la légende ──────────────────────────────────────────────── */
+
+.legende-entrees {
+  display: grid;
+  gap: var(--espacement-fin);
+  margin: 0;
+}
+
+.legende-entree {
+  display: grid;
+  grid-template-columns: var(--espacement-comptoir) 1fr;
+  gap: var(--espacement-court);
+  align-items: center;
+  min-height: var(--cible-minimum);
+}
+
+/*
+ * Le repère d'une entrée sans silhouette : le cadre d'emprise, ou le vide d'une
+ * case libre. C'est de l'information — c'est la clé de deux des douze états — et
+ * non du décor.
+ */
+.legende-repere {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: var(--espacement-comptoir);
+  block-size: var(--espacement-comptoir);
+  color: var(--couleur-encre);
+}
+
+.repere {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 100%;
+  block-size: 100%;
+  font-family: var(--police-etroit);
+  font-size: var(--typo-item-taille);
+  font-weight: var(--typo-fiche-graisse);
+}
+
+.repere--vide {
+  border: var(--trait-fin) solid var(--couleur-trait);
+  background: var(--couleur-pupitre);
+}
+
+.repere--emprise {
+  border: var(--trait-cadre) solid var(--couleur-encre);
+  background: var(--couleur-papier);
+}
+
+/*
+ * La spécificité est portée au même niveau que celle de la grille
+ * (`.grille [role="gridcell"] .marque`) : sans cela, la règle de la grille — écrite
+ * plus haut et plus spécifique — l'emporterait ici, et la marque de la légende
+ * hériterait de dimensions en `cqmin` dans un conteneur qui n'en est pas un.
+ */
+.legende .legende-repere .marque {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-end: 0;
+  inline-size: 60%;
+  block-size: 60%;
+}
+
+.legende-libelle {
+  margin: 0;
+  font-size: var(--typo-menu-taille);
+  line-height: var(--typo-menu-interligne);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+ * Le guichet, au-delà du palier (T085, FR-007, R10)
+ * ═══════════════════════════════════════════════════════════════════════════════ */
+
+/*
+ * **Un seul palier, et il change la disposition** (FR-007).
+ *
+ * `268px 1fr 320px` : le registre et la légende à gauche, le plan au centre, le
+ * comptoir et le chantier à droite. L'en-tête sur toute la largeur.
+ *
+ * **Par zones de grille nommées, jamais par `order`.** Les deux produisent le même
+ * effet visuel ; `order` dissocie l'ordre de tabulation de l'ordre visuel, ce qui est
+ * la façon canonique de casser WCAG 2.4.3. Les zones déplacent la **boîte** sans
+ * toucher au document — c'est exactement ce que FR-007 demande, et la porte de
+ * non-régression refuse `order`, les directions inversées et le placement dense.
+ *
+ * **La divergence visuel / document, et pourquoi elle est sans conséquence ici.** À
+ * 900 px et au-delà, le comptoir se lit à droite alors qu'il précède le plan dans le
+ * document. La question serait sérieuse si le comptoir contenait des éléments
+ * focalisables. **Il n'en contient aucun** : les trois compteurs, la note, la plaque
+ * de chantier et le bloc de signature sont du texte. La colonne de gauche non
+ * davantage — l'entrée active du registre n'est pas un lien, et la légende n'est ni
+ * lien ni bouton.
+ *
+ * **Conséquence, énoncée plutôt que découverte** : la totalité du parcours clavier de
+ * l'écran vit dans l'en-tête puis la colonne centrale — plan, puis actions. Le saut
+ * visuel gauche-droite n'existe donc pas au clavier, et c'est ce qui rend le guichet
+ * acceptable sans dispositif d'évitement.
+ */
+@media (width >= 900px) {
+  .ecran {
+    display: grid;
+    grid-template-columns: var(--guichet-gauche) 1fr var(--guichet-droite);
+    grid-template-areas:
+      "en-tete  en-tete  en-tete"
+      "gauche   centre   droite";
+    gap: var(--espacement-large);
+    align-items: start;
+    padding: var(--espacement-guichet);
+  }
+
+  [data-bloc="en-tete"] {
+    grid-area: en-tete;
+  }
+
+  /*
+    La colonne de gauche : le registre puis la légende, **dans cet ordre**, qui est
+    celui du document. Elles y arrivent par `grid-area`, donc sans que leur rang
+    change (R10).
+  */
+  [data-bloc="registre"],
+  [data-bloc="legende"] {
+    grid-area: gauche;
+    align-self: start;
+  }
+
+  [data-bloc="legende"] {
+    /*
+      La légende suit le registre dans la même zone : une seconde grille en colonne
+      les empile sans les réordonner. `align-self: end` sur la seconde plutôt qu'un
+      second `grid-area` : deux zones de plus pour deux boîtes qui se suivent
+      compliqueraient la table sans rien ajouter.
+    */
+    align-self: end;
+  }
+
+  [data-bloc="plan"],
+  [data-bloc="actions"] {
+    grid-area: centre;
+  }
+
+  [data-bloc="actions"] {
+    align-self: end;
+  }
+
+  [data-bloc="comptoir"],
+  [data-bloc="energie"],
+  [data-bloc="note"],
+  [data-bloc="chantier"],
+  [data-bloc="mention"] {
+    grid-area: droite;
+  }
+
+  /*
+    Le comptoir devient une pile de **bandeaux horizontaux** : l'aplat et sa
+    silhouette à gauche, l'étiquette de papier à droite. Les trois cartes verticales
+    d'une colonne de 320 px seraient hautes de dix pixels chacune.
+  */
+  .comptoir {
+    grid-template-columns: 1fr;
+  }
+
+  .carte-ressource {
+    flex-direction: row;
+    min-height: var(--comptoir-bandeau);
+  }
+
+  .aplat {
+    inline-size: var(--comptoir-aplat);
+    border-bottom: none;
+    border-inline-end: var(--trait-fort) solid var(--couleur-encre);
+  }
+
+  .etiquette {
+    flex: 1;
+  }
+
+  /* Le pochoir grandit avec la place : c'est le nom de la planète. */
+  .nom-de-planete {
+    font-size: var(--typo-titre-l-taille);
+    line-height: var(--typo-titre-l-interligne);
+  }
+}
+
+/*
+ * Les zones nommées empilent leurs boîtes dans l'ordre du document, mais une zone
+ * partagée les superpose : il faut une grille implicite pour les mettre à la suite.
+ * Ces deux règles la donnent, sans réordonner quoi que ce soit.
+ */
+@media (width >= 900px) {
+  .ecran {
+    grid-auto-flow: row;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+ * Le renvoi à la ligne, jamais empêché (T087, SC-002, FR-034)
+ * ═══════════════════════════════════════════════════════════════════════════════ */
+
+/*
+ * **Rien n'empêche un texte de passer à la ligne.**
+ *
+ * « Bave d'étoiles » sur deux lignes plutôt que tronqué : c'est le comportement
+ * voulu, calculé par R14 sur les ≈ 76 px utiles d'une carte à 320 px. Aucune
+ * `text-overflow: ellipsis`, aucun `white-space: nowrap` sur un texte long — les deux
+ * tronquent, et une valeur tronquée est une valeur fausse.
+ *
+ * `overflow-wrap: anywhere` sur les noms : à 320 px avec un zoom texte de 200 %, un
+ * mot long dépasserait sa carte et pousserait la page. Il se coupe plutôt que de
+ * déborder, ce que SC-002 exige.
+ */
+.nom-ressource,
+.legende-libelle,
+.cible-chantier,
+.registre-entree {
+  overflow-wrap: anywhere;
+  white-space: normal;
+  text-overflow: clip;
+}
+
+/*
+ * **Les chiffres, eux, ne se coupent jamais.** Un nombre scindé sur deux lignes se
+ * lit comme deux nombres, et c'est la seule troncature qui produirait une valeur
+ * **fausse** plutôt qu'une gêne. Ils ont la place : l'étiquette de papier s'agrandit,
+ * elle ne rétrécit pas son texte (cas limite de la spécification).
+ */
+.chiffre {
+  white-space: nowrap;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+ * Le budget de largeur, sous 360 px (T086, R9, SC-001)
+ * ═══════════════════════════════════════════════════════════════════════════════ */
+
+/*
+ * **Les valeurs resserrées vivent dans `tokens.css`**, dans un `@media` de même
+ * seuil : rembourrage d'écran, bande de coordonnées, encadrement, rembourrage de
+ * grille et gouttières. La grille les lit par `var()` et n'a rien à redéclarer — le
+ * budget est ainsi vérifiable d'un seul endroit, et il s'additionne à la lecture.
+ *
+ * Ce qui reste ici est ce que le budget ne couvre pas : la gouttière entre les trois
+ * cartes de ressources, qui passe de 9 à 5 px pour laisser aux étiquettes leurs
+ * ≈ 76 px utiles.
+ *
+ * **Ce qui ne cède pas** : les bandes de coordonnées restent affichées (FR-016
+ * n'admet pas de palier), et le côté d'une case ne descend pas sous 44 px (FR-014).
+ * Le décor est ce qui peut céder ; la cible tactile est ce qui ne le peut pas.
+ */
+@media (width < 360px) {
+  .comptoir {
+    gap: var(--espacement-fin);
+  }
+
+  .etiquette {
+    padding: var(--espacement-ras) var(--espacement-fin);
+  }
+}

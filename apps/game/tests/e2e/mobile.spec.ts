@@ -10,9 +10,16 @@ import { signUp } from './account.js'
  * - les **36 cases visibles ensemble**. Une grille qu'il faut faire défiler pour voir
  *   en entier détruit le sujet du jeu : ranger des polyominos suppose de voir l'espace
  *   où on les range. Sur téléphone, c'est la contrainte qui décide de la mise en page ;
- * - le **corps de texte à 16 px au moins**. En dessous, iOS Safari zoome de lui-même à
- *   la mise au point d'un champ — donc le zoom que SC-009 interdit arrive *par*
- *   l'interface, sans que personne l'ait demandé ;
+ * - les **champs de saisie à 16 px au moins**. En dessous, iOS Safari zoome de lui-même
+ *   à la mise au point d'un champ — donc le zoom que SC-009 interdit arrive *par*
+ *   l'interface, sans que personne l'ait demandé. *Recentré le 2026-08-28* : la
+ *   clause typographique de SC-009 exigeait 16 px pour **tout** le corps de texte,
+ *   et ce test le mesurait sur `p, dd, dt, li, label, button, a` — sept sélecteurs
+ *   pour un motif qui n'en couvre qu'un. Le plancher du reste du texte passe au
+ *   **rôle** (16 / 14 / 12 / 9,5 px), mesuré par `us9-regie.spec.ts` (T090), et
+ *   aucune taille de police n'est plus exprimée en pixels. L'amendement est daté et
+ *   motivé dans `specs/001-la-planete-mere/spec.md § SC-009` et dans
+ *   `specs/002-la-regie-approximative/research.md § R14` ;
  * - les **cibles interactives à 44 × 44 px au moins**. C'est la taille du doigt, pas
  *   celle du curseur, et une cible plus petite se manque — ce qui, dans un jeu où
  *   confirmer engage une dépense, se paie.
@@ -91,30 +98,41 @@ test.describe('la planète tient sur un téléphone (SC-009)', () => {
     expect(overflow.scrollWidth).toBeLessThanOrEqual(overflow.clientWidth + 1)
   })
 
-  test('le corps de texte fait au moins 16 px', async ({ page }) => {
+  test('tout champ de saisie fait au moins 16 px', async ({ page }) => {
     await signUp(page)
 
     /**
-     * Mesuré sur le texte **rendu**, et non sur une déclaration CSS : c'est la taille
-     * calculée qui décide si iOS Safari zoome, et une règle héritée peut réduire un
-     * élément que la feuille de style dit pourtant grand.
+     * **Trois sélecteurs, et non sept** — voir l'amendement en tête de fichier.
+     *
+     * Le motif de la clause est le zoom automatique d'iOS Safari, et ce
+     * déclencheur porte sur les champs de saisie. Mesurer un `<p>` avec la même
+     * règle imposait 16 px à tout l'écran pour une raison qui ne le concernait
+     * pas — et rendait le jeu de valeurs de la Régie irrecevable pour un motif
+     * que personne n'avait examiné.
+     *
+     * Mesuré sur le texte **rendu**, et non sur une déclaration CSS : c'est la
+     * taille calculée qui décide si iOS Safari zoome, et une règle héritée peut
+     * réduire un élément que la feuille de style dit pourtant grand.
+     *
+     * L'écran de parcelle n'en porte aucun ; l'écran d'authentification en porte
+     * trois. La règle vaut donc partout dans l'application, et c'est pourquoi elle
+     * reste mesurée ici plutôt que déplacée dans un parcours de 002.
      */
     const tooSmall = await page.evaluate((minimum) => {
       const offenders: string[] = []
 
-      for (const node of Array.from(document.querySelectorAll('p, dd, dt, li, label, button, a'))) {
-        const text = (node.textContent ?? '').trim()
-        if (text.length === 0) continue
-
+      for (const node of Array.from(document.querySelectorAll('input, select, textarea'))) {
         const size = Number.parseFloat(window.getComputedStyle(node).fontSize)
         if (size < minimum) {
-          offenders.push(`${node.tagName.toLowerCase()} « ${text.slice(0, 40)} » à ${size}px`)
+          offenders.push(`${node.tagName.toLowerCase()} à ${size}px`)
         }
       }
       return offenders
     }, MIN_FONT_SIZE)
 
-    expect(tooSmall, `texte sous ${MIN_FONT_SIZE}px :\n${tooSmall.join('\n')}`).toEqual([])
+    expect(tooSmall, `champ de saisie sous ${MIN_FONT_SIZE}px :\n${tooSmall.join('\n')}`).toEqual(
+      [],
+    )
   })
 
   test('toute cible interactive fait au moins 44 × 44 px', async ({ page }) => {

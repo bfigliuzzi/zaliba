@@ -145,11 +145,33 @@ describe('les touches étrangères ne font rien', () => {
     expect(reduceCursor(CURSOR_ORIGIN, { kind: 'key', key: 'Tab' }, BOUNDS)).toBe(CURSOR_ORIGIN)
   })
 
+  /**
+   * *Réécrit par 002.* `Escape` figurait parmi les touches **laissées passer**. Elle
+   * est désormais consommée, et le motif n'est pas qu'elle change l'état du curseur
+   * — elle ne le change pas — mais qu'elle doit être **retenue** : sans
+   * `preventDefault`, `Échap` remonte au navigateur, où elle interrompt un
+   * chargement en cours ou ferme une boîte native, c'est-à-dire fait quelque chose
+   * que le joueur n'a pas demandé (FR-020, US3-AC4).
+   *
+   * `Tab` reste laissée passer, et c'est essentiel : la retenir enfermerait le
+   * joueur dans la grille — la façon habituelle de rendre une interface
+   * « accessible » et inutilisable.
+   */
   it('distingue les touches qu’il consomme de celles qu’il laisse passer', () => {
-    for (const key of ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'r', 'R', 'Enter', ' ']) {
+    for (const key of [
+      'ArrowUp',
+      'ArrowDown',
+      'ArrowLeft',
+      'ArrowRight',
+      'r',
+      'R',
+      'Enter',
+      ' ',
+      'Escape',
+    ]) {
       expect(isCursorKey(key), key).toBe(true)
     }
-    for (const key of ['Tab', 'Escape', 'a', 'F5']) {
+    for (const key of ['Tab', 'a', 'F5']) {
       expect(isCursorKey(key), key).toBe(false)
     }
   })
@@ -190,5 +212,54 @@ describe('le pointeur mène au même état que le clavier (SC-004)', () => {
       x: BOUNDS.width - 1,
       y: 0,
     })
+  })
+})
+
+/**
+ * `Échap` — **l'annulation de la pose armée** (US3-AC4, § 3 du contrat).
+ *
+ * FR-020 exige que les trois commandes de pose — pivoter, poser, annuler — soient
+ * atteignables **au clavier et par un bouton visible**. 001 n'avait aucune
+ * annulation : un joueur qui avait armé une pose par erreur devait choisir un autre
+ * type pour s'en défaire, c'est-à-dire apprendre un détour.
+ *
+ * **Le curseur consomme la touche, il ne désarme pas lui-même.** La sélection vit
+ * dans l'écran de planète — comme le curseur, comme le fantôme —, et un curseur qui
+ * effacerait une sélection qu'il ne détient pas serait un état muté à distance. Ce
+ * que le curseur doit garantir est qu'il **reconnaît** la touche : sans cela,
+ * `preventDefault` ne s'applique pas et `Échap` remonte au navigateur.
+ */
+describe('Échap annule la pose armée (US3-AC4)', () => {
+  it('est reconnue comme touche de curseur', () => {
+    expect(isCursorKey('Escape')).toBe(true)
+  })
+
+  /**
+   * **Elle ne déplace rien.** Une annulation qui bougerait le curseur ferait perdre
+   * au joueur la case qu'il visait, alors qu'il vient précisément de dire qu'il ne
+   * voulait pas y poser *ce* bâtiment.
+   */
+  it('ne déplace ni le curseur ni l’orientation', () => {
+    const state: CursorState = { x: 3, y: 2, orientation: 2 }
+    expect(reduceCursor(state, { kind: 'key', key: 'Escape' }, BOUNDS)).toBe(state)
+  })
+
+  it('rend l’état **à la référence près** — donc ne provoque aucun rendu', () => {
+    const state: CursorState = { x: 0, y: 0, orientation: 0 }
+    expect(reduceCursor(state, { kind: 'key', key: 'Escape' }, BOUNDS) === state).toBe(true)
+  })
+
+  it('n’est pas confondue avec une confirmation', () => {
+    const state: CursorState = { x: 1, y: 1, orientation: 0 }
+    const apresEchap = reduceCursor(state, { kind: 'key', key: 'Escape' }, BOUNDS)
+    const apresEntree = reduceCursor(state, { kind: 'key', key: 'Enter' }, BOUNDS)
+    // Les deux laissent le curseur intact ; ce qui les distingue est ce que
+    // l'écran en fait, et c'est lui qui l'éprouve.
+    expect(apresEchap).toBe(state)
+    expect(apresEntree).toBe(state)
+  })
+
+  it('reste sans effet sur une touche inconnue', () => {
+    expect(isCursorKey('Backspace')).toBe(false)
   })
 })

@@ -162,7 +162,15 @@ test.describe('déblayer au clavier seul, sans dispositif de pointage (FR-058, S
     // Un chantier lancé n'est ni annulable ni remplaçable (FR-037), et l'écran
     // dit **quelle** case : le joueur doit pouvoir vérifier qu'il a lancé ce
     // qu'il croyait.
-    await expect(currentWork(page)).toContainText(/colonne 4, rangée 1/i)
+    /*
+      L'adresse dans **son propre élément**, et non dans le texte concaténé du bloc.
+      Depuis 002, la plaque de chantier porte l'avancement juste après la cible :
+      `textContent` rend « …DéblaiementD11 % », où « D1 » et « 1 % » se touchent. Les
+      deux vivent dans des éléments distincts — un lecteur d'écran les sépare, l'œil
+      les voit sur deux lignes —, mais une assertion sur le texte concaténé n'a plus de
+      frontière de mot à trouver.
+    */
+    await expect(currentWork(page).locator('.cible-chantier')).toHaveText('D1')
 
     // L'achèvement est appliqué par la projection **locale**, à l'échéance.
     await expect(cellAt(page, EBOULIS.index)).toHaveAttribute('data-state', 'free', {
@@ -193,7 +201,7 @@ test.describe('ce qui apparaît est exactement ce qui était annoncé (US5-1, US
     await keyboard.press('Enter')
 
     await expect(currentWork(page)).toContainText(/déblaiement/i)
-    await expect(currentWork(page)).toContainText(/colonne 4, rangée 3/i)
+    await expect(currentWork(page).locator('.cible-chantier')).toHaveText('D3')
 
     // Passé l'échéance, et pas seulement jusqu'à elle.
     await page.clock.fastForward((POCHE.seconds + 120) * 1_000)

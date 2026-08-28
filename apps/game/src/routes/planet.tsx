@@ -22,15 +22,25 @@ import {
   previewUpgrade,
   validatePlacement,
 } from '@zaliba/domain'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { phraseDeReleve } from '../features/announce/releve.js'
+import { type Transition, useAnnonce } from '../features/announce/useAnnonce.js'
 import type { PlanetGateway } from '../features/auth/gateway.js'
 import { PlanetLoader } from '../features/auth/PlanetLoader.js'
 import { SessionGate } from '../features/auth/SessionGate.js'
 import { CatalogNotice } from '../features/catalog/CatalogNotice.js'
+import { announcePlacement } from '../features/grid/announce.js'
+import type { PoseVisee } from '../features/grid/appearance.js'
 import type { GhostState } from '../features/grid/FootprintGhost.js'
 import { GridLiveRegion } from '../features/grid/GridLiveRegion.js'
 import { GridView } from '../features/grid/GridView.js'
-import { useGridCursor } from '../features/grid/useGridCursor.js'
+import { Legende } from '../features/grid/Legende.js'
+import { raisonDeRefus } from '../features/grid/refusal.js'
+import { isCancelKey, useGridCursor } from '../features/grid/useGridCursor.js'
+import { BarreDActions } from '../features/regie/BarreDActions.js'
+import { COPIE } from '../features/regie/copie.js'
+import { PlaqueEnTete } from '../features/regie/PlaqueEnTete.js'
+import { Registre } from '../features/regie/Registre.js'
 import { EnergyPanel } from '../features/resources/EnergyPanel.js'
 import { ResourcePanel } from '../features/resources/ResourcePanel.js'
 import { useExtrapolatedState } from '../features/resources/useExtrapolatedState.js'
@@ -41,6 +51,7 @@ import { DemolishPanel } from '../features/work/DemolishPanel.js'
 import { RefusalNotice } from '../features/work/RefusalNotice.js'
 import { UpgradePanel } from '../features/work/UpgradePanel.js'
 import { createClock } from '../lib/clock.js'
+import { ARCHETYPE_LABELS, describePosition, RESOURCE_LABELS } from '../lib/labels.js'
 import { PlanetRefusal } from '../lib/planetGateway.js'
 import { rootRoute } from './root.js'
 
@@ -93,6 +104,36 @@ function PlanetRoute() {
       </PlanetLoader>
     </SessionGate>
   )
+}
+
+/**
+ * La mise en mots d'une transition (R11).
+ *
+ * Elle est ici et non dans `useAnnonce` : le crochet détecte, il ne nomme pas. Lui
+ * faire fabriquer une phrase en ferait un second endroit où le jeu se nomme, à côté
+ * de `labels.ts` — et deux vocabulaires finissent par énoncer un mot que l'écran
+ * n'affiche pas.
+ */
+function phraseDeTransition(transition: Transition): string {
+  if (transition.origine === 'stockage-sature') {
+    const nom =
+      transition.resourceId === undefined
+        ? 'Une ressource'
+        : (RESOURCE_LABELS[transition.resourceId] ?? transition.resourceId)
+    return `${nom} : stockage saturé. La production se perd désormais.`
+  }
+
+  const acheve = transition.acheve
+  if (acheve === undefined) return 'Chantier achevé.'
+
+  const cible =
+    acheve.target.kind === 'cell'
+      ? `en ${describePosition(acheve.target.cell)}`
+      : acheve.target.kind === 'build'
+        ? `en ${describePosition(acheve.target.anchor)}`
+        : 'sur un bâtiment posé'
+
+  return `Chantier achevé ${cible}.`
 }
 
 export interface PlanetScreenProps {
@@ -154,6 +195,37 @@ export function PlanetScreen({ snapshot, gateway, onSnapshot }: PlanetScreenProp
     setRefusal(null)
   }, [])
 
+  /**
+   * **Le désarmement** (FR-020, US3-AC4).
+   *
+   * Il vit ici parce que la sélection vit ici : le curseur reconnaît `Échap` — ce
+   * qui lui permet de retenir la touche — mais ne détient pas ce qu'il faudrait
+   * effacer. Un curseur qui effacerait une sélection qu'il ne détient pas serait un
+   * état muté à distance.
+   *
+   * Le curseur, lui, **ne bouge pas** : le joueur vient de dire qu'il ne voulait pas
+   * poser *ce* bâtiment ici, pas qu'il voulait perdre la case qu'il visait.
+   */
+  const desarmer = useCallback(() => {
+    setSelection({ typeId: null, variantId: null })
+    setRefusal(null)
+  }, [])
+
+  /** La touche, traitée par le curseur **puis** par l'écran s'il s'agit d'`Échap`. */
+  const handleGridKey = useCallback(
+    (key: string): boolean => {
+      const consommee = cursor.handleKey(key)
+      if (isCancelKey(key)) desarmer()
+      return consommee
+    },
+    [cursor, desarmer],
+  )
+
+  /** La rotation, déclenchée par le bouton visible autant que par la touche `R`. */
+  const pivoter = useCallback(() => {
+    cursor.handleKey('r')
+  }, [cursor])
+
   /** La commande que le curseur et la sélection décrivent, ou `null`. */
   const command = useMemo((): Omit<BuildCommand, 'workId'> | null => {
     if (selection.typeId === null || selection.variantId === null) return null
@@ -195,8 +267,19 @@ export function PlanetScreen({ snapshot, gateway, onSnapshot }: PlanetScreenProp
     return placementAvailability(state.grid, selection.typeId, DEFAULT_CATALOGS)
   }, [selection.typeId, state.grid])
 
-  /** Les cases sous l'empreinte, et leur validité. */
-  const ghost = useMemo((): GhostState | null => {
+  /**
+   * Les cases sous l'empreinte, leur validité et **la raison d'un refus**.
+   *
+   * La raison est ce que 002 ajoute : 001 marquait le refus, il ne le motivait
+   * pas, et un joueur au clavier apprenait le refus sans sa cause — donc essayait
+   * les trente-six cases (FR-021).
+   *
+   * `validatePlacement` ne rend qu'**un seul** verdict, selon une priorité fixée
+   * dans le domaine — hors parcelle, puis obstrué, puis occupé. Plusieurs causes ne
+   * coexistent jamais à l'arrivée : il n'y a donc aucune règle d'agrégation à
+   * écrire ici, et le client n'a qu'une phrase à produire.
+   */
+  const pose = useMemo((): PoseVisee | null => {
     if (command === null) return null
     const cells = placementCells(
       command.variantId,
@@ -205,16 +288,54 @@ export function PlanetScreen({ snapshot, gateway, onSnapshot }: PlanetScreenProp
       DEFAULT_CATALOGS,
     )
     const check = validatePlacement(state.grid, cells)
+    const raison = raisonDeRefus(check, {
+      bounds,
+      grid: state.grid,
+      buildings: state.buildings,
+      catalogs: DEFAULT_CATALOGS,
+    })
+
     return {
       cells,
-      valid: check.kind === 'ok',
-      faultyCells: check.kind === 'ok' ? [] : check.cells,
+      valide: check.kind === 'ok',
+      fautives: check.kind === 'ok' ? [] : check.cells,
+      ...(raison === null ? {} : { raison }),
     }
-  }, [command, state.grid])
+  }, [command, state.grid, state.buildings, bounds])
+
+  /** Le fantôme de 001, dérivé de la pose : son crochet `data-ghost` subsiste. */
+  const ghost = useMemo((): GhostState | null => {
+    if (pose === null) return null
+    return { cells: pose.cells, valid: pose.valide, faultyCells: pose.fautives }
+  }, [pose])
 
   const cell = state.grid.find(
     (candidate) => candidate.x === cursor.state.x && candidate.y === cursor.state.y,
   )
+
+  /**
+   * **L'annonce unique de l'écran** (FR-022, R11).
+   *
+   * Elle vit ici pour la même raison que le curseur et la sélection : sept
+   * événements l'écrivent, et aucun ne lui appartient. La faire vivre dans la région
+   * l'obligerait à connaître la pose, le chantier et la saturation.
+   */
+  /*
+    **Déstructuré, et c'est nécessaire.** `useAnnonce` rend un objet neuf à chaque
+    rendu — il porte l'annonce courante, qui change. Un effet qui dépendrait de
+    l'objet entier se rejouerait donc à chaque rendu, écrirait l'annonce, provoquerait
+    un rendu, et boucherait sans fin. Les deux rappels sont stables (`useCallback`
+    sans dépendance) ; c'est d'eux que les effets dépendent.
+  */
+  const { annonce, annoncer, observer } = useAnnonce()
+
+  /**
+   * L'archétype de la planète, nommé **une fois**.
+   *
+   * Deux blocs en ont besoin — la plaque d'en-tête et le registre —, et tant que la
+   * planète n'a pas de nom propre c'est lui qui porte son identité (FR-008).
+   */
+  const archetypeId = snapshot.planet.archetypeId as keyof typeof ARCHETYPE_LABELS
 
   /**
    * Le bâtiment sous le curseur, ou `null` — la cible d'amélioration.
@@ -407,6 +528,87 @@ export function PlanetScreen({ snapshot, gateway, onSnapshot }: PlanetScreenProp
     await launch('demolish', { nature: 'demolish', buildingId: upgradeTarget.id })
   }, [upgradeTarget, pending, demolishPreview, launch])
 
+  /**
+   * Le texte de l'annonce de curseur, **tenu dans une référence**.
+   *
+   * C'est le point délicat de tout ce fichier, et il vaut d'être écrit : `state` est
+   * reprojeté **à chaque seconde** pour animer les compteurs, donc `announcement`
+   * aussi. Un effet qui dépendrait de lui écrirait l'annonce une fois par seconde —
+   * c'est-à-dire exactement ce que INV-N2 interdit, et exactement le défaut que la
+   * région du curseur de 001 avait sous une autre forme.
+   *
+   * La référence sépare donc le **déclencheur** du **contenu** : l'effet ne se
+   * rejoue que lorsque le curseur ou l'empreinte bougent, et il lit alors la phrase
+   * la plus fraîche. C'est la seule façon d'énoncer un état courant sans énoncer son
+   * écoulement.
+   */
+  const phraseDuCurseur = useRef('')
+  phraseDuCurseur.current =
+    announcement === null ? '' : announcePlacement(announcement, DEFAULT_CATALOGS)
+
+  /**
+   * **Ce qui déclenche une annonce de curseur, écrit comme une valeur.**
+   *
+   * La position, l'orientation et l'empreinte armée : rien d'autre. Pas `state`, qui
+   * est reprojeté à la seconde — dépendre de lui écrirait l'annonce une fois par
+   * seconde, c'est-à-dire exactement ce qu'INV-N2 interdit.
+   *
+   * Une **chaîne** plutôt qu'un tableau de dépendances : elle rend le déclencheur
+   * comparable, donc explicite. La version précédente listait les valeurs en
+   * dépendances sans les lire dans le corps de l'effet, et s'appuyait pour cela sur
+   * l'identité de référence que `reduceCursor` préserve — une propriété vraie mais
+   * invisible, que le lint ne pouvait pas comprendre et qu'une retouche du réducteur
+   * aurait pu emporter en silence.
+   */
+  const declencheurDuCurseur = `${cursor.state.x},${cursor.state.y},${cursor.state.orientation},${selection.variantId ?? ''}`
+
+  /**
+   * Le déplacement du curseur, et la rotation — qui n'a pas d'origine propre.
+   *
+   * **Rien au montage**, et c'est l'objet de la comparaison à `null`. Un effet
+   * s'exécute toujours une première fois : sans garde, ouvrir l'écran annoncerait la
+   * case A1 alors que le joueur n'a rien fait — exactement le défaut que la région du
+   * curseur de 001 avait, et exactement ce qu'US4-AC2 refuse. La région est **vide au
+   * départ**, et c'est `entree-grille` qui énonce la case du curseur, au moment où le
+   * focus y arrive.
+   */
+  const dernierDeclencheur = useRef<string | null>(null)
+  useEffect(() => {
+    const premier = dernierDeclencheur.current === null
+    if (dernierDeclencheur.current === declencheurDuCurseur) return
+    dernierDeclencheur.current = declencheurDuCurseur
+
+    if (premier || phraseDuCurseur.current === '') return
+    annoncer('curseur', phraseDuCurseur.current)
+  }, [declencheurDuCurseur, annoncer])
+
+  /**
+   * Les deux **transitions** de l'état extrapolé (R11, INV-N4).
+   *
+   * Cet effet se rejoue à chaque projection — donc à la seconde —, et c'est sans
+   * conséquence : `observer` ne rend une transition que lorsque l'état a réellement
+   * changé de nature. C'est le seul endroit de la tranche où le client regarde le
+   * temps passer pour en tirer une phrase, et il le fait **par comparaison**, jamais
+   * en lisant une échéance.
+   */
+  useEffect(() => {
+    for (const transition of observer(state)) {
+      annoncer(transition.origine, phraseDeTransition(transition))
+    }
+  }, [state, observer, annoncer])
+
+  /** Le relevé, à la demande du joueur (FR-023). */
+  const releve = useCallback(() => {
+    annoncer(
+      'releve',
+      phraseDeReleve({
+        holdings: state.holdings,
+        work: state.work,
+        buildings: state.buildings,
+      }),
+    )
+  }, [annoncer, state.holdings, state.work, state.buildings])
+
   const handleConfirm = useCallback(
     (_cell: CellView) => {
       void confirm()
@@ -422,82 +624,186 @@ export function PlanetScreen({ snapshot, gateway, onSnapshot }: PlanetScreenProp
       embarqué, par le même code que le serveur (R8). Si les deux catalogues
       divergent, il n'y a pas un chiffre à sauver : ils sont tous faux ensemble, et un
       avertissement placé à côté d'eux laisserait le joueur décider lesquels croire.
+
+      **L'ordre des blocs est celui de FR-006**, et il a changé avec 002 :
+
+      - le **panneau de construction passe après la grille** (R16). Le motif de 001 —
+        « sélectionner un type, choisir une empreinte, puis déplacer le curseur » —
+        reste vrai comme séquence d'apprentissage, et il perd son argument de mise en
+        page dès lors que le plan devient le sujet visuel de l'écran. L'aller-retour
+        au clavier se paie **une fois par choix de bâtiment**, pas une fois par
+        placement : la grille garde sa confirmation par `Entrée` ;
+      - l'**alerte de refus quitte sa place** entre le plan et les compteurs pour
+        suivre les boutons de pose. Un message d'échec loin du bouton qui a échoué
+        oblige à le chercher ;
+      - les **quatre mécaniques restent toutes visibles** (FR-011), rassemblées sous
+        le plan, sans navigation supplémentaire ni repli derrière un menu.
     */
     <CatalogNotice fromServer={snapshot.catalogVersion}>
-      <h1>Ma planète</h1>
+      <div className="ecran">
+        <PlaqueEnTete archetypeId={archetypeId} />
 
-      <BuildPanel
-        catalogs={DEFAULT_CATALOGS}
-        selection={selection}
-        preview={preview}
-        occupancy={occupancy}
-        availability={availability}
-        pending={pending === 'build'}
-        onSelectType={selectType}
-        onSelectVariant={selectVariant}
-        onConfirm={() => void confirm()}
-      />
+        <ResourcePanel holdings={state.holdings} at={state.at} />
 
-      <GridView
-        cells={state.grid}
-        width={layout.width}
-        height={layout.height}
-        cursorIndex={cursor.index}
-        ghost={ghost}
-        onKey={cursor.handleKey}
-        onPoint={cursor.point}
-        onConfirm={handleConfirm}
-      />
+        {/*
+          L'énergie après les compteurs, et dans son **propre bloc** (FR-010) : sa
+          nature est différente — instantanée, ni stockée ni plafonnée. L'ordre est
+          celui de la lecture : « ce que j'ai », puis « ce qui le limite », puis « ce
+          qui est en cours ».
+        */}
+        <EnergyPanel energy={state.energy} buildings={state.buildings} />
 
-      <GridLiveRegion announcement={announcement} catalogs={DEFAULT_CATALOGS} />
-      <RefusalNotice refusal={refusal} at={state.at} />
+        {/*
+          La note de bas de page renvoie à l'astérisque des débits. Du décor, marqué
+          comme tel : c'est ce qui autorise son corps 9,5 (FR-038, FR-039).
+        */}
+        <p data-bloc="note" data-role-texte="decor" className="note-regie">
+          {COPIE.note}
+        </p>
 
-      {/*
-        L'amélioration **après** la grille, parce qu'elle en dépend : sa cible est
-        la case du curseur. La placer avant obligerait à désigner un bâtiment qu'on
-        n'a pas encore vu.
-      */}
-      <UpgradePanel
-        building={upgradeTarget}
-        preview={upgradePreview}
-        pending={pending === 'upgrade'}
-        onConfirm={() => void confirmUpgrade()}
-      />
+        <CurrentWork work={state.work} buildings={state.buildings} />
 
-      {/*
-        La démolition juste après l'amélioration, parce que ce sont les deux décisions
-        qu'on prend devant un bâtiment posé. Les mettre côte à côte rend le choix
-        lisible ; les séparer le cacherait derrière une navigation.
-      */}
-      <DemolishPanel
-        building={upgradeTarget}
-        preview={demolishPreview}
-        pending={pending === 'demolish'}
-        onConfirm={() => void confirmDemolish()}
-      />
+        <div data-bloc="plan" className="plaque cadre-main--fort">
+          <GridView
+            cells={state.grid}
+            width={layout.width}
+            height={layout.height}
+            buildings={state.buildings}
+            work={state.work}
+            pose={pose}
+            cursorIndex={cursor.index}
+            onKey={handleGridKey}
+            onPoint={cursor.point}
+            onEnterGrid={() => annoncer('entree-grille', phraseDuCurseur.current)}
+            onConfirm={handleConfirm}
+          />
+        </div>
 
-      {/*
-        Le déblaiement après, et pour la même raison qu'ils suivent tous la
-        grille : leur cible est la case du curseur. Les panneaux sont armés par la
-        même position et ne se disputent jamais — une case porte un obstacle ou
-        un bâtiment, jamais les deux.
-      */}
-      <ClearPanel
-        cell={cell ?? null}
-        preview={clearPreview}
-        pending={pending === 'clear'}
-        onConfirm={() => void confirmClear()}
-      />
+        <div data-bloc="actions" className="actions">
+          {/*
+            **Le choix de bâtiment d'abord**, les commandes ensuite.
 
-      <ResourcePanel holdings={state.holdings} at={state.at} />
-      {/*
-        L'énergie après les ressources, et avant le chantier. L'ordre est celui
-        de la lecture : « ce que j'ai », puis « ce qui le limite », puis « ce qui
-        est en cours ». Placer l'énergie avant les compteurs ferait ouvrir l'écran
-        sur une contrainte plutôt que sur un état.
-      */}
-      <EnergyPanel energy={state.energy} buildings={state.buildings} />
-      <CurrentWork work={state.work} buildings={state.buildings} />
+            L'ordre est celui de la séquence que R16 décrit : *sélectionner un type,
+            choisir une empreinte, puis déplacer le curseur et poser*.
+
+            Et il a un second effet, décisif. Le sélecteur de type devient le
+            **premier** arrêt de tabulation du bloc des actions, et le compte de
+            frappes de SC-001 de 001 tient malgré le déplacement du panneau après la
+            grille. La rédaction précédente mettait les commandes en tête : cela
+            coûtait deux arrêts avant le sélecteur — un par bouton toujours actif —, et
+            portait le parcours à **dix-sept** frappes là où le critère en admet quinze.
+          */}
+          <div data-bloc="pose">
+            <BuildPanel
+              catalogs={DEFAULT_CATALOGS}
+              selection={selection}
+              preview={preview}
+              occupancy={occupancy}
+              availability={availability}
+              onSelectType={selectType}
+              onSelectVariant={selectVariant}
+            />
+          </div>
+
+          {/*
+            **Les trois commandes de pose, visibles** (FR-020) — plus le relevé.
+
+            Le § 6 du contrat nomme **une** commande de pose, `JE POSE ÇA`, et conclut
+            « aucune autre commande n'existe » : le bouton de confirmation de
+            `BuildPanel` a donc quitté ce panneau pour venir ici, où `Pivoter` et
+            `Annuler` l'accompagnent.
+          */}
+          <BarreDActions
+            poseArmee={selection.typeId !== null}
+            enVol={pending === 'build'}
+            onPoser={() => void confirm()}
+            onPivoter={pivoter}
+            onAnnuler={desarmer}
+            onReleve={releve}
+          />
+
+          {/*
+            **Le refus de commande, immédiatement après les boutons de pose**
+            (§ 1.1 du contrat). Il garde sa région **assertive** distincte : c'est
+            l'exception que FR-022 nomme, et elle porte le refus *de la commande*,
+            pas celui d'une case.
+          */}
+          <RefusalNotice refusal={refusal} at={state.at} />
+
+          {/*
+            L'amélioration après la grille, parce que sa cible est la case du
+            curseur. La placer avant obligerait à désigner un bâtiment qu'on n'a pas
+            encore vu.
+          */}
+          <UpgradePanel
+            building={upgradeTarget}
+            preview={upgradePreview}
+            pending={pending === 'upgrade'}
+            onConfirm={() => void confirmUpgrade()}
+          />
+
+          {/*
+            La démolition juste après l'amélioration : ce sont les deux décisions
+            qu'on prend devant un bâtiment posé, et les mettre côte à côte rend le
+            choix lisible plutôt que caché derrière une navigation.
+          */}
+          <DemolishPanel
+            building={upgradeTarget}
+            preview={demolishPreview}
+            pending={pending === 'demolish'}
+            onConfirm={() => void confirmDemolish()}
+          />
+
+          {/*
+            Le déblaiement après, et pour la même raison qu'ils suivent tous la
+            grille : leur cible est la case du curseur. Les panneaux sont armés par
+            la même position et ne se disputent jamais — une case porte un obstacle
+            ou un bâtiment, jamais les deux.
+          */}
+          <ClearPanel
+            cell={cell ?? null}
+            preview={clearPreview}
+            pending={pending === 'clear'}
+            onConfirm={() => void confirmClear()}
+          />
+        </div>
+
+        <p data-bloc="mention" data-role-texte="decor" className="note-regie">
+          {COPIE.mention}
+        </p>
+
+        {/*
+          **Le registre, après la mention** (§ 1 du contrat d'interface).
+
+          Une seule entrée en 001 — la planète courante —, et cette entrée unique est
+          vraie. La maquette en montre quatre, dont une possession perdue au nom
+          raturé : le modèle ne les alimente pas, et FR-008a interdit de les inventer.
+          Une liste de voisines fictives n'est pas « en attendant les vraies » : c'est
+          un mensonge que le joueur n'a aucun moyen de démentir.
+        */}
+        <Registre
+          possessions={[{ nom: ARCHETYPE_LABELS[archetypeId] ?? archetypeId, active: true }]}
+        />
+
+        {/*
+          **La légende, après la mention** (§ 1 du contrat d'interface).
+          
+          Elle est livrée par US2 et montée ici plutôt qu'en US6 : un composant qui
+          n'est monté nulle part n'est pas livré, et FR-018 exige qu'elle soit
+          atteignable **sur toutes les largeurs**. Le guichet la déplacera
+          visuellement dans la colonne de gauche sans changer sa place dans le
+          document (R10).
+        */}
+        <Legende />
+
+        {/*
+          **La région d'annonce polie, unique et montée en permanence** (FR-022).
+          Elle n'occupe aucun rang dans l'ordre des blocs : elle est destinée aux
+          lecteurs d'écran, pas aux yeux, et son emplacement dans le document ne
+          change rien à ce qu'elle énonce.
+        */}
+        <GridLiveRegion annonce={annonce} />
+      </div>
     </CatalogNotice>
   )
 }
