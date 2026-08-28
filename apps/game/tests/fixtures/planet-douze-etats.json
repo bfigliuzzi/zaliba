@@ -1,0 +1,72 @@
+{
+  "serverInstant": 1787750000,
+  "catalogVersion": "2026-08-26.1",
+  "planet": {
+    "id": "33333333-3333-4333-8333-333333333333",
+    "archetypeId": "berceau",
+    "layoutId": "berceau-v1",
+    "ownerId": "22222222-2222-4222-8222-222222222222",
+    "occupantId": "22222222-2222-4222-8222-222222222222",
+    "consolidatedAt": 1787750000
+  },
+  "holdings": [
+    {
+      "resourceId": "camelote",
+      "amountGrains": 1440000,
+      "lostGrains": 0,
+      "saturatedSince": null
+    },
+    {
+      "resourceId": "jus",
+      "amountGrains": 0,
+      "lostGrains": 0,
+      "saturatedSince": null
+    },
+    {
+      "resourceId": "bave-etoiles",
+      "amountGrains": 432000,
+      "lostGrains": 0,
+      "saturatedSince": null
+    }
+  ],
+  "buildings": [
+    {
+      "id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+      "typeId": "mine",
+      "variantId": "square-4",
+      "orientation": 0,
+      "anchorX": 0,
+      "anchorY": 4,
+      "level": 2
+    },
+    {
+      "id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
+      "typeId": "puits",
+      "variantId": "rect-6",
+      "orientation": 0,
+      "anchorX": 3,
+      "anchorY": 4,
+      "level": 1
+    }
+  ],
+  "clearedCells": [
+    {
+      "x": 0,
+      "y": 2
+    },
+    {
+      "x": 5,
+      "y": 2
+    }
+  ],
+  "work": {
+    "id": "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+    "startedAt": 1787748800,
+    "dueAt": 1787751800,
+    "target": {
+      "nature": "clear",
+      "x": 1,
+      "y": 2
+    }
+  }
+}

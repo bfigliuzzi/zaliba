@@ -51,6 +51,25 @@ export const CONFIRM_KEYS = ['Enter', ' '] as const
 /** La rotation, majuscule comprise : un joueur ne relâche pas Maj pour tourner. */
 const ROTATE_KEYS: readonly string[] = ['r', 'R']
 
+/**
+ * `Échap` — **l'annulation de la pose armée** (US3-AC4, § 3 du contrat).
+ *
+ * Le curseur la **reconnaît** sans rien en faire, et c'est délibéré : la sélection
+ * de bâtiment vit dans l'écran de planète, comme le curseur et comme le fantôme, et
+ * un curseur qui effacerait une sélection qu'il ne détient pas serait un état muté
+ * à distance.
+ *
+ * Ce que la reconnaissance garantit est le `preventDefault` : sans elle, `Échap`
+ * remonte au navigateur, où elle interrompt un chargement en cours ou ferme une
+ * boîte native — c'est-à-dire fait quelque chose que le joueur n'a pas demandé.
+ */
+const CANCEL_KEYS: readonly string[] = ['Escape']
+
+/** Vrai si cette touche demande l'annulation de la pose armée (US3-AC4). */
+export function isCancelKey(key: string): boolean {
+  return CANCEL_KEYS.includes(key)
+}
+
 const HORIZONTAL: Readonly<Record<string, number>> = { ArrowRight: 1, ArrowLeft: -1 }
 const VERTICAL: Readonly<Record<string, number>> = { ArrowDown: 1, ArrowUp: -1 }
 
@@ -68,6 +87,7 @@ export function isCursorKey(key: string): boolean {
     key in HORIZONTAL ||
     key in VERTICAL ||
     ROTATE_KEYS.includes(key) ||
+    CANCEL_KEYS.includes(key) ||
     (CONFIRM_KEYS as readonly string[]).includes(key)
   )
 }
@@ -104,6 +124,14 @@ export function reduceCursor(
   // L'y mêler ferait du curseur un mélange de position et d'intention, qu'il
   // faudrait remettre à zéro après chaque pose.
   if ((CONFIRM_KEYS as readonly string[]).includes(event.key)) return state
+
+  /*
+    **L'annulation ne déplace rien.** Une annulation qui bougerait le curseur ferait
+    perdre au joueur la case qu'il visait, alors qu'il vient précisément de dire
+    qu'il ne voulait pas y poser *ce* bâtiment. L'état est rendu **à la référence
+    près**, donc aucun rendu n'a lieu — et la région d'annonce ne redit rien.
+  */
+  if (CANCEL_KEYS.includes(event.key)) return state
 
   const dx = HORIZONTAL[event.key]
   if (dx !== undefined) {

@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test'
 import { countingKeyboard, freshAccount, homeCursor, signIn, signUp, tabToGrid } from './account.js'
+import { adresse } from './adresse.js'
 import { expectNoAccessibilityViolations } from './axe.js'
 
 /**
@@ -35,9 +36,15 @@ const SC001_MAX_KEYSTROKES = 15
  */
 const VEIN = { x: 0, y: 4 } as const
 
-/** Le nom accessible d'une case, tel que la grille le compose. */
+/**
+ * Le nom accessible d'une case, tel que la grille le compose.
+ *
+ * L'adresse courte de FR-016 : `A1` en haut à gauche. Elle est **la même
+ * partout** — nom accessible, annonce, aperçu, alerte de refus (INV-A1) —, et
+ * c'est ce qui permet à ce parcours de la composer plutôt que de la lire.
+ */
 function cellName(x: number, y: number): RegExp {
-  return new RegExp(`Colonne ${x + 1}, rangée ${y + 1}`, 'i')
+  return new RegExp(`\\b${adresse(x, y)}\\b`)
 }
 
 /**
@@ -68,7 +75,13 @@ async function placeMineOnVein(page: import('@playwright/test').Page) {
   await expect(page.getByRole('radio', { name: /^mine$/i })).toBeChecked()
   await expect(page.getByRole('radio', { name: /carré de quatre/i })).toBeChecked()
 
-  await tabToGrid(page, keyboard)
+  /*
+    **`Maj+Tab` depuis le sélecteur**, et non `Tab` : FR-006 met le plan **avant** les
+    actions (R16), et le chemin naturel pour revenir à la grille est donc en arrière.
+    C'est l'aller-retour que R16 décrit, et il se paie une fois par choix de bâtiment —
+    non une fois par placement, la grille gardant sa confirmation par `Entrée`.
+  */
+  await tabToGrid(page, keyboard, 'arriere')
 
   // Le curseur part de la première case ; quatre pas vers le bas l'amènent sur
   // la veine.
@@ -133,7 +146,16 @@ test.describe('poser un extracteur, au clavier seul', () => {
     await signUp(page)
     await page.getByRole('radio', { name: /^mine$/i }).check()
 
-    const confirm = page.getByRole('button', { name: /lancer la construction/i })
+    /*
+      **`JE POSE ÇA`** depuis 002. Le bouton de confirmation a quitté le panneau de
+      construction : le § 6 du contrat d'interface nomme **une** commande de pose et
+      conclut « aucune autre commande n'existe ». Deux boutons visibles qui posent
+      sont deux commandes de pose.
+
+      Ce que le cas éprouve ne change pas : la confirmation est **explicite**, c'est un
+      bouton, et il s'atteint au clavier (FR-035).
+    */
+    const confirm = page.getByRole('button', { name: 'JE POSE ÇA' })
     await expect(confirm).toBeEnabled()
     await confirm.focus()
     await page.keyboard.press('Enter')
@@ -220,7 +242,7 @@ test.describe('les refus énoncent leur motif exact et les cases fautives (FR-01
     await signUp(page)
     // Le carré de quatre ancré en (5,5) déborde de deux cases en x et en y.
     expect(await refusalCodeAt(page, { x: 5, y: 5 })).toBe('placement-out-of-grid')
-    await expect(page.getByRole('alert')).toContainText(/colonne 7|hors de la grille/i)
+    await expect(page.getByRole('alert')).toContainText(/\bG7\b|hors de la grille/i)
   })
 
   test('une case obstruée est refusée pour cela, et nommée', async ({ page }) => {
@@ -296,11 +318,11 @@ test.describe('deux vues du jeu ne lancent pas deux chantiers (FR-034, SC-006)',
     await signIn(pageB, credentials)
 
     await pageA.getByRole('radio', { name: /^mine$/i }).check()
-    await pageA.getByRole('button', { name: /lancer la construction/i }).click()
+    await pageA.getByRole('button', { name: 'JE POSE ÇA' }).click()
     await expect(pageA.getByRole('group', { name: /chantier/i })).toContainText(/construction/i)
 
     await pageB.getByRole('radio', { name: /^centrale$/i }).check()
-    await pageB.getByRole('button', { name: /lancer la construction/i }).click()
+    await pageB.getByRole('button', { name: 'JE POSE ÇA' }).click()
 
     const alert = pageB.getByRole('alert')
     await expect(alert).toBeVisible()

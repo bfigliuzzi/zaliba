@@ -1,0 +1,209 @@
+/*
+ * Les réglages de base de la Régie : ce qui vaut pour tout l'écran, et pour les
+ * deux écrans qui reçoivent le jeu de valeurs sans être remaquettés —
+ * l'authentification et la page de règles.
+ *
+ * Quatre sujets, et aucun n'est décoratif : le thème clair déclaré, l'indicateur
+ * de focus, le texte réservé aux lecteurs d'écran, et le mouvement.
+ *
+ * **Aucune valeur littérale ici** (INV-V2). Tout passe par `tokens.css`.
+ */
+
+/* ── Le thème, déclaré ──────────────────────────────────────────────────────── */
+
+/*
+ * `color-scheme: light` et **aucune** règle `prefers-color-scheme: dark` (R17).
+ *
+ * FR-036 met le thème sombre hors périmètre, et le motif n'est pas un manque de
+ * temps : le dossier annonce des ratios mesurés et n'en fournit aucun en sombre.
+ * Livrer un thème dont les contrastes ne sont pas mesurés serait une régression
+ * d'accessibilité présentée comme une fonctionnalité.
+ *
+ * Le déclarer explicitement évite que le navigateur ne repeigne de lui-même les
+ * contrôles natifs en sombre sur un fond que la palette a fixé clair — c'est-à-
+ * dire produise un couple de contraste que personne n'a mesuré.
+ */
+:root {
+  color-scheme: light;
+}
+
+html {
+  /*
+   * La racine ne fixe **aucune** taille en pixels : `100%` respecte le réglage
+   * de taille de texte du système, et c'est ce qui rend le `rem` de l'échelle
+   * typographique utile plutôt que décoratif (FR-039a, WCAG 1.4.4).
+   */
+  font-size: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--couleur-pupitre);
+  color: var(--couleur-encre);
+  font-family: var(--police-ui);
+  font-size: var(--typo-corps-taille);
+  line-height: var(--typo-corps-interligne);
+  font-weight: var(--typo-corps-graisse);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/*
+ * **Tout chiffre est en chasse fixe tabulaire** (FR-002).
+ *
+ * `tabular-nums` posé sur la famille elle-même, et non sur chaque composant qui
+ * en porte un : un compteur qui progresse ne doit jamais faire frémir les
+ * chiffres qui l'entourent, et l'oubli sur un seul écran suffirait à le faire.
+ */
+.chiffre {
+  font-family: var(--police-mono);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+/* ── L'indicateur de focus, composite ───────────────────────────────────────── */
+
+/*
+ * **Deux anneaux contigus, et c'est la solution minimale, pas une élégance.**
+ *
+ * FR-024 exige 3:1 contre le fond **bordé**, et l'écran comporte huit fonds.
+ * L'anneau Camelote que prescrit le dossier échoue sur quatre d'entre eux, dont
+ * trois sont focalisables : une case de gisement de Jus (2,31:1), une case de
+ * Bave (1,26:1) et le bouton `JE POSE ÇA`, qui est en Jus. Le contrat était donc
+ * violé sur la cible la plus sollicitée du jeu et sur son bouton principal.
+ *
+ * Aucune teinte de la palette ne tient seule contre les huit — `encre` échoue sur
+ * `bave` (2,87), `papier` échoue sur `jus` (1,53). Le **couple** y parvient, et
+ * les deux anneaux contrastent en outre l'un contre l'autre à 12,8:1, ce qui rend
+ * l'indicateur perceptible même quand l'un des deux se fond dans son fond.
+ *
+ * Ce que la décision coûte au dessin : le liseré Camelote au focus disparaît.
+ * La Camelote garde ses autres emplois — la rature, le tampon, le survol du
+ * bouton de pose.
+ */
+:focus-visible {
+  outline: var(--trait-fort) solid var(--couleur-encre);
+  outline-offset: var(--trait-fort);
+  box-shadow: 0 0 0 var(--trait-fort) var(--couleur-papier);
+}
+
+/* Le focus par défaut du navigateur n'est jamais laissé en place à côté du nôtre. */
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* ── Le texte réservé aux technologies d'assistance ─────────────────────────── */
+
+/*
+ * `.sr-only` — la moitié audible des ratures (FR-027, INV-R2), et la seule voie
+ * admise : `aria-label` sur un `<p>` ou un `<span>` sans rôle est ignoré par les
+ * technologies d'assistance, et le texte rayé redevient alors du contenu lu —
+ * c'est ainsi qu'un lecteur d'écran énonce « niveau 2 3 », donc une valeur
+ * **fausse** (R13).
+ *
+ * La technique garde le texte **dans** l'arbre d'accessibilité : `display: none`
+ * et `visibility: hidden` l'en retireraient, c'est-à-dire supprimeraient la seule
+ * chose que cette classe sert à faire.
+ */
+.sr-only {
+  position: absolute;
+  width: var(--sr-only-cote);
+  height: var(--sr-only-cote);
+  margin: calc(-1 * var(--sr-only-cote));
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ── Le mouvement ───────────────────────────────────────────────────────────── */
+
+/*
+ * **Une seule transition existe sur cet écran, et elle est de couleur** (FR-005).
+ *
+ * Aucun élément ne se déplace, ne tourne ni ne change de taille au survol ou à
+ * la prise de focus : la règle est tenue par l'absence de `transform` dans les
+ * feuilles de la Régie, et éprouvée par le parcours qui compare la boîte rendue
+ * avant et après `hover` puis `focus`.
+ *
+ * Le plafond de 120 ms est déclaré ici une fois, sur une propriété nommée : le
+ * répéter à chaque règle ferait qu'un oubli passerait.
+ */
+:root {
+  --duree-couleur: 120ms;
+}
+
+a,
+button,
+[role="gridcell"] {
+  transition:
+    background-color var(--duree-couleur) linear,
+    color var(--duree-couleur) linear,
+    border-color var(--duree-couleur) linear;
+}
+
+/*
+ * Sous mouvement réduit, **toute** durée tombe à 1 ms — animations comprises
+ * (SC-010). La préférence supprime le mouvement, pas l'information : le tampon
+ * d'état apparaît quand même, il n'est simplement plus frappé.
+ *
+ * `1ms` et non `0s` : une durée nulle empêche l'événement `transitionend`, dont
+ * certaines interfaces dépendent pour enchaîner. Ici aucune n'en dépend, mais la
+ * valeur est celle que le parcours mesure, et il mesure ce que le contrat dit.
+ */
+@media (prefers-reduced-motion: reduce) {
+  /*
+   * `!important` est ici la **condition** de la règle, non un raccourci : une
+   * préférence système doit primer sur toute déclaration de durée, y compris
+   * celle qu'un composant ou une bibliothèque écrirait plus loin dans la
+   * cascade. Sans lui, la porte de SC-010 mesurerait la durée qu'un oubli aura
+   * laissée passer, et la préférence du joueur serait consultative.
+   */
+  /* biome-ignore-start lint/complexity/noImportantStyles: une préférence système prime sur toute déclaration de durée, sans quoi SC-010 devient consultatif. */
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
+  /* biome-ignore-end lint/complexity/noImportantStyles: fin de la dérogation. */
+}
+
+/* ── Le mode contrastes forcés ──────────────────────────────────────────────── */
+
+/*
+ * Les aplats et les ombres y disparaissent, et c'est le système qui les retire :
+ * ce qui subsiste doit être la **silhouette** et le **style de trait** (FR-033).
+ * C'est pourquoi INV-S1 rend `fill="currentColor"` non négociable, et pourquoi
+ * les deux glyphes évidés sont redessinés en chemin unique à trou (R5) — une
+ * seconde forme peinte à la teinte du fond y hériterait d'une couleur système et
+ * **rebouche**rait l'évidement.
+ *
+ * L'indicateur de focus passe à la couleur de mise en évidence du système
+ * (FR-024a) : les teintes de la palette n'y sont plus rendues, et s'y accrocher
+ * reviendrait à ne plus rien indiquer.
+ */
+@media (forced-colors: active) {
+  :focus-visible {
+    outline-color: Highlight;
+    box-shadow: none;
+  }
+
+  /*
+   * Les ombres portées sont retirées explicitement. Le mode en neutralise la
+   * couleur mais pas la géométrie, et une ombre dure de cinq pixels repeinte en
+   * couleur système redevient un aplat — donc un canal chromatique là où il ne
+   * doit plus y en avoir.
+   */
+  /* biome-ignore-start lint/complexity/noImportantStyles: le mode neutralise la couleur d'une ombre, pas sa géométrie ; la retirer partout est ce que FR-033 exige. */
+  * {
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+  /* biome-ignore-end lint/complexity/noImportantStyles: fin de la dérogation. */
+}

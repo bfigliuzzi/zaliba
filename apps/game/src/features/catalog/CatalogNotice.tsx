@@ -28,7 +28,17 @@ export interface CatalogNoticeProps {
 
 export function CatalogNotice({ fromServer, onReload, children }: CatalogNoticeProps) {
   const divergence = catalogDivergence(fromServer)
-  if (divergence === null) return <>{children}</>
+
+  /*
+    **Une enveloppe, et non un fragment** (FR-011, § 1.1 du contrat de 002).
+
+    001 rendait `<>{children}</>` quand les versions concordent : rien dans le
+    document ne disait alors que l'écran était *dedans*, et la propriété que FR-011
+    énonce — « elle englobe l'écran entier, sans occuper de rang » — n'était
+    vérifiable dans aucun sens. Un élément la rend constatable, et il ne coûte rien :
+    il ne porte ni rôle, ni nom, ni rang parmi les blocs.
+  */
+  if (divergence === null) return <div data-enveloppe="catalogue">{children}</div>
 
   return (
     /*

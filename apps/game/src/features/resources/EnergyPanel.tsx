@@ -47,7 +47,7 @@ function describeBuilding(building: {
   readonly anchor: { readonly x: number; readonly y: number }
 }): string {
   const label = BUILDING_LABELS[building.typeId as keyof typeof BUILDING_LABELS] ?? building.typeId
-  return `${label} niveau ${building.level}, ${describePosition(building.anchor).toLowerCase()}`
+  return `${label} niveau ${building.level}, ${describePosition(building.anchor)}`
 }
 
 export function EnergyPanel({ energy, buildings }: EnergyPanelProps) {
@@ -62,8 +62,22 @@ export function EnergyPanel({ energy, buildings }: EnergyPanelProps) {
 
   return (
     // biome-ignore lint/a11y/useSemanticElements: `group` est le rôle juste pour un ensemble de valeurs liées. Une `<section>` étiquetée deviendrait un point de repère `region` de plus dans la navigation, et `<fieldset>` annonce un groupe de champs de saisie : il n'y en a aucun ici.
-    <div role="group" aria-label="Énergie" data-energy={`${energy.produced}/${energy.consumed}`}>
-      <h2>Énergie</h2>
+    <div
+      role="group"
+      aria-label="Énergie"
+      data-bloc="energie"
+      data-energy={`${energy.produced}/${energy.consumed}`}
+      className="plaque cadre-main"
+    >
+      {/*
+        **Un bloc distinct des trois ressources** (FR-010), et non une quatrième
+        carte de comptoir : l'énergie est instantanée, ni stockée ni plafonnée. La
+        fondre dans le comptoir ferait chercher au joueur un plafond d'énergie qui
+        n'existe pas, et un débit horaire pour une grandeur qui n'en a pas.
+      */}
+      <p data-role-texte="intitule" className="intitule">
+        Énergie
+      </p>
 
       <dl>
         <dt>Produite</dt>

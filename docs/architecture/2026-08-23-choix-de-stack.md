@@ -785,6 +785,27 @@ constitution et devront être épinglées exactement dans les manifestes.
 | Accessibilité | @axe-core/playwright | 4.13.0 |
 | Lint et format | @biomejs/biome | 2.5.10 |
 | Frontières de paquets | dependency-cruiser | 18.2.0 |
+| Polices auto-hébergées | @fontsource/archivo, archivo-narrow, jetbrains-mono, saira-stencil-one | 5.3.0 |
+
+**@fontsource/\*** : ajoutés le **2026-08-28** par la tranche
+[002 — La Régie approximative](../../specs/002-la-regie-approximative/plan.md).
+Quatre paquets de **contenu statique**, sans code exécutable, exigés par FR-004 de
+cette tranche : *l'écran doit s'afficher complet sans aucune requête vers un domaine
+tiers*, et le dossier de design charge ses polices depuis Google Fonts en le
+signalant lui-même comme inacceptable ici. Vite émet les `woff2` dans le paquet
+compilé et réécrit les `@font-face` en chemins relatifs, sans configuration.
+
+Licence **OFL-1.1** pour les quatre, vérifiée à l'installation. L'alternative écartée
+est `presetWebFonts` du dossier de design, qui charge depuis Google ; le repli nommé
+d'avance est le `woff2` téléchargé et sous-ensemblé à la main, qui coûte un binaire
+versionné et aucune voie de mise à jour.
+
+**Un écart relevé par exécution** : *Archivo Narrow n'a pas de graisse 800*, que le
+dossier de design demande — son axe de graisse s'arrête à 700, et ce n'est pas une
+lacune du paquet mais de la famille. La graisse est donc plafonnée à 700 ; déclarer
+800 sans fichier produirait une graisse **synthétique**, c'est-à-dire un rendu que le
+dossier n'a jamais mesuré, obtenu en silence. Le relevé complet est en
+[`specs/002-la-regie-approximative/verdicts.md`](../../specs/002-la-regie-approximative/verdicts.md).
 
 **typescript** : relevé à 7.0.2 le 2026-08-23, **corrigé à 6.0.3 le 2026-08-26**
 sur verdict d'exécution. `dependency-cruiser` 18.2.0 parcourt **zéro module**

@@ -8,6 +8,9 @@ import {
   formatWhole,
 } from '../../lib/format.js'
 import { RESOURCE_LABELS } from '../../lib/labels.js'
+import { Comptoir, SILHOUETTE_DE_RESSOURCE } from '../regie/Comptoir.js'
+import { Rature } from '../regie/Rature.js'
+import { useRature } from '../regie/useRature.js'
 
 /**
  * Les compteurs de ressources.
@@ -75,9 +78,60 @@ function lostInCaps(holding: HoldingView): string | null {
   return `l’équivalent de ${rounded.toLocaleString('fr-FR')} fois votre plafond`
 }
 
+/**
+ * Le débit horaire, **signé**.
+ *
+ * Le signe est de l'information, pas de la décoration : « 540/h » ne dit pas si la
+ * ressource monte ou descend, et un débit nul se lit « 0/h » plutôt que « +0/h »,
+ * qui promettrait une production inexistante.
+ */
+function formatRate(rate: number): string {
+  if (rate === 0) return '0/h'
+  return `${rate > 0 ? '+' : '−'}${formatWhole(Math.abs(rate))}/h`
+}
+
+/**
+ * Une valeur suivie, raturée quand elle change.
+ *
+ * Un composant à part parce qu'un crochet ne s'appelle pas dans une boucle : chaque
+ * valeur suivie a besoin de **sa** référence, et les rassembler dans le corps du
+ * panneau ferait dépendre l'ordre des crochets du nombre de ressources.
+ *
+ * La comparaison porte sur la **chaîne formatée** et non sur le nombre : c'est ce que
+ * le joueur voit changer, et c'est ce que la rature doit corriger. Un débit qui passe
+ * de 20,4 à 20,6 sans changer d'affichage n'a rien corrigé.
+ */
+function RatureDeValeur({
+  etiquette,
+  valeur,
+}: {
+  readonly etiquette: string
+  readonly valeur: string
+}) {
+  const { courante, ancienne } = useRature(valeur)
+  return (
+    <Rature
+      etiquette={etiquette}
+      courante={courante}
+      ancienne={ancienne}
+      /*
+        Le `<dt>` de la liste porte déjà « Débit » et « Plafond » : le répéter dans le
+        visuel ferait énoncer « Plafond plafond 5 000 ». La phrase explicite, elle,
+        garde l'étiquette — c'est elle que SC-007 mesure.
+      */
+      montrerEtiquette={false}
+    />
+  )
+}
+
 export function ResourcePanel({ holdings, at }: ResourcePanelProps) {
   return (
-    <>
+    /*
+      **Le comptoir est un bloc**, et son rang dans le document est fixé par
+      FR-006. 001 rendait un fragment : les trois cartes se succédaient sans que
+      rien ne les rassemble, donc sans que l'ordre des blocs soit vérifiable.
+    */
+    <div data-bloc="comptoir" className="comptoir">
       {Object.entries(holdings).map(([resourceId, holding]) => {
         const label = RESOURCE_LABELS[resourceId as ResourceId] ?? resourceId
         // La saturation **acquise** se lit sur `saturatedSince`, jamais sur
@@ -90,15 +144,57 @@ export function ResourcePanel({ holdings, at }: ResourcePanelProps) {
         const lostScale = lostInCaps(holding)
 
         return (
-          // biome-ignore lint/a11y/useSemanticElements: `group` est le rôle juste, et aucun élément natif ne convient. Une `<section>` étiquetée devient un **point de repère** `region` — trois repères nommés « Camelote », « Jus » et « Bave d'étoiles » encombreraient la navigation par repères pour ce qui n'est qu'un ensemble de valeurs liées. Et `<fieldset>`, que le lint suggère, annonce un groupe de champs de saisie : il n'y en a aucun ici.
-          <div key={resourceId} role="group" aria-label={label}>
-            <h2>{label}</h2>
-            <dl>
-              <dt>Détenu</dt>
-              <dd>{formatHeld(holding.amount)}</dd>
+          /*
+            **Le rendu passe par `Comptoir`, la dérivation ne change pas.**
 
-              <dt>Plafond</dt>
-              {/*
+            Les cinq grandeurs de 001 — dont trois n'apparaissent nulle part dans
+            la maquette — restent publiées avec leurs crochets : trois parcours de
+            bout en bout les lisent, et aucune exigence de 002 ne demande de les
+            retirer. Elles sont rendues **dans** l'étiquette de papier, parce qu'un
+            plafond et une perte sont des chiffres eux aussi (FR-003).
+
+            Le `<h2>` de 001 disparaît : le nom de la ressource est déjà le nom
+            accessible du bloc, et un titre de niveau 2 par ressource peuplait le
+            plan du document de trois entrées qui n'ouvrent aucune section.
+          */
+          <Comptoir
+            key={resourceId}
+            ressourceId={resourceId as ResourceId}
+            nom={label}
+            silhouette={SILHOUETTE_DE_RESSOURCE[resourceId as ResourceId]}
+            enfants={
+              <dl>
+                <dt>Détenu</dt>
+                {/*
+                **Un seul nœud pour un seul fait.** La quantité est la valeur que
+                l'étiquette met en avant, et c'est ce `<dd>` qui la porte : la
+                rendre une seconde fois en gros caractères ferait énoncer « 400,00 »
+                deux fois à un lecteur d'écran. La prominence est affaire de CSS,
+                pas de duplication.
+              */}
+                <dd data-chiffre="quantite" className="chiffre valeur">
+                  {formatHeld(holding.amount)}
+                </dd>
+
+                {/*
+                **Le débit horaire, que 001 n'affichait pas** — FR-010 l'exige, et
+                FR-002 le range dans la famille tabulaire au pas `chiffre-xs`. Le
+                dossier le laissait en corps 9,5 non tabulaire, sous tous les
+                planchers, alors que c'est un chiffre.
+              */}
+                <dt>Débit</dt>
+                {/*
+                  **Raturé** (FR-026, FR-029a) : le débit change par saut, à l'achèvement
+                  d'un chantier ou à l'entrée en déficit d'énergie. C'est précisément le
+                  genre de changement qu'un joueur manque s'il regardait ailleurs — et
+                  c'est ce que la rature lui rend.
+                */}
+                <dd data-chiffre="debit" data-resource={resourceId} className="chiffre debit">
+                  <RatureDeValeur etiquette="débit" valeur={formatRate(holding.rate)} />
+                </dd>
+
+                <dt>Plafond</dt>
+                {/*
                 Le chiffre **en grains** dans l'attribut, sa forme lisible dans le
                 texte. Le second est formaté pour être lu — séparateurs de milliers
                 compris — et le relire à l'envers pour retrouver un nombre serait
@@ -107,22 +203,23 @@ export function ResourcePanel({ holdings, at }: ResourcePanelProps) {
                 celui d'US7 pour établir qu'un entrepôt les relève : il leur faut le
                 chiffre.
               */}
-              <dd data-cap={holding.cap} data-resource={resourceId}>
-                {formatUnits(holding.cap)}
-              </dd>
+                <dd data-cap={holding.cap} data-resource={resourceId}>
+                  {/* Raturé aussi : un entrepôt posé le relève d'un coup (FR-029a). */}
+                  <RatureDeValeur etiquette="plafond" valeur={formatUnits(holding.cap)} />
+                </dd>
 
-              {/*
+                {/*
                 Le remplissage, en pourcentage lisible et en millièmes comparables.
                 C'est la grandeur qui répond d'un coup d'œil à « suis-je près de
                 perdre ? », et la seule que les trois ressources partagent malgré
                 leurs plafonds différents.
               */}
-              <dt>Remplissage</dt>
-              <dd data-fill={perMille} data-resource={resourceId}>
-                {`${formatWhole(Math.floor(perMille / 10))} %`}
-              </dd>
+                <dt>Remplissage</dt>
+                <dd data-fill={perMille} data-resource={resourceId}>
+                  {`${formatWhole(Math.floor(perMille / 10))} %`}
+                </dd>
 
-              {/*
+                {/*
                 **Les deux moitiés d'US1/AC5.** Combien s'est perdu est plus bas ;
                 depuis quand est ici. La seconde n'est pas dérivable de la
                 première — `perdu ÷ taux` serait faux dès que le taux a changé
@@ -132,34 +229,35 @@ export function ResourcePanel({ holdings, at }: ResourcePanelProps) {
                 La durée en secondes est dans l'attribut, sa forme lisible dans le
                 texte : le parcours a besoin du chiffre, le joueur de la phrase.
               */}
-              <dt>Saturation</dt>
-              {since === null ? (
-                <dd>
-                  {holding.rate === 0
-                    ? 'jamais — production nulle'
-                    : `dans ${formatDuration((holding.saturationAt ?? at) - at)}`}
-                </dd>
-              ) : (
-                <dd data-saturated-for={at - since} data-resource={resourceId}>
-                  {`saturée depuis ${formatElapsed(at - since)} : la production se perd`}
-                </dd>
-              )}
+                <dt>Saturation</dt>
+                {since === null ? (
+                  <dd>
+                    {holding.rate === 0
+                      ? 'jamais — production nulle'
+                      : `dans ${formatDuration((holding.saturationAt ?? at) - at)}`}
+                  </dd>
+                ) : (
+                  <dd data-saturated-for={at - since} data-resource={resourceId}>
+                    {`saturée depuis ${formatElapsed(at - since)} : la production se perd`}
+                  </dd>
+                )}
 
-              <dt>Perdu</dt>
-              {/*
+                <dt>Perdu</dt>
+                {/*
                 La perte, **située**. Le nombre nu ne disait pas ce qu'il valait ;
                 le comparer au plafond donne l'échelle sans demander au joueur de
                 diviser, et c'est cette phrase qui fait d'un entrepôt un achat
                 raisonné (FR-026, US7-3).
               */}
-              <dd data-lost={holding.lost} data-resource={resourceId}>
-                {formatUnits(holding.lost)}
-                {lostScale === null ? '' : ` — ${lostScale}`}
-              </dd>
-            </dl>
-          </div>
+                <dd data-lost={holding.lost} data-resource={resourceId}>
+                  {formatUnits(holding.lost)}
+                  {lostScale === null ? '' : ` — ${lostScale}`}
+                </dd>
+              </dl>
+            }
+          />
         )
       })}
-    </>
+    </div>
   )
 }

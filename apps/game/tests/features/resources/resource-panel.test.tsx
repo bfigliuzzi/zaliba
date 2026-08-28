@@ -236,10 +236,23 @@ describe('la quantité détenue progresse de façon continue (US1, critère 3)',
  * il lui faut le chiffre, pas son apparence.
  */
 describe('le plafond est comparable, pas seulement lisible', () => {
-  it.each([/camelote/i, /jus/i, /bave d’étoiles/i])('porte le plafond de %s en grains', (name) => {
+  /**
+   * *Réécrit par 002.* L'assertion passait par `getByText(…, { selector })`, qui ne
+   * compare que les **nœuds de texte directs** d'un élément. Depuis T077, le plafond
+   * est enveloppé dans un bloc de rature — il change par saut, un entrepôt le relève
+   * d'un coup (FR-029a) —, donc la cellule n'a plus de texte direct et le matcher ne
+   * la trouvait plus.
+   *
+   * L'assertion porte désormais sur la cellule elle-même : son attribut donne les
+   * grains, son contenu donne la forme lisible. C'est ce que le test voulait dire.
+   */
+  it.each(['camelote', 'jus', 'bave-etoiles'])('porte le plafond de %s en grains', (resourceId) => {
     renderPanel()
-    const value = group(name).getByText(/^\d[\d   ]*$/, { selector: '[data-cap]' })
-    expect(value.getAttribute('data-cap')).toMatch(/^\d+$/)
+    const cellule = document.querySelector(`[data-cap][data-resource="${resourceId}"]`)
+
+    expect(cellule, `la cellule du plafond de ${resourceId}`).not.toBeNull()
+    expect(cellule?.getAttribute('data-cap')).toMatch(/^\d+$/)
+    expect(cellule?.textContent ?? '', 'et sa forme lisible').toMatch(/^\d[\d   ]*$/)
   })
 
   it('donne exactement le plafond de la projection', () => {

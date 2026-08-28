@@ -1,98 +1,29 @@
 import type { BuildingView, WorkView } from '@zaliba/domain'
-import { formatDuration } from '../../lib/format.js'
-import { BUILDING_LABELS, describePosition, FOOTPRINT_LABELS } from '../../lib/labels.js'
+import { PlaqueChantier } from '../regie/PlaqueChantier.js'
 
 /**
- * Le chantier en cours : sa nature, **sa cible** et le temps restant (FR-038).
+ * Le chantier en cours — **la plaque de la Régie, montée à sa place**.
  *
- * La cible est ce qui manquait à la première version de cet écran, et son
- * absence n'était pas anodine : « construction en cours, deux minutes » ne dit
- * pas *quoi*, donc ne permet pas de vérifier qu'on a lancé ce qu'on croyait
- * lancer. Or le chantier n'est **ni annulable ni remplaçable** (FR-037) — c'est
- * précisément quand l'erreur est irréversible que le joueur doit pouvoir la
- * constater.
+ * Ce fichier ne porte plus de rendu : il ne reste que la frontière. La plaque, ses
+ * quatre grandeurs (FR-009) et la dérivation de l'avancement vivent dans
+ * `features/regie/PlaqueChantier.tsx`, avec les autres blocs de la Régie.
  *
- * Le temps restant est **extrapolé localement**, comme les compteurs de
- * ressources : il vient de la projection rejouée à la seconde, sans un seul appel
- * réseau (R8).
+ * **Pourquoi le garder plutôt que monter la plaque directement.** Trois choses
+ * citent `CurrentWork` : l'écran de parcelle, son test unitaire, et deux parcours
+ * de bout en bout. Le nom est celui sous lequel la mécanique de 001 est connue, et
+ * la tranche 002 ne renomme pas ce qu'elle réhabille — elle en change le rendu, et
+ * le principe V lui interdit d'en profiter pour redessiner l'assemblage.
+ *
+ * **Ce qui n'a pas changé** : la dérivation de l'état. Le composant reçoit la
+ * `WorkView` que la projection rend, exactement comme avant, et n'en tire que de
+ * la présentation.
  */
-
-const NATURE_LABELS: Readonly<Record<WorkView['nature'], string>> = {
-  build: 'Construction',
-  upgrade: 'Amélioration',
-  demolish: 'Démolition',
-  clear: 'Déblaiement',
-}
 
 export interface CurrentWorkProps {
   readonly work: WorkView | null
-  /**
-   * Les bâtiments projetés, pour **nommer** la cible d'une amélioration ou d'une
-   * démolition (FR-038).
-   *
-   * La liste vient de la projection, la même dont l'aperçu et le panneau
-   * d'énergie tirent leurs chiffres. La redemander au serveur, ou en tenir une
-   * copie ici, donnerait deux vérités sur un écran qui les montre côte à côte.
-   */
   readonly buildings: readonly BuildingView[]
 }
 
-/**
- * La cible, en clair.
- *
- * L'union discriminée du domaine rend ce `switch` exhaustif : ajouter une nature
- * de cible fera échouer la compilation ici, plutôt qu'afficher un chantier sans
- * cible.
- *
- * La branche `building` **résout** son bâtiment dans la liste projetée, depuis
- * US4 : dès qu'un joueur peut lancer une amélioration, savoir *lequel* est ce qui
- * lui permet de vérifier qu'il a lancé ce qu'il croyait. Le repli — « un bâtiment
- * posé » — n'est pas décoratif : un second onglet peut démolir la cible, et la
- * liste cesse alors de la contenir. Afficher un identifiant technique dans ce cas
- * serait pire que ne rien dire, ce serait dire quelque chose d'illisible.
- */
-function describeTarget(work: WorkView, buildings: readonly BuildingView[]): string {
-  switch (work.target.kind) {
-    case 'build': {
-      const typeId = work.target.typeId as keyof typeof BUILDING_LABELS
-      const label = BUILDING_LABELS[typeId] ?? typeId
-      const footprint = FOOTPRINT_LABELS[work.target.variantId] ?? work.target.variantId
-      return `${label} (${footprint.toLowerCase()}) en ${describePosition(work.target.anchor)}`
-    }
-    case 'building': {
-      const buildingId = work.target.buildingId
-      const building = buildings.find((one) => one.id === buildingId)
-      if (building === undefined) return 'un bâtiment posé'
-      const label = BUILDING_LABELS[building.typeId] ?? building.typeId
-      return `${label} niveau ${building.level}, ${describePosition(building.anchor).toLowerCase()}`
-    }
-    case 'cell':
-      return describePosition(work.target.cell)
-  }
-}
-
 export function CurrentWork({ work, buildings }: CurrentWorkProps) {
-  if (work === null) {
-    return (
-      // biome-ignore lint/a11y/useSemanticElements: `group` est le rôle juste pour un ensemble de valeurs liées. Une `<section>` étiquetée deviendrait un point de repère `region`, et `<fieldset>` annonce un groupe de champs de saisie : il n'y en a aucun ici.
-      <div role="group" aria-label="Chantier">
-        <p>Aucun chantier en cours.</p>
-      </div>
-    )
-  }
-
-  return (
-    // biome-ignore lint/a11y/useSemanticElements: idem — un ensemble de valeurs liées, pas un point de repère.
-    <div role="group" aria-label="Chantier">
-      <h2>{NATURE_LABELS[work.nature]} en cours</h2>
-      <dl>
-        <dt>Cible</dt>
-        <dd>{describeTarget(work, buildings)}</dd>
-
-        <dt>Temps restant</dt>
-        <dd>{formatDuration(work.remaining)}</dd>
-      </dl>
-      <p>Un chantier lancé ne peut être ni annulé ni remplacé.</p>
-    </div>
-  )
+  return <PlaqueChantier work={work} buildings={buildings} />
 }

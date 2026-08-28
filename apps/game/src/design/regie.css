@@ -1,0 +1,325 @@
+/*
+ * Les gestes signature de La Régie approximative.
+ *
+ * La fiction porte le style : *cette interface a été produite par la Régie
+ * interplanétaire elle-même, une administration d'amateurs.* Les cadres dépassent
+ * aux angles, les étiquettes penchent, les tampons sont de travers.
+ *
+ * **Et sa loi porte l'accessibilité : l'approximation ne touche jamais la
+ * donnée.** Elle vit dans le décor — cadres, étiquettes, tampons, notes en corps
+ * 9,5. Les chiffres restent d'aplomb, en chasse fixe tabulaire, posés sur du
+ * papier, à 12,8:1. C'est la ligne que ce fichier ne franchit jamais : rien de ce
+ * qui penche ici ne porte un chiffre.
+ *
+ * **Aucune valeur littérale** (INV-V2). Tout passe par `tokens.css`.
+ *
+ * **Ce que ce fichier ne reprend pas du dossier, délibérément** : les
+ * « mouchetures d'encre » — trois points en absolu, décor pur. Aucune exigence ne
+ * les réclame, elles ne portent rien, et leurs positions n'ont pas de valeur
+ * nommée dans le jeu de valeurs. Le principe V tranche : ce qu'aucune
+ * spécification ne demande aujourd'hui ne s'ajoute pas.
+ */
+
+/* ── Le cadre tracé à la règle ──────────────────────────────────────────────── */
+
+/*
+ * **`.cadre-main`** — le cadre dont les traits se croisent et **dépassent aux
+ * angles**. C'est le premier des deux gestes signature.
+ *
+ * Deux pseudo-éléments plutôt qu'une bordure : `::before` porte le haut et la
+ * gauche, `::after` le bas et la droite, et chacun débord sur l'axe opposé. Une
+ * bordure ordinaire s'arrête pile au coin — c'est exactement ce que la Régie ne
+ * sait pas faire.
+ *
+ * Le trait et le débord sont des **variables locales** alimentées par le jeu de
+ * valeurs : la variante `--fort` n'a ainsi qu'à les redéclarer, sans dupliquer la
+ * géométrie.
+ */
+.cadre-main {
+  --cadre-trait: var(--trait-normal);
+  --cadre-debord: var(--espacement-fin);
+
+  position: relative;
+}
+
+.cadre-main::before,
+.cadre-main::after {
+  content: "";
+  position: absolute;
+  /* Du décor : il ne doit jamais intercepter un appui destiné au contenu. */
+  pointer-events: none;
+}
+
+.cadre-main::before {
+  inset: 0 calc(-1 * var(--cadre-debord)) calc(-1 * var(--cadre-debord)) 0;
+  border-top: var(--cadre-trait) solid var(--couleur-encre);
+  border-left: var(--cadre-trait) solid var(--couleur-encre);
+}
+
+.cadre-main::after {
+  inset: calc(-1 * var(--cadre-debord)) 0 0 calc(-1 * var(--cadre-debord));
+  border-right: var(--cadre-trait) solid var(--couleur-encre);
+  border-bottom: var(--cadre-trait) solid var(--couleur-encre);
+}
+
+/* La variante du guichet : trait de cadre, débord plus large. */
+.cadre-main--fort {
+  --cadre-trait: var(--trait-cadre);
+  --cadre-debord: var(--espacement-court);
+}
+
+/* ── La plaque ──────────────────────────────────────────────────────────────── */
+
+/*
+ * Le support de tout ce que la Régie affiche. Du **papier**, et c'est ce qui rend
+ * les chiffres lisibles à 12,8:1 quelle que soit leur taille.
+ */
+.plaque {
+  background: var(--couleur-papier);
+  padding: var(--espacement-ample) var(--espacement-aise) var(--espacement-aise);
+}
+
+/* ── L'étiquette de papier collée ───────────────────────────────────────────── */
+
+/*
+ * **`.etiquette`** — le papier collé sur l'aplat de la ressource.
+ *
+ * Elle n'est pas décorative : c'est **la** réponse à FR-003. Aucun chiffre ne se
+ * pose sur un aplat de couleur de ressource, parce qu'un aplat dépend de sa teinte
+ * — 3,61:1 sur la Camelote, et le Jus n'atteint jamais le seuil du texte normal.
+ * Le papier, lui, tient 12,8:1 à toute taille.
+ *
+ * Et c'est ce détail qui donne au passage la meilleure matière du système.
+ *
+ * La rotation reste sous le plafond de 1,5° (FR-032), et elle ne s'applique pas à
+ * un bloc de texte long : une étiquette porte un nom, une valeur et un débit.
+ */
+.etiquette {
+  background: var(--couleur-papier);
+  border: var(--trait-fin) solid var(--couleur-encre);
+  margin: var(--espacement-ras);
+  padding: var(--espacement-fin) var(--espacement-court);
+  rotate: var(--rotation-etiquette);
+}
+
+/*
+ * Une étiquette sur deux penche dans l'autre sens : trois cartes inclinées du
+ * même angle se lisent comme une grille de travers, pas comme trois étiquettes
+ * collées à la main.
+ */
+.carte-ressource:nth-child(even) .etiquette {
+  rotate: var(--rotation-etiquette-inverse);
+}
+
+/* ── Le tampon ──────────────────────────────────────────────────────────────── */
+
+/*
+ * **La seule exception au plafond de rotation** (FR-032), et elle est assumée : le
+ * tampon ne porte aucune information et il est `aria-hidden`. C'est ce qui rend
+ * l'exception soutenable — un texte de travers à 5° qui porterait un fait serait
+ * un fait rendu plus difficile à lire pour tout le monde.
+ *
+ * **La teinte est la Camelote-brique, non la Camelote.** L'audit d'accessibilité a
+ * relevé l'écart : la Camelote sur papier mesure **3,54:1**, sous les 4,5 du texte
+ * normal. Le tampon est décoratif et `aria-hidden`, et WCAG 1.4.3 exempte la
+ * décoration pure — mais il reste **visible**, et `aria-hidden` le cache aux
+ * technologies d'assistance, pas aux yeux. Un joueur malvoyant le voit sans le lire.
+ *
+ * Trois issues existaient : désactiver la règle d'axe (ce que SC-005 interdit),
+ * plaider l'exemption (vrai en droit, faible en pratique), ou **relever la teinte**.
+ * `camelote-brique` — la variante d'échelle de la même famille — rend **5,94:1** : le
+ * tampon garde son identité de Camelote et devient lisible. C'est la seule des trois
+ * qui ne coûte rien à personne.
+ *
+ * Le liseré la suit : un cadre et son texte de deux teintes différentes se liraient
+ * comme deux objets.
+ */
+.tampon {
+  position: absolute;
+  right: var(--espacement-aise);
+  bottom: var(--espacement-aise);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  padding: var(--espacement-ras) var(--espacement-fin);
+  border: var(--trait-normal) solid var(--couleur-camelote-brique);
+  color: var(--couleur-camelote-brique);
+  font-family: var(--police-pochoir);
+  font-size: var(--typo-note-taille);
+  line-height: var(--typo-micro-interligne);
+  letter-spacing: var(--typo-label-interlettre-resserre);
+  rotate: var(--rotation-tampon);
+}
+
+/* ── La note de la Régie ────────────────────────────────────────────────────── */
+
+/*
+ * Les notes de bas de page, les mentions, les apartés : le registre administratif.
+ *
+ * `opacity: .8` sur l'encre donne **7,27:1** sur papier — bien au-dessus du seuil
+ * du texte normal. L'opacité est ce qui casse le plus souvent un calcul de
+ * contraste, et c'est pourquoi cette valeur est mesurée par la porte de contraste
+ * plutôt que choisie à l'œil.
+ */
+.note-regie {
+  color: var(--couleur-encre);
+  opacity: 0.8;
+  font-size: var(--typo-note-taille);
+  line-height: var(--typo-note-interligne);
+  font-weight: var(--typo-note-graisse);
+}
+
+.aparte {
+  color: var(--couleur-encre);
+  opacity: 0.8;
+  font-size: var(--typo-note-taille);
+  line-height: var(--typo-note-interligne);
+}
+
+/* ── Les intitulés de bloc ──────────────────────────────────────────────────── */
+
+/*
+ * Les libellés en capitales espacées — « CHANTIER EN COURS », « CAMELOTE ».
+ *
+ * L'interlettrage est celui **resserré** : à 12 px — le pas `label` relevé à son
+ * plancher d'intitulé —, le `.16em` du dossier fait déborder « CAMELOTE » de son
+ * étiquette à 320 px. Les deux valeurs sont dans `tokens.css`, et l'écart est
+ * consigné.
+ */
+.intitule {
+  font-size: var(--typo-label-taille);
+  line-height: var(--typo-label-interligne);
+  font-weight: var(--typo-label-graisse);
+  letter-spacing: var(--typo-label-interlettre-resserre);
+  text-transform: var(--typo-label-casse);
+}
+
+.surtitre {
+  max-width: 24ch;
+  font-size: var(--typo-micro-taille);
+  line-height: var(--typo-micro-interligne);
+  font-weight: var(--typo-micro-graisse);
+  letter-spacing: var(--typo-label-interlettre-resserre);
+  text-transform: var(--typo-micro-casse);
+}
+
+/* ── Le pochoir ─────────────────────────────────────────────────────────────── */
+
+/*
+ * Le nom de la planète, en pochoir. « Jamais porteur d'information seule », dit le
+ * dossier : ici il porte le nom, qui est aussi le nom accessible du `<h1>` — donc
+ * l'information existe hors du dessin.
+ */
+.nom-de-planete {
+  margin: 0;
+  font-family: var(--police-pochoir);
+  font-size: var(--typo-titre-m-taille);
+  line-height: var(--typo-titre-m-interligne);
+  font-weight: normal;
+}
+
+/* ── Les commandes ──────────────────────────────────────────────────────────── */
+
+/*
+ * **48 px de hauteur effective**, et aucun mouvement au survol ni au focus
+ * (FR-031, FR-005).
+ *
+ * La seule transition est de couleur, et son plafond de 120 ms est déclaré une
+ * fois dans `base.css`. Aucun `transform` ici : c'est l'absence de la propriété
+ * qui tient la règle, et le parcours la mesure en comparant la boîte rendue avant
+ * et après `hover` puis `focus`.
+ */
+.commande {
+  min-height: var(--cible-effectif);
+  min-width: var(--cible-minimum);
+  padding: 0 var(--espacement-aise);
+  border: var(--trait-fort) solid var(--couleur-encre);
+  border-radius: var(--arrondi-aucun);
+  background: var(--couleur-papier);
+  color: var(--couleur-encre);
+  font-family: var(--police-ui);
+  font-size: var(--typo-item-taille);
+  font-weight: var(--typo-item-graisse);
+  cursor: pointer;
+}
+
+/*
+ * Le bouton de pose : le seul en pochoir, et le seul sur un aplat de Jus.
+ *
+ * `encre` sur `jus` mesure **8,34:1** — largement au-dessus du seuil du texte
+ * normal. C'est du texte sur un aplat de ressource, ce que FR-003 autorise : ce
+ * qu'il interdit est un **chiffre**, et un libellé de commande n'en est pas un.
+ */
+.commande--poser {
+  flex: 1;
+  background: var(--couleur-jus);
+  font-family: var(--police-pochoir);
+  font-size: var(--typo-pochoir-s-taille);
+  line-height: var(--typo-pochoir-s-interligne);
+}
+
+.commande--poser:hover {
+  background: var(--couleur-camelote);
+  color: var(--couleur-papier);
+}
+
+.commande:hover {
+  background: var(--couleur-pupitre);
+}
+
+/* ── La jauge d'avancement ──────────────────────────────────────────────────── */
+
+/*
+ * Du décor par-dessus un fait déjà écrit : elle est `aria-hidden`, et l'avancement
+ * est publié en texte juste à côté d'elle. Jamais la géométrie seule (FR-012).
+ */
+.jauge {
+  height: var(--espacement-large);
+  border: var(--trait-fort) solid var(--couleur-encre);
+  background: var(--couleur-pupitre);
+}
+
+.jauge-remplissage {
+  display: block;
+  height: 100%;
+  background: var(--couleur-jus);
+  border-right: var(--trait-fort) solid var(--couleur-encre);
+}
+
+/* ── La rature ──────────────────────────────────────────────────────────────── */
+
+/*
+ * **Le second geste signature**, et le plus délicat.
+ *
+ * Le trait est un **enfant absolu**, jamais un `text-decoration` : il doit dépasser
+ * de la valeur et pencher (FR-028), ce qu'une décoration de texte ne sait pas faire.
+ * C'est ce que le `<i>` vide porte — il n'a aucun texte, et il vit dans un arbre
+ * `aria-hidden`, donc il n'existe pour personne d'autre que l'œil.
+ *
+ * **L'opacité plancher est 0,72**, et elle est mesurée : `encre` à 0,72 sur `papier`
+ * rend **5,68:1**, très au-dessus des 4,5 qu'exige le texte normal (INV-R4). L'opacité
+ * est ce qui casse le plus souvent un calcul de contraste — descendre en dessous
+ * demanderait de remesurer, et c'est la porte de contraste qui le dirait.
+ *
+ * La rotation reste sous le plafond de 1,5° et ne s'applique qu'à une valeur courte,
+ * jamais à un bloc de texte long (FR-032).
+ */
+.rature {
+  position: relative;
+  display: inline-block;
+  opacity: 0.72;
+  rotate: var(--rotation-rature);
+}
+
+.rature > i {
+  position: absolute;
+  /*
+    Le trait dépasse de part et d'autre — c'est la Régie qui rature à la main, et une
+    main ne s'arrête pas pile au bord du chiffre.
+  */
+  inset-inline: calc(-1 * var(--espacement-ras));
+  inset-block-start: 54%;
+  block-size: var(--trait-normal);
+  background: var(--couleur-camelote);
+}

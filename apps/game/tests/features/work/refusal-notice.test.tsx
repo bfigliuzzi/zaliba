@@ -92,8 +92,8 @@ describe('un refus de placement nomme les cases fautives (FR-013)', () => {
         { x: 1, y: 2 },
       ],
     })
-    expect(alert.textContent).toContain('Colonne 1, rangée 3')
-    expect(alert.textContent).toContain('Colonne 2, rangée 3')
+    expect(alert.textContent).toContain('A3')
+    expect(alert.textContent).toContain('B3')
   })
 
   it('reste lisible sans case fournie', () => {

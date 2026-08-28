@@ -60,15 +60,12 @@ function renderPanel(
   selection: BuildSelection,
   preview: ReturnType<typeof previewBuild> | null = null,
   overrides: {
-    pending?: boolean
-    onConfirm?: () => void
     occupancy?: GridOccupancy
     availability?: PlacementAvailability | null
   } = {},
 ) {
   const onSelectType = vi.fn()
   const onSelectVariant = vi.fn()
-  const onConfirm = overrides.onConfirm ?? vi.fn()
 
   render(
     <BuildPanel
@@ -77,13 +74,11 @@ function renderPanel(
       preview={preview}
       occupancy={overrides.occupancy ?? gridOccupancy(freshState().grid)}
       availability={overrides.availability ?? null}
-      pending={overrides.pending ?? false}
       onSelectType={onSelectType}
       onSelectVariant={onSelectVariant}
-      onConfirm={onConfirm}
     />,
   )
-  return { onSelectType, onSelectVariant, onConfirm }
+  return { onSelectType, onSelectVariant }
 }
 
 /** L'aperçu de construction, nommé en entier — jamais `/aperçu/i` seul (leçon d'US2). */
@@ -219,37 +214,33 @@ describe('l’aperçu précède la confirmation (FR-035, FR-050)', () => {
    * doit être **postérieure** à l'affichage. Comparer les positions est la seule
    * façon de le vérifier sans se fier à la lecture du code.
    */
-  it('place le bouton après l’aperçu dans le document', () => {
+  /**
+   * *Réécrit par 002.* L'assertion plaçait le **bouton de confirmation** après
+   * l'aperçu. Ce bouton a quitté ce panneau : le § 6 du contrat d'interface nomme
+   * **une** commande de pose, `JE POSE ÇA`, et conclut « aucune autre commande
+   * n'existe ». Deux boutons visibles qui posent sont deux commandes de pose.
+   *
+   * Ce que l'assertion voulait dire — *l'aperçu précède la confirmation* — reste vrai
+   * et se lit désormais sur l'assemblage : le panneau tout entier précède la barre
+   * d'actions dans le bloc des actions, et `ordre-du-document.test.tsx` le vérifie.
+   *
+   * Ce qui subsiste ici, et qui est ce que ce fichier peut dire : **l'aperçu est le
+   * dernier nœud du panneau**. Rien ne s'interpose entre ce que le joueur lit et la
+   * commande qui suit.
+   */
+  it('place l’aperçu en dernier dans le panneau', () => {
+    // `renderPanel` ne rend pas son conteneur : le document fait l'affaire, il ne
+    // porte que ce panneau.
     renderPanel(MINE_SQUARE, previewOnVein())
     const preview = screen.getByRole('group', { name: /aperçu/i })
-    const button = screen.getByRole('button', { name: /lancer la construction/i })
+    const panneau = preview.parentElement
 
-    // `compareDocumentPosition` rend un **masque de bits** : le lire autrement
-    // qu'avec `&` n'a pas de sens, et comparer le nombre entier à une constante
-    // serait faux dès que deux positions se cumulent.
-    const follows = preview.compareDocumentPosition(button) & Node.DOCUMENT_POSITION_FOLLOWING
-    expect(follows).toBeGreaterThan(0)
-  })
-})
-
-describe('le lancement est explicite, et ne part qu’une fois', () => {
-  it('rapporte la confirmation', () => {
-    const onConfirm = vi.fn()
-    renderPanel(MINE_SQUARE, previewOnVein(), { onConfirm })
-    screen.getByRole('button', { name: /lancer la construction/i }).click()
-    expect(onConfirm).toHaveBeenCalledTimes(1)
-  })
-
-  /**
-   * Pendant que la commande est en vol, le bouton est désactivé **et** annoncé
-   * occupé. Le désactiver seul suffirait à la souris ; `aria-busy` est ce qui le
-   * dit à qui écoute la page.
-   */
-  it('se désactive et s’annonce occupé pendant l’envoi', () => {
-    renderPanel(MINE_SQUARE, previewOnVein(), { pending: true })
-    const button = screen.getByRole('button', { name: /lancement/i })
-    expect(button).toHaveProperty('disabled', true)
-    expect(button.getAttribute('aria-busy')).toBe('true')
+    expect(panneau, 'le panneau de construction').not.toBeNull()
+    expect(panneau?.lastElementChild, 'l’aperçu ferme le panneau').toBe(preview)
+    expect(
+      document.body.querySelectorAll('button'),
+      'et le panneau ne porte plus aucune commande',
+    ).toHaveLength(0)
   })
 })
 
@@ -561,21 +552,24 @@ describe('la grille pleine est énoncée, avec ses issues', () => {
     )
   }
 
+  const pleine = () => renderPanel(NOTHING_SELECTED, null, { occupancy: gridOccupancy(fullGrid()) })
+
+  const texteDeLAvis = (): string => screen.getByText(/entièrement occupée/i).textContent ?? ''
+
   it('ne dit rien tant qu’une case reste libre', () => {
     renderPanel(NOTHING_SELECTED)
     expect(screen.queryByText(/entièrement occupée/i)).toBeNull()
   })
 
   it('dit que la grille est entièrement occupée', () => {
-    renderPanel(NOTHING_SELECTED, null, { occupancy: gridOccupancy(fullGrid()) })
+    pleine()
     expect(screen.getByText(/entièrement occupée/i)).toBeDefined()
   })
 
   it('nomme les deux issues : démolir, déblayer', () => {
-    renderPanel(NOTHING_SELECTED, null, { occupancy: gridOccupancy(fullGrid()) })
-    const text = screen.getByRole('status').textContent ?? ''
-    expect(text).toMatch(/démoli/i)
-    expect(text).toMatch(/déblaiement/i)
+    pleine()
+    expect(texteDeLAvis()).toMatch(/démoli/i)
+    expect(texteDeLAvis()).toMatch(/déblaiement/i)
   })
 
   /**
@@ -583,10 +577,28 @@ describe('la grille pleine est énoncée, avec ses issues', () => {
    * bâtiments ne se libèrent pas au même prix.
    */
   it('chiffre ce qui est sous obstacle et ce qui est sous bâtiment', () => {
-    renderPanel(NOTHING_SELECTED, null, { occupancy: gridOccupancy(fullGrid()) })
-    const text = screen.getByRole('status').textContent ?? ''
-    expect(text).toContain('26')
-    expect(text).toContain('10')
+    pleine()
+    expect(texteDeLAvis()).toContain('26')
+    expect(texteDeLAvis()).toContain('10')
+  })
+
+  /**
+   * **La région polie disparaît ; le message reste** (T067, FR-022, INV-N1).
+   *
+   * 001 portait cet avis dans un `role="status"` — une **seconde** région polie sur
+   * l'écran de parcelle, en concurrence avec celle du curseur. Deux régions polies se
+   * disputent l'ordre de restitution, et le joueur entend l'une des deux sans savoir
+   * laquelle.
+   *
+   * L'avis reste **visible et lisible** : ce que 002 retire est le canal
+   * d'annonce, non l'information. Et il n'est pas perdu à l'oreille : l'annonce
+   * unique le porte au moment où il devient vrai, c'est-à-dire quand une pose vient
+   * d'occuper la dernière case libre — sous l'origine `pose-acceptee`, qui est
+   * exactement l'événement qui l'a produit.
+   */
+  it('ne porte plus de région polie (INV-N1)', () => {
+    pleine()
+    expect(document.body.querySelectorAll('[role="status"], [aria-live]')).toHaveLength(0)
   })
 })
 

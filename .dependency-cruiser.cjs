@@ -44,6 +44,29 @@ module.exports = {
         dependencyTypesNot: ['type-only'],
       },
     },
+    /**
+     * Ajoutée par la tranche 002.
+     *
+     * `apps/game/tsconfig.json` déclare désormais les types de Node, parce que les
+     * **portes du jeu de valeurs** lisent `tokens.json` et parcourent `src/**` sur
+     * le disque. Le typage a donc cessé d'interdire au client d'importer un module
+     * Node — et un `node:fs` dans un paquet destiné au navigateur est une faute
+     * qui ne se verrait qu'à la compilation, c'est-à-dire trop tard et pour une
+     * raison illisible.
+     *
+     * La frontière est donc rendue ici, où elle est vérifiée. Les **tests** ne sont
+     * pas concernés : c'est leur travail de lire le disque.
+     */
+    {
+      name: 'game-src-sans-module-node',
+      comment:
+        'Le client est destiné au navigateur. Aucun module de la bibliothèque ' +
+        'standard de Node n’y a de sens, et le typage ne l’interdit plus depuis ' +
+        'que les portes du jeu de valeurs ont besoin de lire le disque.',
+      severity: 'error',
+      from: { path: '^apps/game/src/' },
+      to: { dependencyTypes: ['core'] },
+    },
     {
       name: 'contracts-n-importe-pas-domain',
       comment:

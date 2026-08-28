@@ -1,0 +1,352 @@
+/*
+ * Le jeu de valeurs de La Régie approximative — **la source unique** (FR-001).
+ *
+ * Transcription de `docs/design/2026-08-27-regie-approximative/tokens.json`,
+ * tenue par deux portes plutôt que par la discipline (R2) :
+ *
+ * - `tests/design/tokens.test.ts` échoue si une valeur du dossier manque ici ou
+ *   diffère, et si une taille de police n'est pas au plancher de son rôle ;
+ * - `tests/design/valeurs-en-dur.test.ts` échoue si une valeur visuelle
+ *   littérale apparaît ailleurs que dans ce fichier.
+ *
+ * **Ce fichier est le seul du dépôt où un hexadécimal, un angle ou une longueur
+ * en pixels a le droit d'être écrit.** Partout ailleurs, `var(--…)`.
+ *
+ * Trois familles de valeurs sont **ajoutées** au dossier parce que
+ * l'implémentation les exige (data-model § 1.2) : les piles de repli de police,
+ * le budget de largeur de R9, et les paliers de bascule. Elles sont regroupées
+ * en fin de fichier, sous leur propre en-tête, pour qu'on ne les confonde jamais
+ * avec ce qui vient du dossier.
+ */
+
+:root {
+  /* ── Couleurs ───────────────────────────────────────────────────────────── */
+
+  --couleur-encre: #1b2220;
+  --couleur-encre-nuit: #141a18;
+  --couleur-encre-douce: #2a3230;
+  --couleur-ardoise: #4a5450;
+  --couleur-mine: #96a09b;
+  --couleur-trait: #6e7873;
+  --couleur-papier: #e2e6dc;
+  --couleur-pupitre: #d6dbd0;
+  --couleur-carton: #c9cec2;
+  --couleur-camelote: #c4552a;
+  --couleur-camelote-brique: #8e3b1b;
+  --couleur-jus: #e8b21c;
+  --couleur-bave: #8e4ba8;
+  --couleur-bave-nuit: #b072c8;
+  --couleur-bave-claire: #9c63b4;
+
+  /* ── Typographie ────────────────────────────────────────────────────────── */
+
+  /*
+   * **Les tailles sont en `rem`, plancher de leur rôle appliqué** (R14).
+   *
+   * `max(valeur du dossier, plancher du rôle) ÷ 16`. La porte applique la règle,
+   * jamais une liste d'exceptions : un pas ajouté demain reçoit son plancher tout
+   * seul, alors qu'une exception énumérée serait invisible en revue six mois plus
+   * tard. Les six pas relevés portent leur valeur d'origine en commentaire.
+   *
+   * Et **aucune taille de police en pixels, nulle part** (FR-039a) : c'est ce qui
+   * rend WCAG 1.4.4 vrai. Le plancher protège la lecture par défaut, le `rem`
+   * protège celle du joueur qui a réglé son appareil.
+   *
+   * La propriété `--typo-*-police` transcrit le dossier, qui y nomme une famille
+   * par sa **clé** (`mono`, `pochoir`). Elle n'est pas utilisable telle quelle
+   * dans `font-family` : la valeur opérante est `--police-mono` et ses sœurs, en
+   * bas de ce fichier.
+   */
+
+  /* décor — plancher 9,5 px. Le dossier écrit 8,5. */
+  --typo-micro-taille: 0.5938rem;
+  --typo-micro-interligne: 1.2;
+  --typo-micro-graisse: 600;
+  --typo-micro-interlettre: 0.16em;
+  --typo-micro-casse: uppercase;
+
+  /* décor — 9,5 px, déjà au plancher. */
+  --typo-note-taille: 0.5938rem;
+  --typo-note-interligne: 1.4;
+  --typo-note-graisse: 400;
+
+  /* intitulé — plancher 12 px. Le dossier écrit 10. */
+  --typo-label-taille: 0.75rem;
+  --typo-label-interligne: 1.2;
+  --typo-label-graisse: 700;
+  --typo-label-interlettre: 0.16em;
+  --typo-label-casse: uppercase;
+
+  /* information — plancher 14 px. Le dossier écrit 11,5. */
+  --typo-menu-taille: 0.875rem;
+  --typo-menu-interligne: 1.35;
+  --typo-menu-graisse: 400;
+
+  /* information — plancher 14 px. Le dossier écrit 12. */
+  --typo-corps-taille: 0.875rem;
+  --typo-corps-interligne: 1.5;
+  --typo-corps-graisse: 400;
+
+  /* information — plancher 14 px. Le dossier écrit 13. */
+  --typo-item-taille: 0.875rem;
+  --typo-item-interligne: 1.2;
+  --typo-item-graisse: 600;
+
+  --typo-fiche-taille: 1.0625rem;
+  --typo-fiche-interligne: 1.2;
+  --typo-fiche-graisse: 700;
+
+  --typo-chiffre-s-taille: 1rem;
+  --typo-chiffre-s-interligne: 1.05;
+  --typo-chiffre-s-graisse: 700;
+  --typo-chiffre-s-police: mono;
+
+  --typo-chiffre-m-taille: 1.375rem;
+  --typo-chiffre-m-interligne: 1.05;
+  --typo-chiffre-m-graisse: 700;
+  --typo-chiffre-m-police: mono;
+
+  --typo-chiffre-l-taille: 1.875rem;
+  --typo-chiffre-l-interligne: 1;
+  --typo-chiffre-l-graisse: 700;
+  --typo-chiffre-l-police: mono;
+
+  --typo-pochoir-s-taille: 1.1875rem;
+  --typo-pochoir-s-interligne: 1;
+  --typo-pochoir-s-police: pochoir;
+
+  --typo-pochoir-m-taille: 1.5rem;
+  --typo-pochoir-m-interligne: 1;
+  --typo-pochoir-m-police: pochoir;
+
+  --typo-titre-m-taille: 2.125rem;
+  --typo-titre-m-interligne: 0.95;
+  --typo-titre-m-police: pochoir;
+
+  --typo-titre-l-taille: 2.875rem;
+  --typo-titre-l-interligne: 0.95;
+  --typo-titre-l-police: pochoir;
+
+  /* ── Espacements ────────────────────────────────────────────────────────── */
+
+  --espacement-ras: 3px;
+  --espacement-fin: 5px;
+  --espacement-court: 7px;
+  --espacement-moyen: 9px;
+  --espacement-ample: 11px;
+  --espacement-aise: 13px;
+  --espacement-large: 16px;
+  --espacement-guichet: 18px;
+  --espacement-comptoir: 20px;
+
+  /* ── Traits ─────────────────────────────────────────────────────────────── */
+
+  --trait-fin: 1.5px;
+  --trait-normal: 2px;
+  --trait-fort: 2.5px;
+  --trait-cadre: 3px;
+
+  /* ── Ombres ─────────────────────────────────────────────────────────────── */
+
+  /*
+   * Aucune ombre floue, jamais. Le décalage dur est de la matière, pas de la
+   * profondeur — c'est la note du dossier, et c'est ce qui fait tenir le mode
+   * contrastes forcés : une ombre y disparaît sans rien emporter.
+   */
+  --ombre-tampon: 5px 5px 0 #1b2220;
+  --ombre-tampon-lg: 6px 6px 0 #1b2220;
+  --ombre-tampon-doux: 4px 4px 0 rgba(27, 34, 32, 0.35);
+  --ombre-pupitre: 0 6px 0 #96a09b;
+  --ombre-pupitre-sm: 0 4px 0 #4a5450;
+  --ombre-batiment: inset 0 0 0 3px #1b2220;
+  --ombre-visee: inset 0 0 0 5px #1b2220;
+  --ombre-visee-nuit: inset 0 0 0 5px #e8b21c;
+
+  /* ── Arrondis ───────────────────────────────────────────────────────────── */
+
+  --arrondi-aucun: 0;
+  --arrondi-jeton: 9999px;
+
+  /* ── Rotations ──────────────────────────────────────────────────────────── */
+
+  /*
+   * Jamais sur un bloc de texte long, jamais au focus, jamais animée (FR-032).
+   * `--rotation-tampon` dépasse le plafond de 1,5° : c'est l'exception assumée du
+   * tampon décoratif, qui ne porte aucune information et est `aria-hidden`.
+   */
+  --rotation-plafond: 1.5deg;
+  --rotation-rature: -1.1deg;
+  --rotation-etiquette: -0.6deg;
+  --rotation-etiquette-inverse: 0.5deg;
+  --rotation-tampon: -5deg;
+
+  /* ── Cibles tactiles ────────────────────────────────────────────────────── */
+
+  --cible-minimum: 44px;
+  --cible-effectif: 48px;
+
+  /* ═══════════════════════════════════════════════════════════════════════════
+   * Ce que le jeu de valeurs porte **en plus** du dossier
+   *
+   * Cinq familles, chacune exigée par l'implémentation et absente du prototype
+   * (data-model § 1.2). Elles sont ici et non dans `tokens.json`, qui reste la
+   * copie fidèle de ce qui a été livré — donc la traçabilité de ce qui a été
+   * décidé et de ce qui a été corrigé.
+   * ═══════════════════════════════════════════════════════════════════════════ */
+
+  /* ── 1. Les piles de repli de police ────────────────────────────────────── */
+
+  /*
+   * Le cas limite « les polices ne se chargent pas » est nommé par la
+   * spécification : chaque famille a donc son repli, et la mise en page ne s'y
+   * disloque pas. Les replis suivent la métrique, pas le goût — Archivo Narrow
+   * retombe sur Archivo avant `system-ui`, le pochoir retombe sur l'étroit.
+   */
+  --police-ui: "Archivo", system-ui, sans-serif;
+  --police-etroit: "Archivo Narrow", "Archivo", system-ui, sans-serif;
+  --police-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --police-pochoir: "Saira Stencil One", "Archivo Narrow", "Archivo", system-ui, sans-serif;
+
+  /* ── 2. Le pas typographique que le dossier ne porte pas ────────────────── */
+
+  /*
+   * Le **débit horaire** était en chasse fixe à 9,5 px, sous tous les planchers,
+   * alors que FR-002 range tout chiffre dans la famille tabulaire. `chiffre-xs`
+   * le range où il appartient : information, donc 14 px.
+   */
+  --typo-chiffre-xs-taille: 0.875rem;
+  --typo-chiffre-xs-interligne: 1.05;
+  --typo-chiffre-xs-graisse: 700;
+  --typo-chiffre-xs-police: mono;
+
+  /* ── 3. L'interlettrage resserré du pas `label` ─────────────────────────── */
+
+  /*
+   * **Une valeur opérante que le dossier ne porte pas**, consignée au titre de
+   * FR-001a avant d'être appliquée (verdicts.md).
+   *
+   * `--typo-label-interlettre` transcrit fidèlement le `.16em` du dossier, et
+   * reste donc au-dessus. Mais à 12 px — le pas `label` relevé à son plancher
+   * d'intitulé —, `.16em` sur des capitales fait déborder « CAMELOTE » de son
+   * étiquette à 320 px. Les intitulés emploient donc la valeur resserrée, et le
+   * `.16em` d'origine demeure lisible à côté d'elle : c'est ce qui rend l'écart
+   * constatable plutôt que perdu dans un diff.
+   */
+  --typo-label-interlettre-resserre: 0.1em;
+
+  /* ── 4. Le budget de largeur de la grille (R9) ──────────────────────────── */
+
+  /*
+   * **Le budget qui rend SC-001 vrai**, et il est calculé, pas décrété.
+   *
+   * Le calcul livré par le dossier — rembourrage 15 px, gouttière 5 px, bande
+   * 16 px — donne 38,8 px de côté à 320 px, c'est-à-dire **sous** le plancher de
+   * 44 px de FR-014. Le conflit est arithmétique. Il se résout en resserrant le
+   * décor, jamais en rognant la case : le décor est ce qui peut céder, la cible
+   * tactile est ce qui ne le peut pas.
+   *
+   *   Poste                              ≥ 360 px    à 320 px
+   *   rembourrage d'écran, deux côtés       30          12
+   *   bande de coordonnées                  16          14
+   *   encadrement de la grille, deux côtés   6           5
+   *   rembourrage de la grille, deux côtés  10           6
+   *   gouttières, cinq                      25          15
+   *   reste pour six cases                 273         268
+   *   côté d'une case                     45,5        44,7
+   *
+   * Les valeurs sont écrites en clair et non par `var()` sur les espacements :
+   * un budget doit s'additionner à la lecture, et le masquer derrière des alias
+   * rendrait la somme invérifiable d'un coup d'œil. **Ce qui ne cède pas** : les
+   * bandes de coordonnées restent affichées à 320 px — les masquer aurait libéré
+   * quatorze pixels et violé FR-016, qui n'admet pas de palier.
+   */
+  --grille-rembourrage-ecran: 15px;
+  --grille-bande: 16px;
+  --grille-encadrement: 3px;
+  --grille-rembourrage: 5px;
+  --grille-gouttiere: 5px;
+
+  /* Le côté minimal d'une case : la cible la plus sollicitée du jeu (INV-C2). */
+  --case-cote-min: 44px;
+
+  /* ── 5. Le côté résiduel de `.sr-only` ──────────────────────────────────── */
+
+  /*
+   * Une **constante de technique**, non une valeur de dessin : le pixel résiduel
+   * qui garde un texte réservé aux lecteurs d'écran dans l'arbre d'accessibilité
+   * sans qu'il occupe la mise en page.
+   *
+   * Elle est nommée ici plutôt qu'écrite dans `base.css` parce qu'une porte sans
+   * exception vaut mieux qu'un débat sur la frontière entre « valeur visuelle » et
+   * « constante de technique » : la première exception admise en ouvrirait une
+   * seconde, et un liseré en dur passerait sous le même argument.
+   */
+  --sr-only-cote: 1px;
+
+  /* ── 6. La géométrie du guichet ─────────────────────────────────────────── */
+
+  /*
+   * Les trois colonnes du guichet, et les deux dimensions du bandeau de ressource
+   * qu'elles imposent. Elles viennent du dossier de design — « une grille
+   * `268px 1fr 320px` », « bandeaux horizontaux `min-height: 66px` », « colonne de
+   * glyphe 60px » — et n'ont pas de nom dans `tokens.json`, qui ne porte que des
+   * valeurs d'échelle.
+   *
+   * Elles sont ici plutôt que dans `parcelle.css` pour la même raison que tout le
+   * reste : la porte de non-régression refuse une longueur littérale hors de ce
+   * fichier, et elle a raison de la refuser — une largeur de colonne écrite dans une
+   * feuille est une valeur qu'on ne retrouve plus quand elle doit bouger.
+   */
+  --guichet-gauche: 268px;
+  --guichet-droite: 320px;
+  --comptoir-bandeau: 66px;
+  --comptoir-aplat: 60px;
+
+  /* ── 7. Les paliers de bascule ──────────────────────────────────────────── */
+
+  /*
+   * Deux paliers, et **un seul change la disposition** (FR-007). Le second ne
+   * fait que resserrer le décor selon le budget ci-dessus.
+   *
+   * La syntaxe des requêtes de média n'évalue pas `var()` : ces jetons ne sont
+   * pas *employés* par les `@media`, ils les **tiennent**. La porte de
+   * non-régression vérifie que tout seuil écrit dans une `@media` correspond à un
+   * palier déclaré ici, de sorte qu'un troisième palier ne puisse pas arriver en
+   * silence.
+   */
+  --palier-etroit: 360px;
+  --palier-guichet: 900px;
+
+  /*
+   * **Un troisième seuil, qui ne contredit pas le palier *unique* de FR-007.**
+   *
+   * FR-007 porte sur la **disposition de l'écran** : elle bascule à un seul endroit,
+   * `--palier-guichet`, et le parcours le vérifie en comptant les colonnes de
+   * l'écran de 320 à 1180 px. Les deux autres seuils ne la touchent pas :
+   * `--palier-etroit` resserre le décor selon le budget de R9, et celui-ci fait
+   * passer une **liste de définitions** de une à deux colonnes.
+   *
+   * Il ne concerne que les deux écrans que la Régie ne remaquette pas —
+   * l'authentification et la page de règles. À 320 px, un terme et sa valeur côte à
+   * côte ne laissent la place ni à l'un ni à l'autre ; c'est le constat de 001, et
+   * il tient toujours.
+   */
+  --palier-liste: 480px;
+}
+
+/*
+ * Le décor resserré sous 360 px — la seconde colonne du budget de R9.
+ *
+ * La porte de conformité ne lit que le **premier** bloc `:root` : ces
+ * redéclarations sont des valeurs opérantes de la tranche, pas des valeurs du
+ * dossier, et les mêler ferait comparer la valeur resserrée à celle du dossier.
+ */
+@media (width < 360px) {
+  :root {
+    --grille-rembourrage-ecran: 6px;
+    --grille-bande: 14px;
+    --grille-encadrement: 2.5px;
+    --grille-rembourrage: 3px;
+    --grille-gouttiere: 3px;
+  }
+}

@@ -47,8 +47,8 @@ const VALID_SQUARE = {
 describe('l’annonce porte les six informations de FR-059', () => {
   const spoken = announce(VALID_SQUARE)
 
-  it('dit la position, en base 1', () => {
-    expect(spoken).toContain('Colonne 1, rangée 5')
+  it('dit la position, par son adresse courte', () => {
+    expect(spoken).toContain('A5')
   })
 
   /**
@@ -146,7 +146,7 @@ describe('un refus est annoncé avec son motif et ses cases fautives (FR-013, FR
     })
     expect(spoken).toMatch(/refusé/i)
     expect(spoken).toMatch(/hors de la grille/i)
-    expect(spoken).toContain('Colonne 7, rangée 6')
+    expect(spoken).toContain('G6')
   })
 
   it('nomme l’obstruction et la case', () => {
@@ -155,7 +155,7 @@ describe('un refus est annoncé avec son motif et ses cases fautives (FR-013, FR
       check: { kind: 'obstructed', cells: [{ x: 0, y: 2 }] },
     })
     expect(spoken).toMatch(/obstruée/i)
-    expect(spoken).toContain('Colonne 1, rangée 3')
+    expect(spoken).toContain('A3')
   })
 
   it('nomme l’occupation et la case', () => {
@@ -164,7 +164,7 @@ describe('un refus est annoncé avec son motif et ses cases fautives (FR-013, FR
       check: { kind: 'occupied', cells: [{ x: 1, y: 5 }] },
     })
     expect(spoken).toMatch(/occupée/i)
-    expect(spoken).toContain('Colonne 2, rangée 6')
+    expect(spoken).toContain('B6')
   })
 
   it('énumère plusieurs cases fautives', () => {
@@ -178,8 +178,8 @@ describe('un refus est annoncé avec son motif et ses cases fautives (FR-013, FR
         ],
       },
     })
-    expect(spoken).toContain('Colonne 1, rangée 3')
-    expect(spoken).toContain('Colonne 2, rangée 3')
+    expect(spoken).toContain('A3')
+    expect(spoken).toContain('B3')
   })
 
   /**
@@ -220,7 +220,7 @@ describe('sans empreinte sélectionnée, l’annonce se borne à la case', () =>
       coveredDeposits: 0,
     })
 
-    expect(spoken).toContain('Colonne 4, rangée 1')
+    expect(spoken).toContain('D1')
     expect(spoken).toMatch(/éboulis/i)
     expect(spoken).toMatch(/aucune empreinte/i)
     expect(spoken).not.toMatch(/orientation/i)

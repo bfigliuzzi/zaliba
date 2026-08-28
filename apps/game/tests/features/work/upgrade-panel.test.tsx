@@ -95,9 +95,10 @@ describe('l’aperçu porte les cinq grandeurs de FR-041', () => {
 
     expect(preview).toMatch(/mine/i)
     expect(preview).toMatch(/niveau 1/i)
-    // La position, en base 1 : « (0,4) » se déchiffre, « colonne 1, rangée 5 » se
-    // dit. C'est la même table de libellés que la grille et l'annonce.
-    expect(preview).toMatch(/colonne 1, rangée 5/i)
+    // L'adresse courte : « (0,4) » se déchiffre, « A5 » se dit — et se dit en une
+    // syllabe, là où « colonne 1, rangée 5 » en prend sept (R7, FR-016). C'est la
+    // même fonction que la grille et l'annonce : l'adresse est la même partout.
+    expect(preview).toContain('A5')
   })
 
   it('affiche le coût, la durée, les deux productions et leur différence', () => {

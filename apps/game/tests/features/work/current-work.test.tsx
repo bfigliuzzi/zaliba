@@ -74,12 +74,22 @@ describe('avec un chantier, les trois informations de FR-038 sont là', () => {
     const shown = screen.getByRole('group', { name: /chantier/i }).textContent ?? ''
     expect(shown).toMatch(/Mine/)
     expect(shown).toMatch(/carré de quatre/i)
-    expect(shown).toContain('Colonne 1, rangée 5')
+    expect(shown).toContain('A5')
   })
 
-  it('donne le temps restant en clair', () => {
+  /**
+   * *Réécrit par 002.* L'attente portait « 2 min », que `formatDuration` rendait
+   * pour 90 secondes. FR-009 exige le format **`HH:MM:SS`**, et le motif n'est pas
+   * cosmétique : le chrono est la seule grandeur de l'écran qui bouge à la
+   * seconde, et l'arrondir à la minute la rendait immobile — un joueur qui revient
+   * ne voyait plus que le temps passe.
+   *
+   * Cette attente n'apparaît dans la liste d'aucune tâche : T017 ne relevait que
+   * les assertions de **position**, et celle-ci porte sur une durée.
+   */
+  it('donne le temps restant au format HH:MM:SS', () => {
     render(<CurrentWork work={work({ remaining: duration(90) })} buildings={[]} />)
-    expect(screen.getByRole('group', { name: /chantier/i }).textContent).toMatch(/2 min/)
+    expect(screen.getByRole('group', { name: /chantier/i }).textContent).toMatch(/00:01:30/)
   })
 
   /**
@@ -110,7 +120,7 @@ describe('les autres natures ont leur libellé et leur cible', () => {
     )
     const shown = screen.getByRole('group', { name: /chantier/i }).textContent ?? ''
     expect(shown).toMatch(/déblaiement/i)
-    expect(shown).toContain('Colonne 4, rangée 3')
+    expect(shown).toContain('D3')
   })
 
   it.each([
@@ -147,7 +157,7 @@ describe('les autres natures ont leur libellé et leur cible', () => {
     expect(shown).toMatch(/niveau 3/i)
     // La position est énoncée en minuscule initiale : elle est ici au milieu
     // d'une phrase, là où la cible d'une pose la commence.
-    expect(shown).toMatch(/colonne 1, rangée 5/i)
+    expect(shown).toContain('A5')
   })
 
   /**

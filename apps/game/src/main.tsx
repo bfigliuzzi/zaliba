@@ -4,6 +4,24 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { createPlanetGateway } from './lib/planetGateway.js'
 import './styles.css'
+/*
+ * **Le système visuel après la géométrie de 001**, et l'ordre est le sujet.
+ *
+ * `styles.css` porte la géométrie qui fait tenir SC-009 de 001 ; les feuilles de
+ * la Régie la reprennent bloc par bloc, au fil des six histoires. Les importer
+ * **après** fait qu'à specificité égale ce sont elles qui gagnent, et que ce que
+ * 002 n'a pas encore repris reste en place plutôt que de disparaître entre deux
+ * tâches. T099 réduit `styles.css` à ce qui subsiste réellement.
+ *
+ * `tokens.css` avant `base.css` : le second n'écrit que des `var()`, et lire les
+ * valeurs avant les règles qui les emploient est ce qui rend le fichier relisible
+ * — la cascade, elle, s'en moque.
+ */
+import './design/fonts.js'
+import './design/tokens.css'
+import './design/base.css'
+import './design/regie.css'
+import './design/parcelle.css'
 import { createGameSession } from './lib/supabase.js'
 import { createAppRouter } from './router.js'
 

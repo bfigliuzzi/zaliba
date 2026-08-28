@@ -4,7 +4,19 @@
     "noEmit": true,
     "lib": ["ES2023", "DOM", "DOM.Iterable"],
     "jsx": "react-jsx",
-    "types": ["vite/client"]
+    /*
+     * `node` s'ajoute à `vite/client` pour les **portes du jeu de valeurs** :
+     * `tests/design/*` lisent `tokens.json` et parcourent `src/**` sur le disque,
+     * donc `node:fs` et `node:path`. Elles tournent dans le projet Vitest `game`,
+     * en environnement node.
+     *
+     * Élargir `types` élargit aussi ce que `src/**` **pourrait** importer — et un
+     * module Node dans un paquet destiné au navigateur est une faute qui ne se
+     * verrait qu'à la compilation. La règle `game-src-sans-module-node` de
+     * `.dependency-cruiser.cjs` la refuse donc explicitement : la porte 3 tient ce
+     * que le typage a cessé de tenir.
+     */
+    "types": ["vite/client", "node"]
   },
   "include": ["src", "tests"]
 }

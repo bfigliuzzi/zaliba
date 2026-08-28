@@ -15,6 +15,7 @@
       "!**/playwright-report",
       "!**/test-results",
       "!packages/db/migrations",
+      "!docs/design/2026-08-27-regie-approximative",
       "!**/*.contract.json",
       "!.specify",
       "!.claude"

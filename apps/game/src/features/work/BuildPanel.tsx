@@ -56,10 +56,8 @@ export interface BuildPanelProps {
    */
   readonly availability: PlacementAvailability | null
   /** Vrai pendant que la commande est en vol : le bouton ne se clique qu'une fois. */
-  readonly pending: boolean
   readonly onSelectType: (typeId: BuildingTypeId) => void
   readonly onSelectVariant: (variantId: FootprintId) => void
-  readonly onConfirm: () => void
 }
 
 export function BuildPanel({
@@ -68,10 +66,8 @@ export function BuildPanel({
   preview,
   occupancy,
   availability,
-  pending,
   onSelectType,
   onSelectVariant,
-  onConfirm,
 }: BuildPanelProps) {
   const typeName = useId()
   const variantName = useId()
@@ -126,11 +122,26 @@ export function BuildPanel({
 
       <BuildPreview preview={preview} availability={availability} />
 
-      {selection.typeId !== null && (
-        <button type="button" onClick={onConfirm} disabled={pending} aria-busy={pending}>
-          {pending ? 'Lancement de la construction…' : 'Lancer la construction'}
-        </button>
-      )}
+      {/*
+        **Le bouton de confirmation a quitté ce panneau avec 002.**
+
+        Le § 6 du contrat d'interface nomme **une** commande de pose — `JE POSE ÇA` —
+        et conclut « aucune autre commande n'existe ». Deux boutons visibles qui
+        posent sont deux commandes de pose : le second était celui de 001, sous un
+        autre libellé, et le garder aurait laissé le joueur choisir entre deux
+        chemins pour le même effet.
+
+        Il vit désormais dans `features/regie/BarreDActions.tsx`, avec `Pivoter` et
+        `Annuler` que FR-020 exige à ses côtés. **Et les propriétés `onConfirm` et
+        `pending` sont parties avec lui** : elles ne servaient que ce bouton, et les
+        garder aurait laissé deux propriétés mortes que le prochain lecteur aurait
+        crues employées (principe V). L'écran les passe désormais à la barre
+        d'actions, qui est ce qui les emploie.
+
+        **Et cela retire deux arrêts de tabulation avant le sélecteur de type**, ce qui
+        est ce qui fait tenir le compte de frappes de SC-001 de 001 malgré le
+        déplacement du panneau après la grille (R16).
+      */}
     </div>
   )
 }
@@ -348,15 +359,22 @@ function BuildPreview({
  * paient pas le même prix. Un « la grille est pleine » sans chiffres laisserait le
  * joueur chercher par où sortir.
  *
- * `role="status"` et non `alert` : c'est un état de la planète, pas un incident.
- * Une alerte interromprait le lecteur d'écran pour une situation que le joueur a
- * lui-même construite, coup par coup.
+ * **Aucune région d'annonce ici, depuis 002** (FR-022, INV-N1). Ce paragraphe
+ * portait `role="status"`, donc une **seconde** région polie sur l'écran de
+ * parcelle — en concurrence avec celle du curseur. Deux régions polies se disputent
+ * l'ordre de restitution, et le joueur entend l'une des deux sans savoir laquelle.
+ *
+ * L'information n'est pas perdue, ni à l'œil ni à l'oreille : le paragraphe reste
+ * **visible et lisible**, et l'annonce unique porte le fait au moment où il devient
+ * vrai — quand une pose vient d'occuper la dernière case libre, sous l'origine
+ * `pose-acceptee`, qui est exactement l'événement qui l'a produit. L'annoncer à
+ * chaque rendu de l'écran l'aurait répété sans qu'il se passe rien.
  */
 function FullGridNotice({ occupancy }: { readonly occupancy: GridOccupancy }) {
   if (!occupancy.full) return null
 
   return (
-    <p role="status">
+    <p>
       La grille est entièrement occupée : {formatWhole(occupancy.occupied)} cases sous bâtiment,{' '}
       {formatWhole(occupancy.obstructed)} sous obstacle, aucune libre. Seules la démolition et le
       déblaiement peuvent libérer de la place.

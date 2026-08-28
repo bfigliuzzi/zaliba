@@ -1,9 +1,7 @@
+import { DEFAULT_CATALOGS } from '@zaliba/domain'
 import { describe, expect, it } from 'vitest'
-import {
-  type GhostState,
-  ghostMarkOf,
-  ghostSuffix,
-} from '../../../src/features/grid/FootprintGhost.js'
+import { appearanceOf } from '../../../src/features/grid/appearance.js'
+import { type GhostState, ghostMarkOf } from '../../../src/features/grid/FootprintGhost.js'
 
 /**
  * Le fantôme de l'empreinte : quelle case porte quelle marque.
@@ -13,8 +11,16 @@ import {
  * et le joueur saurait que quelque chose ne va pas sans savoir *où* — ce qui est
  * exactement ce que FR-013 refuse.
  *
- * Le suffixe accessible est l'autre moitié de FR-060 : la marque se voit en noir
- * et blanc *et* s'entend. Une teinte seule ne remplacerait ni l'un ni l'autre.
+ * **Le suffixe accessible a disparu avec 002.** `ghostSuffix` rendait
+ * « , sous l'empreinte, placement refusé » ; le § 2.3 du contrat d'interface
+ * prescrit désormais une **grammaire** — implémentée une fois dans `describeCell`,
+ * et exercée sur ses onze exemples normatifs par `tests/lib/labels.test.ts`. Garder
+ * les deux aurait laissé deux façons de nommer une case visée, dont une que le
+ * contrat ne prescrit plus.
+ *
+ * Ce qui subsiste ici est donc la **précédence** — la seule propriété que
+ * `ghostMarkOf` porte —, plus la vérification que la moitié audible de FR-012 a
+ * bien trouvé son nouveau porteur.
  */
 
 const cell = (x: number, y: number) => ({ x, y })
@@ -71,24 +77,57 @@ describe('la marque d’une case sous le fantôme', () => {
   })
 })
 
-describe('le suffixe accessible dit la même chose que la marque (FR-060)', () => {
-  it('donne trois textes distincts pour trois marques distinctes', () => {
-    const suffixes = [ghostSuffix('valid'), ghostSuffix('invalid'), ghostSuffix('faulty')]
-    expect(new Set(suffixes).size).toBe(3)
+/**
+ * *Réécrit par 002.* Ce bloc éprouvait `ghostSuffix`, que la grammaire du § 2.3 a
+ * remplacé. Il éprouve désormais **la même exigence sur son nouveau porteur** : la
+ * marque du fantôme se voit *et* s'entend, et ce qu'on entend est la grammaire.
+ *
+ * L'exigence n'a pas disparu avec la fonction ; c'est pourquoi ce bloc reste.
+ */
+describe('la case visée s’entend autant qu’elle se voit (FR-012, FR-021)', () => {
+  const libre = {
+    x: 2,
+    y: 2,
+    state: 'free',
+    obstacleId: null,
+    depositOf: null,
+    buildingId: null,
+  } as const
+
+  const nommer = (valide: boolean, raison?: string) =>
+    appearanceOf(
+      libre,
+      [],
+      null,
+      {
+        cells: [cell(2, 2)],
+        fautives: valide ? [] : [cell(2, 2)],
+        valide,
+        ...(raison === undefined ? {} : { raison }),
+      },
+      DEFAULT_CATALOGS,
+    ).nomAccessible
+
+  it('nomme l’empreinte dans les deux cas', () => {
+    expect(nommer(true)).toMatch(/sous l’empreinte/)
+    expect(nommer(false, 'la case D3 est obstruée par un rocher')).toMatch(/sous l’empreinte/)
   })
 
-  it('nomme l’empreinte dans chacun', () => {
-    for (const mark of ['valid', 'invalid', 'faulty'] as const) {
-      expect(ghostSuffix(mark)).toMatch(/empreinte/i)
-    }
+  it('dit le refus **et sa raison**, non la seule position', () => {
+    const refuse = nommer(false, 'la case D3 est obstruée par un rocher')
+    expect(refuse).toMatch(/refusé/)
+    // Ce que 001 ne disait pas : *pourquoi*. Sans la cause, un joueur au clavier
+    // apprend le refus et essaie les trente-six cases.
+    expect(refuse).toMatch(/obstruée par un rocher/)
   })
 
-  it('dit le refus, et non la seule position', () => {
-    expect(ghostSuffix('invalid')).toMatch(/refusé/i)
-    expect(ghostSuffix('faulty')).toMatch(/fautive/i)
+  it('ne dit rien de l’empreinte hors d’elle', () => {
+    expect(appearanceOf(libre, [], null, null, DEFAULT_CATALOGS).nomAccessible).not.toMatch(
+      /empreinte/,
+    )
   })
 
-  it('reste vide hors de l’empreinte', () => {
-    expect(ghostSuffix(null)).toBe('')
+  it('donne deux phrases distinctes pour deux verdicts distincts', () => {
+    expect(nommer(true)).not.toBe(nommer(false, 'chevauche la Mine niveau 2 en D3'))
   })
 })
