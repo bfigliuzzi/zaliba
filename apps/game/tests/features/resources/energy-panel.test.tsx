@@ -1,10 +1,11 @@
 import { cleanup, render, screen, within } from '@testing-library/react'
-import { BUILDINGS } from '@zaliba/catalogs'
+import type { BuildingTypeId } from '@zaliba/catalogs'
 import { PlanetSnapshotV1 } from '@zaliba/contracts'
-import { DEFAULT_CATALOGS, instant, projectPlanet } from '@zaliba/domain'
+import { instant, projectPlanet } from '@zaliba/domain'
 import { afterEach, describe, expect, it } from 'vitest'
 import { EnergyPanel } from '../../../src/features/resources/EnergyPanel.js'
 import { snapshotFromContract } from '../../../src/features/resources/extrapolation.js'
+import { CATALOGS } from '../../catalogs.js'
 import rawFresh from '../../fixtures/planet-fresh.json' with { type: 'json' }
 
 /**
@@ -26,16 +27,15 @@ import rawFresh from '../../fixtures/planet-fresh.json' with { type: 'json' }
 
 afterEach(cleanup)
 
-const CATALOGS = DEFAULT_CATALOGS
 const payload = PlanetSnapshotV1.parse(rawFresh)
 
 let counter = 0
-function placed(typeId: keyof typeof BUILDINGS, anchor: { x: number; y: number }, level = 1) {
+function placed(typeId: BuildingTypeId, anchor: { x: number; y: number }, level = 1) {
   counter += 1
   return {
     id: `b-${counter}`,
     typeId,
-    variantId: BUILDINGS[typeId].variants[0] as string,
+    variantId: CATALOGS.buildings[typeId].variants[0] as string,
     orientation: 0,
     anchorX: anchor.x,
     anchorY: anchor.y,

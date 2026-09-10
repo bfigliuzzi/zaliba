@@ -1,7 +1,6 @@
-import { BUILDINGS } from '@zaliba/catalogs'
+import { BUILDING_TYPE_IDS, type BuildingTypeId } from '@zaliba/catalogs'
 import { describe, expect, it } from 'vitest'
 import { projectPlanet } from '../../../src/game.js'
-import { DEFAULT_CATALOGS } from '../../../src/kernel/catalogs.js'
 import { cumulativeCost } from '../../../src/kernel/curves.js'
 import type { CreditResources, RemoveBuilding, ScheduleWork } from '../../../src/kernel/effects.js'
 import type { ProjectedState } from '../../../src/kernel/projection.js'
@@ -21,6 +20,7 @@ import {
   grossRefund,
 } from '../../../src/modules/construction/demolish.js'
 import { previewDemolish } from '../../../src/modules/construction/preview.js'
+import { CATALOGS } from '../../catalogs.js'
 
 /**
  * La démolition : le second antidote à la grille figée.
@@ -49,7 +49,6 @@ import { previewDemolish } from '../../../src/modules/construction/preview.js'
  */
 
 const T0 = instant(1_787_750_000)
-const CATALOGS = DEFAULT_CATALOGS
 const WORK_ID = '99999999-9999-4999-8999-999999999999'
 const BUILDING_ID = '88888888-8888-4888-8888-888888888888'
 const OTHER_ID = '77777777-7777-4777-8777-777777777777'
@@ -95,8 +94,8 @@ function command(buildingId = BUILDING_ID): DemolishCommand {
  * (R19) et une troncature finale vers le bas : le joueur ne peut pas récupérer plus
  * qu'il n'a dépensé.
  */
-function expectedRefund(typeId: keyof typeof BUILDINGS, level: number): Record<string, number> {
-  const type = BUILDINGS[typeId]
+function expectedRefund(typeId: BuildingTypeId, level: number): Record<string, number> {
+  const type = CATALOGS.buildings[typeId]
   return Object.fromEntries(
     Object.entries(type.cost).map(([resourceId, curve]) => [
       resourceId,
@@ -133,7 +132,7 @@ describe('le remboursement est dérivé de la courbe, et non stocké (R9, FR-046
   })
 
   it('la fraction est appliquée en entiers, troncature vers le bas', () => {
-    for (const typeId of Object.keys(BUILDINGS) as readonly (keyof typeof BUILDINGS)[]) {
+    for (const typeId of BUILDING_TYPE_IDS) {
       for (const amount of grossRefund(typeId, 5, CATALOGS)) {
         expect(Number.isInteger(amount.grains)).toBe(true)
       }
@@ -141,8 +140,8 @@ describe('le remboursement est dérivé de la courbe, et non stocké (R9, FR-046
   })
 
   it('la durée est lue du catalogue, et ne dépend pas du niveau', () => {
-    for (const typeId of Object.keys(BUILDINGS) as readonly (keyof typeof BUILDINGS)[]) {
-      expect(demolishDuration(typeId, CATALOGS)).toBe(BUILDINGS[typeId].demolitionSeconds)
+    for (const typeId of BUILDING_TYPE_IDS) {
+      expect(demolishDuration(typeId, CATALOGS)).toBe(CATALOGS.buildings[typeId].demolitionSeconds)
     }
   })
 })
@@ -165,7 +164,7 @@ describe('decide() retourne des effets, et ne mute rien', () => {
     const scheduled = decision.effects[0] as ScheduleWork
     expect(scheduled.nature).toBe('demolish')
     expect(scheduled.target).toEqual({ kind: 'building', buildingId: BUILDING_ID })
-    expect(scheduled.dueAt).toBe(T0 + BUILDINGS.mine.demolitionSeconds)
+    expect(scheduled.dueAt).toBe(T0 + CATALOGS.buildings.mine.demolitionSeconds)
   })
 
   it('accepte même avec une trésorerie vide', () => {
@@ -210,7 +209,11 @@ describe('à l’achèvement, les cases redeviennent libres et les gisements son
     if (decision.outcome !== 'accepted') throw new Error('refus inattendu')
 
     const launched = applyEffects(withMine(), decision.effects, T0)
-    const after = projectPlanet(launched, CATALOGS, instant(T0 + BUILDINGS.mine.demolitionSeconds))
+    const after = projectPlanet(
+      launched,
+      CATALOGS,
+      instant(T0 + CATALOGS.buildings.mine.demolitionSeconds),
+    )
 
     expect(after.buildings).toHaveLength(0)
     for (const cell of [
@@ -259,7 +262,7 @@ describe('à l’achèvement, les cases redeviennent libres et les gisements son
     if (decision.outcome !== 'accepted') throw new Error('refus inattendu')
 
     const launched = applyEffects(withMine(), decision.effects, T0)
-    const due = T0 + BUILDINGS.mine.demolitionSeconds
+    const due = T0 + CATALOGS.buildings.mine.demolitionSeconds
     const step = 3_600
 
     const at1 = projectPlanet(launched, CATALOGS, instant(due + step))
@@ -288,9 +291,13 @@ describe('à l’achèvement, les cases redeviennent libres et les gisements son
     const before = projectPlanet(
       launched,
       CATALOGS,
-      instant(T0 + BUILDINGS.mine.demolitionSeconds - 1),
+      instant(T0 + CATALOGS.buildings.mine.demolitionSeconds - 1),
     )
-    const after = projectPlanet(launched, CATALOGS, instant(T0 + BUILDINGS.mine.demolitionSeconds))
+    const after = projectPlanet(
+      launched,
+      CATALOGS,
+      instant(T0 + CATALOGS.buildings.mine.demolitionSeconds),
+    )
 
     const refund = expectedRefund('mine', 3)['bave-etoiles'] as number
     // La Bave d'étoiles est choisie parce que la mine n'en produit pas : la seule
@@ -405,8 +412,8 @@ describe('l’aperçu annonce les cinq grandeurs de la démolition (FR-046, FR-0
     // qu'il ne détruit pas la veine en démolissant l'extracteur (FR-020, FR-047).
     expect(effect.depositsPreserved).toEqual([{ x: 0, y: 4, depositOf: 'camelote' }])
 
-    expect(duration).toBe(BUILDINGS.mine.demolitionSeconds)
-    expect(dueAt).toBe(T0 + BUILDINGS.mine.demolitionSeconds)
+    expect(duration).toBe(CATALOGS.buildings.mine.demolitionSeconds)
+    expect(dueAt).toBe(T0 + CATALOGS.buildings.mine.demolitionSeconds)
     // La démolition ne coûte rien : les termes communs le disent en toutes lettres.
     expect(cost).toEqual([])
     expect(preview.preview.shortfall).toBeNull()

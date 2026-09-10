@@ -1,7 +1,6 @@
-import { BUILDINGS } from '@zaliba/catalogs'
+import type { BuildingTypeId } from '@zaliba/catalogs'
 import { describe, expect, it } from 'vitest'
 import { projectPlanet } from '../../../src/game.js'
-import { DEFAULT_CATALOGS } from '../../../src/kernel/catalogs.js'
 import { evaluateCurve } from '../../../src/kernel/curves.js'
 import type { ScheduleWork } from '../../../src/kernel/effects.js'
 import type { ProjectedState } from '../../../src/kernel/projection.js'
@@ -19,6 +18,7 @@ import {
   decideBuild,
 } from '../../../src/modules/construction/build.js'
 import { previewBuild } from '../../../src/modules/construction/preview.js'
+import { CATALOGS } from '../../catalogs.js'
 
 /**
  * Le module de construction : la première mécanique du jeu.
@@ -43,7 +43,6 @@ import { previewBuild } from '../../../src/modules/construction/preview.js'
  */
 
 const T0 = instant(1_787_750_000)
-const CATALOGS = DEFAULT_CATALOGS
 const WORK_ID = '99999999-9999-4999-8999-999999999999'
 
 function fresh(): PlanetSnapshot {
@@ -75,9 +74,9 @@ function command(overrides: Partial<BuildCommand> = {}): BuildCommand {
 }
 
 /** Le coût du niveau 1, recalculé depuis la courbe — jamais recopié. */
-function expectedCost(typeId: keyof typeof BUILDINGS): Record<string, number> {
+function expectedCost(typeId: BuildingTypeId): Record<string, number> {
   return Object.fromEntries(
-    Object.entries(BUILDINGS[typeId].cost).map(([resourceId, curve]) => [
+    Object.entries(CATALOGS.buildings[typeId].cost).map(([resourceId, curve]) => [
       resourceId,
       evaluateCurve(curve, 1),
     ]),
@@ -126,7 +125,7 @@ describe('decide() retourne des effets, et ne mute rien', () => {
     const scheduled = decision.effects.find(
       (effect): effect is ScheduleWork => effect.kind === 'schedule-work',
     )
-    const duration = evaluateCurve(BUILDINGS.mine.buildDuration, 1)
+    const duration = evaluateCurve(CATALOGS.buildings.mine.buildDuration, 1)
 
     expect(scheduled?.nature).toBe('build')
     expect(scheduled?.startedAt).toBe(T0)
@@ -305,7 +304,7 @@ describe('une variante étrangère au type est refusée (FR-009)', () => {
   })
 
   it('accepte chacune des trois variantes de la mine', () => {
-    for (const variantId of BUILDINGS.mine.variants) {
+    for (const variantId of CATALOGS.buildings.mine.variants) {
       const decision = decideBuild(
         stateOf(fresh()),
         command({ variantId, anchor: { x: 3, y: 3 } }),
@@ -362,7 +361,7 @@ describe('preview() annonce tout ce que FR-050 exige, avant la décision', () =>
     expect(result.outcome).toBe('accepted')
     if (result.outcome !== 'accepted') return
 
-    const duration = evaluateCurve(BUILDINGS.mine.buildDuration, 1)
+    const duration = evaluateCurve(CATALOGS.buildings.mine.buildDuration, 1)
     expect(Object.fromEntries(result.preview.cost.map((a) => [a.resourceId, a.grains]))).toEqual(
       expectedCost('mine'),
     )
@@ -374,7 +373,7 @@ describe('preview() annonce tout ce que FR-050 exige, avant la décision', () =>
     const result = previewBuild(stateOf(fresh()), command(), CATALOGS)
     if (result.outcome !== 'accepted') throw new Error('refus inattendu')
 
-    const curve = BUILDINGS.mine.production
+    const curve = CATALOGS.buildings.mine.production
     expect(curve).not.toBeNull()
     if (curve === null) return
 
@@ -552,7 +551,7 @@ describe('les coûts et durées se lisent du catalogue, niveau par niveau', () =
   it('rend le coût du niveau demandé', () => {
     const level = 3
     const expected = Object.fromEntries(
-      Object.entries(BUILDINGS.mine.cost).map(([resourceId, curve]) => [
+      Object.entries(CATALOGS.buildings.mine.cost).map(([resourceId, curve]) => [
         resourceId,
         evaluateCurve(curve, level),
       ]),
@@ -565,7 +564,9 @@ describe('les coûts et durées se lisent du catalogue, niveau par niveau', () =
   })
 
   it('rend la durée du niveau demandé', () => {
-    expect(buildDuration('mine', 4, CATALOGS)).toBe(evaluateCurve(BUILDINGS.mine.buildDuration, 4))
+    expect(buildDuration('mine', 4, CATALOGS)).toBe(
+      evaluateCurve(CATALOGS.buildings.mine.buildDuration, 4),
+    )
   })
 
   /**

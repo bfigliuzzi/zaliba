@@ -30,7 +30,6 @@ export interface PlanetRouteDependencies {
   readonly sql: GameSql
   readonly authenticator: Authenticator
   readonly catalogs: Catalogs
-  readonly catalogVersion: string
   readonly newId?: () => string
 }
 
@@ -158,6 +157,6 @@ function respond(
   status: 200 | 201,
 ) {
   const snapshot = toSnapshot(record, deps.catalogs)
-  const body = PlanetSnapshotV1.parse(toContract(snapshot, at, deps.catalogVersion))
+  const body = PlanetSnapshotV1.parse(toContract(snapshot, at, deps.catalogs))
   return reply.status(status).send(body)
 }

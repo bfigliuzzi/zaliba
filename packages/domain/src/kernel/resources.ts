@@ -22,7 +22,20 @@ declare const rateBrand: unique symbol
 /** Une quantité, en sous-unités de 1/3600 d'unité. */
 export type Grains = number & { readonly [grainsBrand]: true }
 
-/** Un taux de production, en unités par heure. */
+/**
+ * Un taux de production, en unités par heure — soit, numériquement, un **grain
+ * par seconde** : `GRAINS_PER_UNIT = 3600` fait tomber la division (R1).
+ *
+ * **Ce type n'a pas changé avec 003, et c'est voulu.** Le catalogue déclare
+ * désormais ses productions en **grains par gong**, mais un catalogue déclaré
+ * n'atteint jamais ce fichier : `resolveCatalogs` divise par la longueur du gong
+ * et ne produit que des entiers de grains par seconde — une longueur qui ne le
+ * permettrait pas refuse le démarrage. Ce que la projection multiplie par des
+ * secondes est donc exactement ce qu'il a toujours été.
+ *
+ * Renommer ce type aurait suivi le catalogue au lieu de suivre l'arithmétique,
+ * et aurait rouvert `projection.ts` pour un changement de mot.
+ */
 export type RatePerHour = number & { readonly [rateBrand]: true }
 
 /**

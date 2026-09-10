@@ -4,6 +4,7 @@ import type { PlanetSnapshotV1 } from '@zaliba/contracts'
 import type {
   BuildCommand,
   BuildingView,
+  Catalogs,
   CellView,
   ClearPreviewResult,
   DemolishPreviewResult,
@@ -11,7 +12,6 @@ import type {
   UpgradePreviewResult,
 } from '@zaliba/domain'
 import {
-  DEFAULT_CATALOGS,
   gridOccupancy,
   layoutOf,
   placementAvailability,
@@ -50,6 +50,7 @@ import { CurrentWork } from '../features/work/CurrentWork.js'
 import { DemolishPanel } from '../features/work/DemolishPanel.js'
 import { RefusalNotice } from '../features/work/RefusalNotice.js'
 import { UpgradePanel } from '../features/work/UpgradePanel.js'
+import { resolvedCatalogs } from '../lib/catalogs.js'
 import { createClock } from '../lib/clock.js'
 import { ARCHETYPE_LABELS, describePosition, RESOURCE_LABELS } from '../lib/labels.js'
 import { PlanetRefusal } from '../lib/planetGateway.js'
@@ -143,7 +144,46 @@ export interface PlanetScreenProps {
   readonly onSnapshot?: (snapshot: PlanetSnapshotV1) => void
 }
 
-export function PlanetScreen({ snapshot, gateway, onSnapshot }: PlanetScreenProps) {
+/**
+ * **Le garde-fou du rythme** (FR-013, G9).
+ *
+ * Tout l'écran de planète est dérivé : durées de chantier, taux de production,
+ * temps avant saturation, compteurs extrapolés. Sans la longueur du gong du
+ * serveur, rien de tout cela n'est calculable — et se replier sur une valeur par
+ * défaut afficherait des chiffres d'apparence exacte pour un monde peut-être
+ * différent.
+ *
+ * Le garde-fou vit **avant** le corps de l'écran plutôt qu'en son sein, et c'est
+ * une contrainte de React autant qu'une clarté : les crochets d'un composant
+ * s'appellent inconditionnellement, donc un écran qui déciderait en son milieu
+ * de ne rien dériver appellerait quand même tous les siens sur un catalogue
+ * absent.
+ */
+export function PlanetScreen(props: PlanetScreenProps) {
+  const catalogs = resolvedCatalogs(props.snapshot.gong)
+
+  if (catalogs === null) {
+    return (
+      <CatalogNotice fromServer={props.snapshot.catalogVersion} gong={props.snapshot.gong}>
+        {null}
+      </CatalogNotice>
+    )
+  }
+
+  return <PlanetScreenResolved {...props} catalogs={catalogs} />
+}
+
+interface PlanetScreenResolvedProps extends PlanetScreenProps {
+  /** Le catalogue résolu à la longueur du serveur — jamais celui, déclaré, du bundle. */
+  readonly catalogs: Catalogs
+}
+
+function PlanetScreenResolved({
+  snapshot,
+  gateway,
+  onSnapshot,
+  catalogs,
+}: PlanetScreenResolvedProps) {
   /**
    * Une horloge par instantané reçu. Elle se resynchronise sur `serverInstant`
    * à chaque réponse : c'est la seule référence absolue, l'horloge locale ne
@@ -154,11 +194,11 @@ export function PlanetScreen({ snapshot, gateway, onSnapshot }: PlanetScreenProp
     clock.sync(snapshot.serverInstant as never)
   }, [clock, snapshot.serverInstant])
 
-  const state = useExtrapolatedState(snapshot, DEFAULT_CATALOGS, clock)
+  const state = useExtrapolatedState(snapshot, catalogs, clock)
 
   // Les dimensions viennent de la **disposition**, jamais d'une constante :
   // un archétype plus grand ne doit pas exiger de retoucher cet écran.
-  const layout = layoutOf(DEFAULT_CATALOGS, snapshot.planet.layoutId as never)
+  const layout = layoutOf(catalogs, snapshot.planet.layoutId as never)
   const bounds = useMemo(
     () => ({ width: layout.width, height: layout.height }),
     [layout.width, layout.height],
@@ -184,11 +224,14 @@ export function PlanetScreen({ snapshot, gateway, onSnapshot }: PlanetScreenProp
    * Le choix reste ouvert — les flèches parcourent les variantes — mais il n'est
    * plus obligatoire.
    */
-  const selectType = useCallback((typeId: BuildingTypeId) => {
-    const first = DEFAULT_CATALOGS.buildings[typeId].variants[0] ?? null
-    setSelection({ typeId, variantId: first })
-    setRefusal(null)
-  }, [])
+  const selectType = useCallback(
+    (typeId: BuildingTypeId) => {
+      const first = catalogs.buildings[typeId].variants[0] ?? null
+      setSelection({ typeId, variantId: first })
+      setRefusal(null)
+    },
+    [catalogs.buildings],
+  )
 
   const selectVariant = useCallback((variantId: FootprintId) => {
     setSelection((current) => ({ ...current, variantId }))
@@ -247,8 +290,8 @@ export function PlanetScreen({ snapshot, gateway, onSnapshot }: PlanetScreenProp
    */
   const preview = useMemo((): PreviewResult | null => {
     if (command === null) return null
-    return previewBuild(state, { ...command, workId: 'apercu-local' }, DEFAULT_CATALOGS)
-  }, [command, state])
+    return previewBuild(state, { ...command, workId: 'apercu-local' }, catalogs)
+  }, [command, state, catalogs])
 
   /**
    * Ce que la grille contient, et l'existence d'un placement pour le type choisi.
@@ -264,8 +307,8 @@ export function PlanetScreen({ snapshot, gateway, onSnapshot }: PlanetScreenProp
 
   const availability = useMemo(() => {
     if (selection.typeId === null) return null
-    return placementAvailability(state.grid, selection.typeId, DEFAULT_CATALOGS)
-  }, [selection.typeId, state.grid])
+    return placementAvailability(state.grid, selection.typeId, catalogs)
+  }, [selection.typeId, state.grid, catalogs])
 
   /**
    * Les cases sous l'empreinte, leur validité et **la raison d'un refus**.
@@ -281,18 +324,13 @@ export function PlanetScreen({ snapshot, gateway, onSnapshot }: PlanetScreenProp
    */
   const pose = useMemo((): PoseVisee | null => {
     if (command === null) return null
-    const cells = placementCells(
-      command.variantId,
-      command.orientation,
-      command.anchor,
-      DEFAULT_CATALOGS,
-    )
+    const cells = placementCells(command.variantId, command.orientation, command.anchor, catalogs)
     const check = validatePlacement(state.grid, cells)
     const raison = raisonDeRefus(check, {
       bounds,
       grid: state.grid,
       buildings: state.buildings,
-      catalogs: DEFAULT_CATALOGS,
+      catalogs: catalogs,
     })
 
     return {
@@ -301,7 +339,7 @@ export function PlanetScreen({ snapshot, gateway, onSnapshot }: PlanetScreenProp
       fautives: check.kind === 'ok' ? [] : check.cells,
       ...(raison === null ? {} : { raison }),
     }
-  }, [command, state.grid, state.buildings, bounds])
+  }, [command, state.grid, state.buildings, bounds, catalogs])
 
   /** Le fantôme de 001, dérivé de la pose : son crochet `data-ghost` subsiste. */
   const ghost = useMemo((): GhostState | null => {
@@ -358,9 +396,9 @@ export function PlanetScreen({ snapshot, gateway, onSnapshot }: PlanetScreenProp
     return previewUpgrade(
       state,
       { kind: 'upgrade', workId: 'apercu-local', buildingId: upgradeTarget.id },
-      DEFAULT_CATALOGS,
+      catalogs,
     )
-  }, [upgradeTarget, state])
+  }, [upgradeTarget, state, catalogs])
 
   /**
    * L'aperçu de déblaiement, calculé **localement** par le code du serveur (R8).
@@ -376,9 +414,9 @@ export function PlanetScreen({ snapshot, gateway, onSnapshot }: PlanetScreenProp
     return previewClear(
       state,
       { kind: 'clear', workId: 'apercu-local', cell: { x: cell.x, y: cell.y } },
-      DEFAULT_CATALOGS,
+      catalogs,
     )
-  }, [cell, state])
+  }, [cell, state, catalogs])
 
   /**
    * L'aperçu de démolition, calculé **localement** par le code du serveur (R8).
@@ -393,9 +431,9 @@ export function PlanetScreen({ snapshot, gateway, onSnapshot }: PlanetScreenProp
     return previewDemolish(
       state,
       { kind: 'demolish', workId: 'apercu-local', buildingId: upgradeTarget.id },
-      DEFAULT_CATALOGS,
+      catalogs,
     )
-  }, [upgradeTarget, state])
+  }, [upgradeTarget, state, catalogs])
 
   const announcement = useMemo(() => {
     if (cell === undefined) return null
@@ -543,8 +581,7 @@ export function PlanetScreen({ snapshot, gateway, onSnapshot }: PlanetScreenProp
    * écoulement.
    */
   const phraseDuCurseur = useRef('')
-  phraseDuCurseur.current =
-    announcement === null ? '' : announcePlacement(announcement, DEFAULT_CATALOGS)
+  phraseDuCurseur.current = announcement === null ? '' : announcePlacement(announcement, catalogs)
 
   /**
    * **Ce qui déclenche une annonce de curseur, écrit comme une valeur.**
@@ -639,7 +676,7 @@ export function PlanetScreen({ snapshot, gateway, onSnapshot }: PlanetScreenProp
       - les **quatre mécaniques restent toutes visibles** (FR-011), rassemblées sous
         le plan, sans navigation supplémentaire ni repli derrière un menu.
     */
-    <CatalogNotice fromServer={snapshot.catalogVersion}>
+    <CatalogNotice fromServer={snapshot.catalogVersion} gong={snapshot.gong}>
       <div className="ecran">
         <PlaqueEnTete archetypeId={archetypeId} />
 
@@ -666,6 +703,7 @@ export function PlanetScreen({ snapshot, gateway, onSnapshot }: PlanetScreenProp
         <div data-bloc="plan" className="plaque cadre-main--fort">
           <GridView
             cells={state.grid}
+            catalogs={catalogs}
             width={layout.width}
             height={layout.height}
             buildings={state.buildings}
@@ -695,7 +733,7 @@ export function PlanetScreen({ snapshot, gateway, onSnapshot }: PlanetScreenProp
           */}
           <div data-bloc="pose">
             <BuildPanel
-              catalogs={DEFAULT_CATALOGS}
+              catalogs={catalogs}
               selection={selection}
               preview={preview}
               occupancy={occupancy}

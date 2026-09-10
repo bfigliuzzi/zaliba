@@ -1,9 +1,7 @@
-import { BUILDINGS } from '@zaliba/catalogs'
 import fc from 'fast-check'
 import { describe, expect, it } from 'vitest'
 import { projectPlanet } from '../../src/game.js'
 import { productionBreakdown, recomposeBreakdown } from '../../src/kernel/breakdown.js'
-import { DEFAULT_CATALOGS } from '../../src/kernel/catalogs.js'
 import { evaluateCurve } from '../../src/kernel/curves.js'
 import {
   emptySnapshot,
@@ -11,6 +9,7 @@ import {
   type PlanetSnapshot,
 } from '../../src/kernel/snapshot.js'
 import { instant } from '../../src/kernel/time.js'
+import { CATALOGS } from '../catalogs.js'
 
 /**
  * **La décomposition d'une production en ses facteurs** (FR-053, US8-1).
@@ -37,7 +36,6 @@ import { instant } from '../../src/kernel/time.js'
  */
 
 const T0 = instant(1_787_750_000)
-const CATALOGS = DEFAULT_CATALOGS
 const EXTRACTORS = ['mine', 'puits', 'racloir'] as const
 
 function fresh(): PlanetSnapshot {
@@ -59,7 +57,7 @@ function placed(
   level = 1,
 ): PlacedBuilding {
   counter += 1
-  const variantId = BUILDINGS[typeId].variants[0]
+  const variantId = CATALOGS.buildings[typeId].variants[0]
   if (variantId === undefined) throw new Error(`${typeId} n’a aucune variante.`)
   return { id: `b-${counter}`, typeId, variantId, orientation: 0, anchor, level }
 }
@@ -70,7 +68,7 @@ describe('les quatre facteurs sont publiés, et nommés', () => {
     if (breakdown === null) throw new Error(`${typeId} devait se décomposer`)
 
     // 1. La valeur de base du type : la production au niveau 1, par gisement.
-    expect(breakdown.base).toBe(evaluateCurve(BUILDINGS[typeId].production as never, 1))
+    expect(breakdown.base).toBe(evaluateCurve(CATALOGS.buildings[typeId].production as never, 1))
     // 2. Le facteur de niveau, en **fraction entière** — jamais un flottant (R19).
     expect(breakdown.levelFactor).toEqual({ num: 11, den: 10, exponent: 3 })
     // 3. Les gisements recouverts.
@@ -99,7 +97,7 @@ describe('le produit des facteurs redonne exactement la valeur affichée (FR-053
   it.each(EXTRACTORS)('%s : la recomposition tombe juste, à tout niveau', (typeId) => {
     fc.assert(
       fc.property(
-        fc.integer({ min: 1, max: BUILDINGS[typeId].maxLevel }),
+        fc.integer({ min: 1, max: CATALOGS.buildings[typeId].maxLevel }),
         fc.integer({ min: 0, max: 9 }),
         fc.integer({ min: 1, max: 200 }),
         fc.integer({ min: 1, max: 200 }),

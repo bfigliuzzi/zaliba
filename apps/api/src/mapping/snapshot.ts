@@ -217,15 +217,27 @@ function targetToContract(
  * `consolidatedAt` qui est l'instant du dernier écrit. Le client en tire son
  * décalage d'horloge ; les confondre ferait extrapoler depuis une date
  * arbitrairement ancienne, et les compteurs feraient un bond à chaque lecture.
+ *
+ * **La longueur du gong voyage ici, avec l'état qu'elle explique** (G7). Elle
+ * n'a pas de route à elle, et c'est délibéré : un point d'accès séparé pourrait
+ * être appelé une fois puis mis en cache, et le client dériverait alors des
+ * chiffres exacts pour un serveur qui a changé de rythme depuis. La réponse qui
+ * porte l'état porte les règles qui l'expliquent — comme `catalogVersion`, et
+ * pour exactement la même raison.
  */
 export function toContract(
   snapshot: PlanetSnapshot,
   serverInstant: number,
-  catalogVersion: string,
+  catalogs: Catalogs,
 ): PlanetSnapshotV1 {
   return {
     serverInstant,
-    catalogVersion,
+    // Version **et** longueur de gong sont lues sur le catalogue résolu, jamais
+    // sur deux arguments qui pourraient se contredire. C'est ce qui fait qu'un
+    // serveur ne peut annoncer que ce qu'il applique (G10) : la garantie est
+    // de forme, pas de vigilance.
+    catalogVersion: catalogs.version,
+    gong: catalogs.gong,
     planet: {
       id: snapshot.planetId,
       archetypeId: snapshot.archetypeId,

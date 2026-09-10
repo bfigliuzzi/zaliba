@@ -1,8 +1,7 @@
-import { BERCEAU, BUILDINGS } from '@zaliba/catalogs'
+import { BERCEAU } from '@zaliba/catalogs'
 import fc from 'fast-check'
 import { describe, expect, it } from 'vitest'
 import { projectPlanet } from '../../src/game.js'
-import { DEFAULT_CATALOGS } from '../../src/kernel/catalogs.js'
 import { energyReport } from '../../src/kernel/energy.js'
 import { productionRates, storageCaps } from '../../src/kernel/rates.js'
 import {
@@ -11,6 +10,7 @@ import {
   type PlanetSnapshot,
 } from '../../src/kernel/snapshot.js'
 import { instant } from '../../src/kernel/time.js'
+import { CATALOGS } from '../catalogs.js'
 
 /**
  * FR-023b et R21 : **le rapport ne s'applique qu'à la production**.
@@ -29,7 +29,6 @@ import { instant } from '../../src/kernel/time.js'
  */
 
 const T0 = instant(1_787_750_000)
-const CATALOGS = DEFAULT_CATALOGS
 const RESOURCES = CATALOGS.resourceIds
 
 function fresh(): PlanetSnapshot {
@@ -51,7 +50,7 @@ function placed(
   level = 1,
 ): PlacedBuilding {
   counter += 1
-  const variantId = BUILDINGS[typeId].variants[0]
+  const variantId = CATALOGS.buildings[typeId].variants[0]
   if (variantId === undefined) throw new Error(`${typeId} n’a aucune variante.`)
   return { id: `b-${counter}`, typeId, variantId, orientation: 0, anchor, level }
 }
@@ -162,8 +161,8 @@ describe('les trois plafonds sont inchangés en déficit (FR-023b, R21)', () => 
   it('ne dépend d’aucun niveau de déficit', () => {
     fc.assert(
       fc.property(
-        fc.integer({ min: 1, max: BUILDINGS.mine.maxLevel }),
-        fc.integer({ min: 1, max: BUILDINGS.entrepot.maxLevel }),
+        fc.integer({ min: 1, max: CATALOGS.buildings.mine.maxLevel }),
+        fc.integer({ min: 1, max: CATALOGS.buildings.entrepot.maxLevel }),
         (mineLevel, storeLevel) => {
           const store = placed('entrepot', { x: 2, y: 5 }, storeLevel)
 

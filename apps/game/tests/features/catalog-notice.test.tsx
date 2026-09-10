@@ -1,5 +1,5 @@
 import { cleanup, render, screen } from '@testing-library/react'
-import { CATALOG_VERSION } from '@zaliba/catalogs'
+import { CATALOG_VERSION, GONG_CANONICAL } from '@zaliba/catalogs'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { CatalogNotice } from '../../src/features/catalog/CatalogNotice.js'
 
@@ -21,7 +21,7 @@ afterEach(cleanup)
 describe('quand les versions concordent, l’avertissement s’effface', () => {
   it('rend le contenu et rien d’autre', () => {
     render(
-      <CatalogNotice fromServer={CATALOG_VERSION}>
+      <CatalogNotice fromServer={CATALOG_VERSION} gong={GONG_CANONICAL}>
         <p>Ma planète</p>
       </CatalogNotice>,
     )
@@ -36,7 +36,7 @@ describe('quand elles divergent, le contenu dérivé disparaît', () => {
 
   it('annonce la divergence dans une région d’alerte', () => {
     render(
-      <CatalogNotice fromServer={Divergent}>
+      <CatalogNotice fromServer={Divergent} gong={GONG_CANONICAL}>
         <p>Ma planète</p>
       </CatalogNotice>,
     )
@@ -55,7 +55,7 @@ describe('quand elles divergent, le contenu dérivé disparaît', () => {
    */
   it('ne rend aucun contenu dérivé', () => {
     render(
-      <CatalogNotice fromServer={Divergent}>
+      <CatalogNotice fromServer={Divergent} gong={GONG_CANONICAL}>
         <p>Ma planète</p>
       </CatalogNotice>,
     )
@@ -71,7 +71,7 @@ describe('quand elles divergent, le contenu dérivé disparaît', () => {
   it('offre un bouton de rechargement, et l’appelle sur pression', () => {
     const reload = vi.fn()
     render(
-      <CatalogNotice fromServer={Divergent} onReload={reload}>
+      <CatalogNotice fromServer={Divergent} gong={GONG_CANONICAL} onReload={reload}>
         <p>Ma planète</p>
       </CatalogNotice>,
     )
@@ -83,12 +83,83 @@ describe('quand elles divergent, le contenu dérivé disparaît', () => {
 
   it('traite une version absente comme une divergence', () => {
     render(
-      <CatalogNotice fromServer={null}>
+      <CatalogNotice fromServer={null} gong={GONG_CANONICAL}>
         <p>Ma planète</p>
       </CatalogNotice>,
     )
 
     expect(screen.getByRole('alert').textContent).toContain('aucune version annoncée')
     expect(screen.queryByText('Ma planète')).toBeNull()
+  })
+})
+
+/**
+ * **Une réponse sans longueur de gong enveloppe l'écran** (FR-013, G9).
+ *
+ * Le client ne sait alors pas à quel rythme le serveur bat : il ne peut
+ * convertir aucune durée ni aucun taux, et tout l'écran de planète en est fait.
+ * Les deux états — divergence de version et rythme inconnu — convergent
+ * volontairement sur le même geste, parce que ne rien savoir et se savoir en
+ * désaccord appellent la même prudence.
+ *
+ * Le **message**, lui, est distinct : ce ne sont pas les mêmes causes ni les
+ * mêmes remèdes, et parler de rééquilibrage là où le serveur n'a simplement pas
+ * annoncé son rythme enverrait le lecteur enquêter au mauvais endroit.
+ */
+describe('sans longueur de gong, l’écran est enveloppé comme en divergence (FR-013)', () => {
+  it.each([
+    ['absente', undefined],
+    ['nulle', null],
+  ])('masque le contenu quand la longueur est %s', (_label, gong) => {
+    render(
+      <CatalogNotice fromServer={CATALOG_VERSION} gong={gong}>
+        <p>Ma planète</p>
+      </CatalogNotice>,
+    )
+
+    expect(screen.queryByText('Ma planète')).toBeNull()
+    expect(screen.getByRole('alert')).not.toBeNull()
+  })
+
+  it('dit que c’est le rythme qui manque, et non que les règles ont changé', () => {
+    render(
+      <CatalogNotice fromServer={CATALOG_VERSION} gong={undefined}>
+        <p>Ma planète</p>
+      </CatalogNotice>,
+    )
+
+    const alert = screen.getByRole('alert')
+    expect(alert.textContent).toMatch(/gong|rythme/i)
+    // Le message de divergence de version parlerait de règles changées : le
+    // confondre enverrait chercher un rééquilibrage qui n'a pas eu lieu.
+    expect(alert.textContent).not.toMatch(/les règles du jeu ont changé/i)
+  })
+
+  it('propose un rechargement, comme la divergence', () => {
+    const onReload = vi.fn()
+    render(
+      <CatalogNotice fromServer={CATALOG_VERSION} gong={null} onReload={onReload}>
+        <p>Ma planète</p>
+      </CatalogNotice>,
+    )
+
+    screen.getByRole('button', { name: /recharger/i }).click()
+    expect(onReload).toHaveBeenCalledOnce()
+  })
+
+  /**
+   * **Et la divergence de version l'emporte quand les deux se présentent.** Un
+   * serveur qui n'annonce pas son rythme est probablement antérieur à 003, donc
+   * sa version diverge aussi ; c'est la cause la plus explicative qui doit être
+   * dite.
+   */
+  it('annonce la divergence de version plutôt que le rythme quand les deux manquent', () => {
+    render(
+      <CatalogNotice fromServer="2020-01-01.1" gong={undefined}>
+        <p>Ma planète</p>
+      </CatalogNotice>,
+    )
+
+    expect(screen.getByRole('alert').textContent).toMatch(/les règles ont changé|règles du jeu/i)
   })
 })

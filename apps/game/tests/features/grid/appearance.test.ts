@@ -1,6 +1,6 @@
 import type { ResourceId } from '@zaliba/catalogs'
 import type { BuildingView, CellView, WorkView } from '@zaliba/domain'
-import { DEFAULT_CATALOGS, duration, instant, ratePerHour } from '@zaliba/domain'
+import { duration, instant, ratePerHour } from '@zaliba/domain'
 import { describe, expect, it } from 'vitest'
 import {
   appearanceOf,
@@ -9,6 +9,7 @@ import {
   type EtatDeCase,
   type PoseVisee,
 } from '../../../src/features/grid/appearance.js'
+import { CATALOGS } from '../../catalogs.js'
 
 /**
  * Les douze états de case (FR-013, R6, INV-C1, INV-C4).
@@ -32,7 +33,6 @@ import {
  * `catalogs.buildings[typeId].extracts`, que le client importe déjà.
  */
 
-const CATALOGS = DEFAULT_CATALOGS
 const T0 = instant(1_787_750_000)
 
 const BATIMENT_ID = '88888888-8888-4888-8888-888888888888'

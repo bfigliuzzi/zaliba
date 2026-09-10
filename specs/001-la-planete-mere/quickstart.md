@@ -39,6 +39,25 @@ SUPABASE_JWT_AUDIENCE=…    # audience attendue
 CORS_ALLOWED_ORIGINS=…     # liste close ; l'absence n'ouvre rien
 ```
 
+Et, depuis la tranche 003, la longueur du **gong** — l'unité de temps du
+serveur. Elle est lue par `apps/api` seul, elle est **exigée** comme
+`DATABASE_URL`, et sa valeur est publique : la page de règles l'énonce.
+
+```
+GONG_SECONDS=10            # entier, ou fraction entière — jamais un flottant
+```
+
+| `GONG_SECONDS` | Rapport | Mine niveau 1 | Attente d'une amélioration de mine |
+| --- | --- | --- | --- |
+| `10` | ×1 — canonique | 120 s | ~5 h |
+| `1/2` | ×20 | 6 s | ~15 min |
+| `1/6` | ×60 | 2 s | ~5 min |
+
+Au gong canonique, le jeu se comporte exactement comme avant 003 — c'est ce que
+la table de vérité des 240 valeurs de `specs/003-le-gong/` tient. Les autres
+longueurs accélèrent **tout** ce qui a une dimension de temps dans le même
+rapport : chantiers et accumulation de ressources.
+
 ### La pile Supabase locale
 
 Le parcours de bout en bout commence par « créer un compte », donc par Supabase.

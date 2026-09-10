@@ -1,9 +1,10 @@
 import { cleanup, render, screen, within } from '@testing-library/react'
 import { PlanetSnapshotV1 } from '@zaliba/contracts'
-import { DEFAULT_CATALOGS, instant, projectPlanet } from '@zaliba/domain'
+import { instant, projectPlanet } from '@zaliba/domain'
 import { afterEach, describe, expect, it } from 'vitest'
 import { snapshotFromContract } from '../../../src/features/resources/extrapolation.js'
 import { ResourcePanel } from '../../../src/features/resources/ResourcePanel.js'
+import { CATALOGS } from '../../catalogs.js'
 import rawFresh from '../../fixtures/planet-fresh.json' with { type: 'json' }
 
 /**
@@ -22,7 +23,6 @@ import rawFresh from '../../fixtures/planet-fresh.json' with { type: 'json' }
 
 afterEach(cleanup)
 
-const CATALOGS = DEFAULT_CATALOGS
 const payload = PlanetSnapshotV1.parse(rawFresh)
 
 function renderPanel(elapsed = 0) {

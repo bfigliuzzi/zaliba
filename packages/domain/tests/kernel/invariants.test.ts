@@ -1,10 +1,10 @@
 import fc from 'fast-check'
 import { describe, expect, it } from 'vitest'
 import { consolidatePlanet, projectPlanet } from '../../src/game.js'
-import { DEFAULT_CATALOGS } from '../../src/kernel/catalogs.js'
 import type { Effect } from '../../src/kernel/effects.js'
 import { applyEffects, emptySnapshot, type PlanetSnapshot } from '../../src/kernel/snapshot.js'
 import { instant } from '../../src/kernel/time.js'
+import { CATALOGS } from '../catalogs.js'
 
 /**
  * Les invariants du modèle, sous fast-check (data-model § 1.7).
@@ -22,7 +22,6 @@ import { instant } from '../../src/kernel/time.js'
  */
 
 const T0 = instant(1_787_750_000)
-const CATALOGS = DEFAULT_CATALOGS
 const RESOURCES = CATALOGS.resourceIds
 
 function fresh(consolidatedAt = T0): PlanetSnapshot {

@@ -1,7 +1,7 @@
 import type { CellView } from '@zaliba/domain'
-import { DEFAULT_CATALOGS } from '@zaliba/domain'
 import { describe, expect, it } from 'vitest'
 import { announcePlacement } from '../../../src/features/grid/announce.js'
+import { CATALOGS } from '../../catalogs.js'
 
 /**
  * Ce qu'un lecteur d'écran entend quand le curseur bouge (FR-059).
@@ -17,8 +17,6 @@ import { announcePlacement } from '../../../src/features/grid/announce.js'
  * la porte n'a plus alors qu'à la placer dans une région `aria-live`, ce qui ne
  * demande pas de test de composant.
  */
-
-const CATALOGS = DEFAULT_CATALOGS
 
 function cell(overrides: Partial<CellView> = {}): CellView {
   return {

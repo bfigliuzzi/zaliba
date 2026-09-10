@@ -1,10 +1,11 @@
 import { cleanup, render, screen } from '@testing-library/react'
 import { PlanetSnapshotV1 } from '@zaliba/contracts'
 import type { CellView, ClearPreviewResult } from '@zaliba/domain'
-import { DEFAULT_CATALOGS, instant, previewClear, projectPlanet } from '@zaliba/domain'
+import { instant, previewClear, projectPlanet } from '@zaliba/domain'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { snapshotFromContract } from '../../../src/features/resources/extrapolation.js'
 import { ClearPanel } from '../../../src/features/work/ClearPanel.js'
+import { CATALOGS } from '../../catalogs.js'
 import rawFresh from '../../fixtures/planet-fresh.json' with { type: 'json' }
 
 /**
@@ -29,7 +30,6 @@ import rawFresh from '../../fixtures/planet-fresh.json' with { type: 'json' }
 
 afterEach(cleanup)
 
-const CATALOGS = DEFAULT_CATALOGS
 const payload = PlanetSnapshotV1.parse(rawFresh)
 
 /** L'éboulis de (3,0) : le moins cher, et il rend du terrain nu. */

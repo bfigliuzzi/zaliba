@@ -1,3 +1,4 @@
+import { GONG_CANONICAL, type GongLength } from '@zaliba/catalogs'
 import type { FastifyInstance } from 'fastify'
 import { buildApi } from '../../src/app.js'
 import type { Authenticator } from '../../src/plugins/auth.js'
@@ -68,10 +69,21 @@ function nextKey(): string {
   return `3f2504e0-4f89-11d3-9a0c-${counter.toString(16).padStart(12, '0')}`
 }
 
-export async function buildTestServer(harness: Harness): Promise<TestServer> {
+/**
+ * La longueur de gong du serveur de test, **canonique par défaut**.
+ *
+ * Un défaut est légitime ici et ne l'est pas dans `buildApi` : ce qui est un
+ * confort en test serait, en production, le repli silencieux que FR-007 refuse.
+ * Les tests qui éprouvent un autre rythme la passent explicitement.
+ */
+export async function buildTestServer(
+  harness: Harness,
+  gong: GongLength = GONG_CANONICAL,
+): Promise<TestServer> {
   const app = buildApi({
     sql: harness.sql,
     authenticator: passthroughAuthenticator,
+    gong,
     logLevel: 'silent',
   })
   await app.ready()

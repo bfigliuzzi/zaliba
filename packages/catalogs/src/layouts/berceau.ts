@@ -41,28 +41,65 @@ export interface LayoutCell {
   readonly depositOf: ResourceId | null
 }
 
-export interface Layout {
+/**
+ * Ce qu'une disposition a de commun entre sa forme déclarée et sa forme
+ * résolue : sa géométrie, ses plafonds, son énergie et son stock de départ.
+ *
+ * Aucune de ces grandeurs n'a de dimension de temps — un plafond et un stock se
+ * comparent à une quantité, une énergie est un rapport —, donc aucune n'est
+ * touchée par la résolution (G13).
+ */
+interface LayoutCommon {
   readonly id: LayoutId
   readonly archetypeId: ArchetypeId
   readonly width: number
   readonly height: number
   readonly cells: readonly LayoutCell[]
-  /**
-   * Production de base, en **unités par heure** — pas en grains.
-   *
-   * L'unité est dans le nom parce que la confusion est facile et silencieuse :
-   * un taux se multiplie par des secondes pour donner des grains (une unité par
-   * heure vaut exactement un grain par seconde), tandis qu'un stock est déjà en
-   * grains. Les deux sont des nombres entiers, et rien dans le type ne les
-   * distingue. Non nulle partout (FR-018).
-   */
-  readonly baseProductionPerHour: Readonly<Record<ResourceId, number>>
   /** Plafond de base, en **grains**. Non nul partout (FR-025). */
   readonly baseCapacityGrains: Readonly<Record<ResourceId, number>>
   /** Énergie de base, non nulle (FR-022). Sans elle, la première pose punirait. */
   readonly baseEnergy: number
   /** Stock initial, en **grains**. Paie une centrale et un extracteur (FR-019). */
   readonly startingStockGrains: Readonly<Record<ResourceId, number>>
+}
+
+/**
+ * La disposition telle que le **catalogue la déclare** : sa production de base
+ * est en grains par gong.
+ *
+ * **C'est un taux, donc il se résout** — et c'est le point que les documents de
+ * conception de 003 avaient rangé de travers, en écartant « les dispositions »
+ * en bloc de la résolution. La production de base est la seule grandeur d'une
+ * disposition qui ait une dimension de temps, et c'est aussi la **seule source
+ * de revenu d'une planète fraîche** : ne pas la résoudre laisserait le premier
+ * écran du jeu battre au rythme canonique sur un serveur rapide, ce que SC-002
+ * interdit nommément — « tout délai du jeu, chantier **comme accumulation de
+ * ressources**, dans le même rapport, et jamais l'un sans l'autre ». C'est
+ * exactement le défaut qui avait fait écarter le premier design de la tranche
+ * 900 : des chantiers instantanés et un joueur affamé.
+ */
+export interface DeclaredLayout extends LayoutCommon {
+  /**
+   * Production de base, en **grains par gong**.
+   *
+   * L'unité est dans le nom parce que la confusion est facile et silencieuse :
+   * un taux se multiplie par une durée pour donner des grains, tandis qu'un
+   * stock est déjà en grains. Les deux sont des nombres entiers, et rien dans
+   * le type ne les distingue. Non nulle partout (FR-018).
+   */
+  readonly baseProductionPerGong: Readonly<Record<ResourceId, number>>
+}
+
+/**
+ * La disposition **résolue** : sa production de base est en unités par heure,
+ * c'est-à-dire numériquement en grains par seconde (R1).
+ *
+ * Ce champ n'a ni changé de nom ni changé d'unité avec 003 — raison pour
+ * laquelle `kernel/rates.ts`, qui le lit, n'a pas bougé d'une ligne.
+ */
+export interface Layout extends LayoutCommon {
+  /** Production de base, en **unités par heure** — soit un grain par seconde. */
+  readonly baseProductionPerHour: Readonly<Record<ResourceId, number>>
 }
 
 /** Les dix obstacles, à la case et au type que R7 publie. */
@@ -109,10 +146,13 @@ function buildCells(): readonly LayoutCell[] {
 }
 
 /**
- * En unités par heure, et **non converties** : c'est déjà l'unité d'un taux.
- * Une unité par heure vaut exactement un grain par seconde (R1).
+ * En **grains par gong**, et non converties : c'est déjà l'unité d'un taux.
+ *
+ * Au gong canonique de dix secondes, `200 ÷ 10 = 20` grains par seconde, soit
+ * exactement les vingt unités par heure d'avant 003 (une unité par heure vaut
+ * un grain par seconde, R1). Aucun chiffre du jeu n'a bougé.
  */
-const BASE_PRODUCTION_PER_HOUR = { camelote: 20, jus: 10, 'bave-etoiles': 5 } as const
+const BASE_PRODUCTION_PER_GONG = { camelote: 200, jus: 100, 'bave-etoiles': 50 } as const
 
 /** En unités affichées, converties en grains à la construction. */
 const BASE_CAPACITY_UNITS = { camelote: 5_000, jus: 5_000, 'bave-etoiles': 2_000 } as const
@@ -132,13 +172,13 @@ function toGrains(units: Readonly<Record<ResourceId, number>>): Record<ResourceI
   ) as Record<ResourceId, number>
 }
 
-export const BERCEAU: Layout = {
+export const BERCEAU: DeclaredLayout = {
   id: 'berceau-v1',
   archetypeId: 'berceau',
   width: WIDTH,
   height: HEIGHT,
   cells: buildCells(),
-  baseProductionPerHour: BASE_PRODUCTION_PER_HOUR,
+  baseProductionPerGong: BASE_PRODUCTION_PER_GONG,
   baseCapacityGrains: toGrains(BASE_CAPACITY_UNITS),
   baseEnergy: 20,
   startingStockGrains: toGrains(STARTING_STOCK_UNITS),
@@ -162,7 +202,13 @@ export const ARCHETYPE_IDS = Object.keys(ARCHETYPES) as readonly ArchetypeId[]
  * `undefined` plutôt qu'une exception : « hors de la planète » est une réponse
  * normale à une question de placement, pas une faute de programmation.
  */
-export function cellAt(layout: Layout, x: number, y: number): LayoutCell | undefined {
+/**
+ * Elle prend `LayoutCommon` et non `Layout` : la lecture d'une case ne touche
+ * que la **géométrie**, qui est identique entre la disposition déclarée et la
+ * disposition résolue. Exiger l'une des deux formes obligerait un appelant à
+ * résoudre un catalogue pour lire une coordonnée, ce qui n'a pas de sens.
+ */
+export function cellAt(layout: LayoutCommon, x: number, y: number): LayoutCell | undefined {
   if (x < 0 || y < 0 || x >= layout.width || y >= layout.height) return undefined
   return layout.cells[y * layout.width + x]
 }

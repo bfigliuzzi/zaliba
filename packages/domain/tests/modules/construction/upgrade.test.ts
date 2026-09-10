@@ -1,7 +1,6 @@
-import { BUILDINGS } from '@zaliba/catalogs'
+import type { BuildingTypeId } from '@zaliba/catalogs'
 import { describe, expect, it } from 'vitest'
 import { projectPlanet } from '../../../src/game.js'
-import { DEFAULT_CATALOGS } from '../../../src/kernel/catalogs.js'
 import { cumulativeCost, evaluateCurve } from '../../../src/kernel/curves.js'
 import type { ScheduleWork } from '../../../src/kernel/effects.js'
 import { energyConsumption, energyProduction } from '../../../src/kernel/energy.js'
@@ -23,6 +22,7 @@ import {
   upgradeCost,
   upgradeDuration,
 } from '../../../src/modules/construction/upgrade.js'
+import { CATALOGS } from '../../catalogs.js'
 
 /**
  * L'amélioration : la voie de progression qui ne consomme **pas** de surface.
@@ -47,7 +47,6 @@ import {
  */
 
 const T0 = instant(1_787_750_000)
-const CATALOGS = DEFAULT_CATALOGS
 const WORK_ID = '99999999-9999-4999-8999-999999999999'
 const BUILDING_ID = '88888888-8888-4888-8888-888888888888'
 
@@ -87,9 +86,9 @@ function command(overrides: Partial<UpgradeCommand> = {}): UpgradeCommand {
 }
 
 /** Le coût du niveau visé, recalculé depuis la courbe — jamais recopié. */
-function expectedCost(typeId: keyof typeof BUILDINGS, level: number): Record<string, number> {
+function expectedCost(typeId: BuildingTypeId, level: number): Record<string, number> {
   return Object.fromEntries(
-    Object.entries(BUILDINGS[typeId].cost).map(([resourceId, curve]) => [
+    Object.entries(CATALOGS.buildings[typeId].cost).map(([resourceId, curve]) => [
       resourceId,
       evaluateCurve(curve, level),
     ]),
@@ -138,7 +137,7 @@ describe('decideUpgrade() retourne des effets, et ne mute rien', () => {
     const scheduled = decision.effects[1] as ScheduleWork
     expect(scheduled.kind).toBe('schedule-work')
     expect(scheduled.dueAt - scheduled.startedAt).toBe(
-      evaluateCurve(BUILDINGS.mine.buildDuration, 2),
+      evaluateCurve(CATALOGS.buildings.mine.buildDuration, 2),
     )
   })
 
@@ -177,11 +176,11 @@ describe('la courbe est la même que celle de la pose, évaluée au niveau visé
    * montant qui n'a jamais été payé — et elle le ferait en silence.
    */
   it('la somme des améliorations jusqu’à N vaut le coût cumulé de la courbe', () => {
-    for (const [typeId, type] of Object.entries(BUILDINGS)) {
+    for (const [typeId, type] of Object.entries(CATALOGS.buildings)) {
       for (const [resourceId, curve] of Object.entries(type.cost)) {
         let paid = evaluateCurve(curve, 1)
         for (let level = 2; level <= 5; level += 1) {
-          const step = upgradeCost(typeId as keyof typeof BUILDINGS, level, CATALOGS).find(
+          const step = upgradeCost(typeId as BuildingTypeId, level, CATALOGS).find(
             (amount) => amount.resourceId === resourceId,
           )
           paid += step?.grains ?? 0
@@ -195,7 +194,7 @@ describe('la courbe est la même que celle de la pose, évaluée au niveau visé
 
   it('la durée d’une amélioration est la courbe de durée au niveau visé', () => {
     expect(upgradeDuration('mine', 3, CATALOGS)).toBe(
-      evaluateCurve(BUILDINGS.mine.buildDuration, 3),
+      evaluateCurve(CATALOGS.buildings.mine.buildDuration, 3),
     )
   })
 })
@@ -208,7 +207,7 @@ describe('l’aperçu annonce le gain exact avant paiement (FR-041, US4-2)', () 
     expect(Object.fromEntries(result.preview.cost.map((a) => [a.resourceId, a.grains]))).toEqual(
       expectedCost('mine', 2),
     )
-    expect(result.preview.duration).toBe(evaluateCurve(BUILDINGS.mine.buildDuration, 2))
+    expect(result.preview.duration).toBe(evaluateCurve(CATALOGS.buildings.mine.buildDuration, 2))
   })
 
   /**
@@ -390,13 +389,17 @@ describe('les refus portent leur motif exact', () => {
   })
 
   it('refuse au niveau maximal du catalogue, en nommant le plafond', () => {
-    const decision = decideUpgrade(stateOf(withMine(BUILDINGS.mine.maxLevel)), command(), CATALOGS)
+    const decision = decideUpgrade(
+      stateOf(withMine(CATALOGS.buildings.mine.maxLevel)),
+      command(),
+      CATALOGS,
+    )
     if (decision.outcome !== 'refused') throw new Error('acceptation inattendue')
 
     expect(decision.refusal).toEqual({
       code: 'max-level-reached',
       buildingId: BUILDING_ID,
-      maxLevel: BUILDINGS.mine.maxLevel,
+      maxLevel: CATALOGS.buildings.mine.maxLevel,
     })
   })
 
@@ -502,7 +505,11 @@ describe('les refus portent leur motif exact', () => {
     )
     expect(absent.outcome).toBe('refused')
 
-    const capped = previewUpgrade(stateOf(withMine(BUILDINGS.mine.maxLevel)), command(), CATALOGS)
+    const capped = previewUpgrade(
+      stateOf(withMine(CATALOGS.buildings.mine.maxLevel)),
+      command(),
+      CATALOGS,
+    )
     expect(capped.outcome).toBe('refused')
   })
 })
@@ -521,7 +528,7 @@ describe('l’achèvement porte le bâtiment au niveau suivant, et rien d’autr
     if (decision.outcome !== 'accepted') throw new Error('refus inattendu')
 
     const launched = applyEffects(withMine(1), decision.effects, T0)
-    const seconds = evaluateCurve(BUILDINGS.mine.buildDuration, 2)
+    const seconds = evaluateCurve(CATALOGS.buildings.mine.buildDuration, 2)
 
     // Une seconde avant l'échéance : rien n'a changé, et le chantier est visible.
     const before = stateOf(launched, instant(T0 + seconds - 1))
@@ -543,7 +550,7 @@ describe('l’achèvement porte le bâtiment au niveau suivant, et rien d’autr
     if (decision.outcome !== 'accepted') throw new Error('refus inattendu')
 
     const launched = applyEffects(withMine(1), decision.effects, T0)
-    const seconds = evaluateCurve(BUILDINGS.mine.buildDuration, 2)
+    const seconds = evaluateCurve(CATALOGS.buildings.mine.buildDuration, 2)
     const after = stateOf(launched, instant(T0 + seconds))
 
     // Le gain annoncé et le gain constaté, à l'unité près. C'est l'« Independent

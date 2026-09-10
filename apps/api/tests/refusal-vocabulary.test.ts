@@ -1,10 +1,10 @@
 import type { BuildingTypeId } from '@zaliba/catalogs'
-import { BUILDINGS } from '@zaliba/catalogs'
+import { GONG_CANONICAL } from '@zaliba/catalogs'
 import { REFUSAL_CODES_V1, RefusalDetailsV1 } from '@zaliba/contracts'
 import type { PlanetSnapshot, ProjectedState } from '@zaliba/domain'
 import {
   applyEffects,
-  DEFAULT_CATALOGS,
+  DECLARED_CATALOGS,
   decideBuild,
   decideClear,
   decideDemolish,
@@ -13,6 +13,7 @@ import {
   grains,
   instant,
   projectPlanet,
+  resolveCatalogs,
 } from '@zaliba/domain'
 import { describe, expect, it } from 'vitest'
 import { REFUSAL_MESSAGES, refusalToError } from '../src/routes/v1/works.js'
@@ -39,7 +40,9 @@ import { REFUSAL_MESSAGES, refusalToError } from '../src/routes/v1/works.js'
  * produit ; celui-ci prouve qu'il accepte ce que le domaine produit vraiment.
  */
 
-const CATALOGS = DEFAULT_CATALOGS
+/** Le catalogue du jeu, résolu au gong canonique — le vocabulaire de refus ne
+ * dépend d'aucune longueur, mais il faut bien un catalogue résolu pour décider. */
+const CATALOGS = resolveCatalogs(DECLARED_CATALOGS, GONG_CANONICAL)
 const T0 = instant(1_787_750_000)
 const WORK_ID = '99999999-9999-4999-8999-999999999999'
 const BUILDING_ID = '88888888-8888-4888-8888-888888888888'
@@ -142,7 +145,7 @@ const PROVOCATIONS = {
   'variant-not-available-for-type': () => build(fresh(), { variantId: 'single' }),
   'building-not-found': () => upgrade({ ...fresh(), buildings: [MINE] }, ABSENT_ID),
   'max-level-reached': () =>
-    upgrade({ ...fresh(), buildings: [{ ...MINE, level: BUILDINGS.mine.maxLevel }] }),
+    upgrade({ ...fresh(), buildings: [{ ...MINE, level: CATALOGS.buildings.mine.maxLevel }] }),
   /** (5,5) est libre dans la disposition du Berceau : rien à déblayer. */
   'cell-not-obstructed': () => clear(fresh(), { x: 5, y: 5 }),
   /**

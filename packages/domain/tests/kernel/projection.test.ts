@@ -1,11 +1,11 @@
 import { BERCEAU, CATALOG_VERSION } from '@zaliba/catalogs'
 import { describe, expect, it } from 'vitest'
 import { projectPlanet } from '../../src/game.js'
-import { DEFAULT_CATALOGS } from '../../src/kernel/catalogs.js'
 import { project } from '../../src/kernel/projection.js'
 import { grains } from '../../src/kernel/resources.js'
 import { emptySnapshot, type PlanetSnapshot } from '../../src/kernel/snapshot.js'
 import { instant } from '../../src/kernel/time.js'
+import { CATALOGS } from '../catalogs.js'
 
 /**
  * La projection : `projectPlanet(snapshot, catalogs, at)`, fonction **pure**.
@@ -34,12 +34,12 @@ function fresh(consolidatedAt = T0): PlanetSnapshot {
     archetypeId: 'berceau',
     layoutId: 'berceau-v1',
     consolidatedAt,
-    catalogs: DEFAULT_CATALOGS,
+    catalogs: CATALOGS,
   })
 }
 
 function at(seconds: number) {
-  return projectPlanet(fresh(), DEFAULT_CATALOGS, instant(T0 + seconds))
+  return projectPlanet(fresh(), CATALOGS, instant(T0 + seconds))
 }
 
 describe('le stock de départ est celui du catalogue', () => {
@@ -217,11 +217,11 @@ describe('remonter le temps est une erreur de programmation, pas un cas de jeu',
    * résultat serait faux, puisque la projection ne sait pas défaire une perte.
    */
   it('refuse une projection antérieure à la consolidation', () => {
-    expect(() => projectPlanet(fresh(), DEFAULT_CATALOGS, instant(T0 - 1))).toThrow(RangeError)
+    expect(() => projectPlanet(fresh(), CATALOGS, instant(T0 - 1))).toThrow(RangeError)
   })
 
   it('accepte une projection exactement à l’instant de consolidation', () => {
-    expect(() => projectPlanet(fresh(), DEFAULT_CATALOGS, T0)).not.toThrow()
+    expect(() => projectPlanet(fresh(), CATALOGS, T0)).not.toThrow()
   })
 })
 
@@ -233,15 +233,15 @@ describe('I-11 — la projection ne dépend d’aucune horloge', () => {
   it('rend le même résultat quel que soit le moment de l’appel', () => {
     const snapshot = fresh()
     const target = instant(T0 + THREE_WEEKS)
-    const first = projectPlanet(snapshot, DEFAULT_CATALOGS, target)
-    const second = projectPlanet(snapshot, DEFAULT_CATALOGS, target)
+    const first = projectPlanet(snapshot, CATALOGS, target)
+    const second = projectPlanet(snapshot, CATALOGS, target)
     expect(JSON.stringify(first)).toBe(JSON.stringify(second))
   })
 
   it('ne mute pas l’instantané qu’on lui donne', () => {
     const snapshot = fresh()
     const before = JSON.stringify(snapshot)
-    projectPlanet(snapshot, DEFAULT_CATALOGS, instant(T0 + THREE_WEEKS))
+    projectPlanet(snapshot, CATALOGS, instant(T0 + THREE_WEEKS))
     expect(JSON.stringify(snapshot)).toBe(before)
   })
 })
@@ -267,21 +267,21 @@ describe('segmentation autour de l’échéance d’un chantier (R3, FR-032)', (
   }
 
   it('laisse le chantier en cours tant qu’il n’est pas échu', () => {
-    const state = projectPlanet(withDueClearing(HOUR), DEFAULT_CATALOGS, instant(T0 + 60))
+    const state = projectPlanet(withDueClearing(HOUR), CATALOGS, instant(T0 + 60))
     expect(state.work).not.toBeNull()
     expect(state.work?.remaining).toBe(HOUR - 60)
   })
 
   it('libère la case à l’échéance, et pas avant', () => {
-    const before = projectPlanet(withDueClearing(HOUR), DEFAULT_CATALOGS, instant(T0 + HOUR - 1))
-    const after = projectPlanet(withDueClearing(HOUR), DEFAULT_CATALOGS, instant(T0 + HOUR))
+    const before = projectPlanet(withDueClearing(HOUR), CATALOGS, instant(T0 + HOUR - 1))
+    const after = projectPlanet(withDueClearing(HOUR), CATALOGS, instant(T0 + HOUR))
 
     expect(before.grid.find((c) => c.x === 3 && c.y === 0)?.state).toBe('obstructed')
     expect(after.grid.find((c) => c.x === 3 && c.y === 0)?.state).toBe('free')
   })
 
   it('n’a plus de chantier une fois l’échéance passée', () => {
-    const state = projectPlanet(withDueClearing(HOUR), DEFAULT_CATALOGS, instant(T0 + HOUR + 1))
+    const state = projectPlanet(withDueClearing(HOUR), CATALOGS, instant(T0 + HOUR + 1))
     expect(state.work).toBeNull()
   })
 
@@ -292,7 +292,7 @@ describe('segmentation autour de l’échéance d’un chantier (R3, FR-032)', (
    * transition ne peut survenir.
    */
   it('donne le même total qu’un calcul en un seul temps, plafond compris', () => {
-    const segmented = projectPlanet(withDueClearing(HOUR), DEFAULT_CATALOGS, instant(T0 + 2 * HOUR))
+    const segmented = projectPlanet(withDueClearing(HOUR), CATALOGS, instant(T0 + 2 * HOUR))
     const plain = at(2 * HOUR)
 
     // Le déblaiement d'une case ne change aucun taux : les deux doivent
@@ -350,7 +350,7 @@ describe('un achèvement qui touche les ressources est repris par le second segm
   ]
 
   it.each([0, 1, 60, HOUR, THREE_WEEKS])('le crédit survit à %i s après l’échéance', (extra) => {
-    const projected = project(scheduled(), DEFAULT_CATALOGS, instant(T0 + Due + extra), crediting)
+    const projected = project(scheduled(), CATALOGS, instant(T0 + Due + extra), crediting)
 
     // Le stock de Jus part de zéro, et sa production de base est de dix unités par
     // heure — donc dix grains par seconde (R1). Tout le reste est le crédit.
@@ -360,7 +360,7 @@ describe('un achèvement qui touche les ressources est repris par le second segm
     // la capacité. Un crédit qui outrepasserait le plafond violerait I-1, et c'est
     // précisément ce que l'écrêtement du remboursement d'une démolition empêche en
     // amont (FR-049).
-    const base = BERCEAU.baseProductionPerHour.jus
+    const base = CATALOGS.layouts['berceau-v1'].baseProductionPerHour.jus
     expect(projected.holdings.jus.amount).toBe(
       Math.min(BERCEAU.baseCapacityGrains.jus, Credit + base * (Due + extra)),
     )
@@ -385,11 +385,11 @@ describe('un achèvement qui touche les ressources est repris par le second segm
       },
     }
 
-    const projected = project(saturated, DEFAULT_CATALOGS, instant(T0 + Due + HOUR), crediting)
+    const projected = project(saturated, CATALOGS, instant(T0 + Due + HOUR), crediting)
 
     // La Camelote est saturée depuis le départ : elle perd sa production entière
     // pendant les deux segments, et le compte est celui de la durée totale.
-    const base = BERCEAU.baseProductionPerHour.camelote
+    const base = CATALOGS.layouts['berceau-v1'].baseProductionPerHour.camelote
     expect(projected.holdings.camelote.amount).toBe(BERCEAU.baseCapacityGrains.camelote)
     expect(projected.holdings.camelote.lost).toBe(base * (Due + HOUR))
   })

@@ -1,6 +1,5 @@
 import type { FootprintId } from '@zaliba/catalogs'
 import { describe, expect, it } from 'vitest'
-import { DEFAULT_CATALOGS } from '../../src/kernel/catalogs.js'
 import {
   cellsOf,
   coveredDeposits,
@@ -15,6 +14,7 @@ import {
   type PlanetSnapshot,
 } from '../../src/kernel/snapshot.js'
 import { instant } from '../../src/kernel/time.js'
+import { CATALOGS } from '../catalogs.js'
 
 /**
  * La grille : la disposition du catalogue **moins** les déblaiements, plus les
@@ -27,7 +27,6 @@ import { instant } from '../../src/kernel/time.js'
  */
 
 const T0 = instant(1_787_750_000)
-const CATALOGS = DEFAULT_CATALOGS
 
 function fresh(): PlanetSnapshot {
   return emptySnapshot({

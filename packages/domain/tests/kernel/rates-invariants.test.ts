@@ -1,8 +1,6 @@
-import { BUILDINGS } from '@zaliba/catalogs'
 import fc from 'fast-check'
 import { describe, expect, it } from 'vitest'
 import { projectPlanet } from '../../src/game.js'
-import { DEFAULT_CATALOGS } from '../../src/kernel/catalogs.js'
 import { evaluateCurve } from '../../src/kernel/curves.js'
 import { NO_DEFICIT } from '../../src/kernel/energy.js'
 import { coveredDeposits, gridView } from '../../src/kernel/grid.js'
@@ -13,6 +11,7 @@ import {
   type PlanetSnapshot,
 } from '../../src/kernel/snapshot.js'
 import { instant } from '../../src/kernel/time.js'
+import { CATALOGS } from '../catalogs.js'
 
 /**
  * Les invariants de production (data-model § 1.7).
@@ -30,7 +29,6 @@ import { instant } from '../../src/kernel/time.js'
  */
 
 const T0 = instant(1_787_750_000)
-const CATALOGS = DEFAULT_CATALOGS
 
 function fresh(): PlanetSnapshot {
   return emptySnapshot({
@@ -88,7 +86,7 @@ describe('I-12 — un extracteur qui ne recouvre aucun gisement produit zéro (F
    */
   it('ne produit rien à quelque niveau que ce soit', () => {
     fc.assert(
-      fc.property(fc.integer({ min: 1, max: BUILDINGS.mine.maxLevel }), (level) => {
+      fc.property(fc.integer({ min: 1, max: CATALOGS.buildings.mine.maxLevel }), (level) => {
         expect(
           nominalOf({ ...fresh(), buildings: [mine('square-4', { x: 3, y: 3 }, level)] }),
         ).toBe(0)
@@ -133,12 +131,12 @@ describe('I-13 — la production est proportionnelle aux gisements recouverts (F
    * qu'un joueur peut refaire n'importe quel chiffre affiché.
    */
   it('vaut exactement la courbe du niveau multipliée par le compte de gisements', () => {
-    const curve = BUILDINGS.mine.production
+    const curve = CATALOGS.buildings.mine.production
     expect(curve).not.toBeNull()
     if (curve === null) return
 
     fc.assert(
-      fc.property(fc.integer({ min: 1, max: BUILDINGS.mine.maxLevel }), (level) => {
+      fc.property(fc.integer({ min: 1, max: CATALOGS.buildings.mine.maxLevel }), (level) => {
         expect(
           nominalOf({ ...fresh(), buildings: [mine('square-4', { x: 0, y: 4 }, level)] }),
         ).toBe(evaluateCurve(curve, level) * 1)

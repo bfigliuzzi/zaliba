@@ -1,14 +1,14 @@
-import { FOOTPRINT_IDS, OBSTACLES, type ObstacleId } from '@zaliba/catalogs'
+import { FOOTPRINT_IDS, type ObstacleId } from '@zaliba/catalogs'
 import fc from 'fast-check'
 import { describe, expect, it } from 'vitest'
 import { projectPlanet } from '../../../src/game.js'
-import { DEFAULT_CATALOGS } from '../../../src/kernel/catalogs.js'
 import { type Cell, EFFECT_KINDS, type Effect } from '../../../src/kernel/effects.js'
 import { gridView } from '../../../src/kernel/grid.js'
 import { grains } from '../../../src/kernel/resources.js'
 import { applyEffects, emptySnapshot, type PlanetSnapshot } from '../../../src/kernel/snapshot.js'
 import { instant } from '../../../src/kernel/time.js'
 import { decideClear } from '../../../src/modules/construction/clear.js'
+import { CATALOGS } from '../../catalogs.js'
 
 /**
  * **I-8 — une case déblayée ne redevient jamais obstruée** (data-model § 1.7,
@@ -35,7 +35,6 @@ import { decideClear } from '../../../src/modules/construction/clear.js'
  */
 
 const T0 = instant(1_787_750_000)
-const CATALOGS = DEFAULT_CATALOGS
 const LAYOUT = CATALOGS.layouts['berceau-v1']
 
 /** Les dix cases obstruées de la disposition, et leur type. */
@@ -230,7 +229,7 @@ describe('I-8 tient aussi de bout en bout, par la projection', () => {
           if (decision.outcome !== 'accepted') return false
 
           const launched = applyEffects(rich(), decision.effects, T0)
-          const seconds = OBSTACLES[target.obstacleId].durationSeconds
+          const seconds = CATALOGS.obstacles[target.obstacleId].durationSeconds
 
           // Bien **après** l'échéance : la projection applique l'achèvement à
           // `dueAt`, et le temps qui suit n'y change rien (FR-032, R3).
@@ -246,7 +245,7 @@ describe('I-8 tient aussi de bout en bout, par la projection', () => {
 
   it('le gisement révélé est celui du type d’obstacle, et il apparaît à l’échéance', () => {
     for (const target of OBSTRUCTED) {
-      const reveals = OBSTACLES[target.obstacleId].reveals
+      const reveals = CATALOGS.obstacles[target.obstacleId].reveals
       const state = projectPlanet(rich(), CATALOGS, T0)
       const decision = decideClear(
         state,
@@ -260,7 +259,7 @@ describe('I-8 tient aussi de bout en bout, par la projection', () => {
       if (decision.outcome !== 'accepted') throw new Error(`Refusé sur (${target.x},${target.y}).`)
 
       const launched = applyEffects(rich(), decision.effects, T0)
-      const seconds = OBSTACLES[target.obstacleId].durationSeconds
+      const seconds = CATALOGS.obstacles[target.obstacleId].durationSeconds
       const projected = projectPlanet(launched, CATALOGS, instant(T0 + seconds))
       const cell = projected.grid.find((one) => one.x === target.x && one.y === target.y)
 

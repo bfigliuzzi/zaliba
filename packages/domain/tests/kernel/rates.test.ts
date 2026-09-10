@@ -1,10 +1,10 @@
 import { BERCEAU } from '@zaliba/catalogs'
 import { describe, expect, it } from 'vitest'
-import { DEFAULT_CATALOGS } from '../../src/kernel/catalogs.js'
 import { applyEnergyRatio, NO_DEFICIT } from '../../src/kernel/energy.js'
 import { productionRates, storageCaps } from '../../src/kernel/rates.js'
 import { emptySnapshot, type PlanetSnapshot } from '../../src/kernel/snapshot.js'
 import { instant } from '../../src/kernel/time.js'
+import { CATALOGS } from '../catalogs.js'
 
 /**
  * Les taux et les plafonds.
@@ -14,8 +14,6 @@ import { instant } from '../../src/kernel/time.js'
  * garantit qu'aucun état de jeu n'est définitivement bloquant — même à zéro
  * énergie, la planète produit et le joueur peut repartir.
  */
-
-const CATALOGS = DEFAULT_CATALOGS
 
 function fresh(): PlanetSnapshot {
   return emptySnapshot({
@@ -59,7 +57,9 @@ describe('les taux de production d’une planète neuve', () => {
     '%s produit au taux de base du Berceau',
     (resourceId) => {
       const rates = productionRates(fresh(), CATALOGS, NO_DEFICIT)
-      expect(rates[resourceId].effective).toBe(BERCEAU.baseProductionPerHour[resourceId])
+      expect(rates[resourceId].effective).toBe(
+        CATALOGS.layouts['berceau-v1'].baseProductionPerHour[resourceId],
+      )
     },
   )
 
@@ -80,7 +80,9 @@ describe('les taux de production d’une planète neuve', () => {
     'garde la base de %s intacte même à rapport nul',
     (resourceId) => {
       const rates = productionRates(fresh(), CATALOGS, { numerator: 0, denominator: 100 })
-      expect(rates[resourceId].effective).toBe(BERCEAU.baseProductionPerHour[resourceId])
+      expect(rates[resourceId].effective).toBe(
+        CATALOGS.layouts['berceau-v1'].baseProductionPerHour[resourceId],
+      )
       expect(rates[resourceId].effective).toBeGreaterThan(0)
     },
   )

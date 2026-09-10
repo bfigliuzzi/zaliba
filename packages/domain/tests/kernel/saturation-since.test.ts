@@ -1,11 +1,11 @@
 import fc from 'fast-check'
 import { describe, expect, it } from 'vitest'
 import { consolidatePlanet, projectPlanet } from '../../src/game.js'
-import { DEFAULT_CATALOGS } from '../../src/kernel/catalogs.js'
 import { storageCaps } from '../../src/kernel/rates.js'
 import { grains } from '../../src/kernel/resources.js'
 import { applyEffects, emptySnapshot, type PlanetSnapshot } from '../../src/kernel/snapshot.js'
 import { instant } from '../../src/kernel/time.js'
+import { CATALOGS } from '../catalogs.js'
 
 /**
  * **Depuis combien de temps la saturation dure** (US1/AC5).
@@ -28,7 +28,6 @@ import { instant } from '../../src/kernel/time.js'
  * `GET` ne sait rien de ce qui a précédé la dernière consolidation.
  */
 
-const CATALOGS = DEFAULT_CATALOGS
 const T0 = instant(1_787_750_000)
 const HOUR = 3_600
 

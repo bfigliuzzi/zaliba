@@ -37,6 +37,26 @@
                       "minLength": 1,
                       "maxLength": 64
                     },
+                    "gong": {
+                      "type": "object",
+                      "properties": {
+                        "num": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "exclusiveMinimum": 0
+                        },
+                        "den": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "exclusiveMinimum": 0
+                        }
+                      },
+                      "required": [
+                        "num",
+                        "den"
+                      ],
+                      "additionalProperties": false
+                    },
                     "planet": {
                       "type": "object",
                       "properties": {
@@ -398,6 +418,26 @@
                       "type": "string",
                       "minLength": 1,
                       "maxLength": 64
+                    },
+                    "gong": {
+                      "type": "object",
+                      "properties": {
+                        "num": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "exclusiveMinimum": 0
+                        },
+                        "den": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "exclusiveMinimum": 0
+                        }
+                      },
+                      "required": [
+                        "num",
+                        "den"
+                      ],
+                      "additionalProperties": false
                     },
                     "planet": {
                       "type": "object",
@@ -804,6 +844,26 @@
                       "type": "string",
                       "minLength": 1,
                       "maxLength": 64
+                    },
+                    "gong": {
+                      "type": "object",
+                      "properties": {
+                        "num": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "exclusiveMinimum": 0
+                        },
+                        "den": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "exclusiveMinimum": 0
+                        }
+                      },
+                      "required": [
+                        "num",
+                        "den"
+                      ],
+                      "additionalProperties": false
                     },
                     "planet": {
                       "type": "object",
@@ -1386,6 +1446,26 @@
                       "type": "string",
                       "minLength": 1,
                       "maxLength": 64
+                    },
+                    "gong": {
+                      "type": "object",
+                      "properties": {
+                        "num": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "exclusiveMinimum": 0
+                        },
+                        "den": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "exclusiveMinimum": 0
+                        }
+                      },
+                      "required": [
+                        "num",
+                        "den"
+                      ],
+                      "additionalProperties": false
                     },
                     "planet": {
                       "type": "object",

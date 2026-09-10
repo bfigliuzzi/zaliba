@@ -1,12 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import { projectPlanet } from '../../../src/game.js'
-import { type Catalogs, DEFAULT_CATALOGS } from '../../../src/kernel/catalogs.js'
+import type { Catalogs } from '../../../src/kernel/catalogs.js'
 import type { ResourceAmount } from '../../../src/kernel/effects.js'
 import type { ProjectedState } from '../../../src/kernel/projection.js'
 import { grains } from '../../../src/kernel/resources.js'
 import { emptySnapshot, type PlanetSnapshot } from '../../../src/kernel/snapshot.js'
 import { instant } from '../../../src/kernel/time.js'
 import { secondsUntilAffordable } from '../../../src/modules/construction/build.js'
+import { CATALOGS } from '../../catalogs.js'
 
 /**
  * « Payable dans » — le chiffre qui distingue un refus d'une impasse.
@@ -30,7 +31,6 @@ import { secondsUntilAffordable } from '../../../src/modules/construction/build.
  */
 
 const T0 = instant(1_787_750_000)
-const CATALOGS = DEFAULT_CATALOGS
 
 /** Les taux de base du Berceau, en grains par seconde (R1, R7). */
 const BASE_RATE = { camelote: 20, jus: 10, 'bave-etoiles': 5 } as const

@@ -34,9 +34,30 @@ Le registre lexical du jeu est délibérément décalé. « Métal », « crista
 | **Berceau** | archétype | la planète mère, polyvalente |
 | **Veine** / **geyser** / **récif** | case spéciale | gisement de Camelote / Jus / Bave d'étoiles |
 | **Mine** / **puits** / **racloir** | bâtiment | extracteur de Camelote / Jus / Bave d'étoiles |
+| **Gong** | unité de temps | l'unité dans laquelle le catalogue déclare ses durées et ses productions (003) |
 
 Les ressources étant des **données déclaratives** et non des colonnes nommées en
 dur, tout renommage reste sans coût technique à n'importe quel stade.
+
+**Le Gong**, entré au vocabulaire le 2026-08-31 avec la tranche 003. Le catalogue
+ne dit plus « cent vingt secondes » mais « douze gongs », et plus « quinze unités
+par heure » mais « cent cinquante grains par gong ». **Chaque serveur déclare la
+longueur de son gong**, et cette longueur lui appartient : elle est la même pour
+tous ses joueurs, et le client la **reçoit** dans la réponse qui porte l'état de
+sa planète — il ne la configure pas.
+
+Le bénéfice tient en une phrase, et c'est ce qui a fait retenir cette forme :
+durées et production sont couplées **par l'unité elle-même** et ne peuvent plus
+diverger. Un serveur qui bat deux fois plus vite voit ses chantiers *et* son
+accumulation de ressources accélérés dans le même rapport — là où un réglage
+portant sur les seules durées donnerait des chantiers instantanés et un joueur
+affamé.
+
+Le **gong canonique** vaut dix secondes. Ce n'est pas un chiffre rond choisi pour
+l'être : c'est le plus grand commun diviseur exact des quinze durées du
+catalogue, ce qui permet de changer d'unité sans déplacer aucun chiffre du jeu.
+Ce que le joueur voit reste du **temps réel** : le gong n'apparaît que sur la
+page de règles, avec sa longueur, pour qu'aucun calcul ne soit caché.
 
 ---
 
@@ -422,11 +443,12 @@ d'architecture. Il mérite sa propre spécification, avant le marché lui-même.
 | --- | --- | --- |
 | **001** | **La planète mère** — grille à empreintes, gisements, obstacles déblayables, démolition, production dans le temps, transparence des coûts | Tout le jeu repose sur l'hypothèse que ranger des polyominos est amusant. La valider sur une planète avant d'en faire l'ossature de sept. |
 | **002** | **La Régie approximative** — le système visuel de l'écran de parcelle : jeu de valeurs unique, silhouettes non chromatiques, adresse courte, raison du refus portée par la case, annonce unique et relevé, ratures, guichet à trois colonnes | *Interposée le 2026-08-27.* La direction artistique existe et elle est mesurée ; **sept planètes habillées par un écran sans identité coûteraient sept fois la même reprise**. Et sans elle, la refonte à venir serait une régression d'accessibilité par rapport aux caractères `▓ ■ · ◆` de 001, qui se lisaient en noir et blanc. Aucune règle de jeu ne change. |
-| **003** | **Le système solaire** — les sept archétypes, choix du berceau, installation sur les autres planètes | Rend la spécialisation réelle |
-| **004** | **La recherche** — laboratoire et arbre technologique | Prérequis de tout ce qui suit |
-| **005** | **Le Toboggan** — logistique interne | Rend la spécialisation *payante*. Doit suivre le système solaire de près, sinon celui-ci est une contrainte sans récompense. |
-| **006** | **L'adjacence** | Approfondissement, pas un prérequis. Relance si le puzzle s'essouffle. |
-| **007** | **Le Chamboule-Tout** | Après les flottes, dont dépendent ses verrous anti-exploit |
+| **003** | **Le Gong** — l'unité de temps déclarée du jeu : le catalogue déclare en gongs et en grains par gong, chaque serveur déclare la longueur de la sienne et l'annonce au client | *Interposée le 2026-08-30.* Le temps cesse d'être un réglage pour devenir une **unité**, ce qui couple durées et production par construction. Aucune valeur d'équilibrage ne bouge : au gong canonique, les 240 chiffres comparables sont strictement inchangés. Elle débloque le banc d'essai de la tranche 900, qui n'a pas de levier de rythme sans elle. |
+| **004** | **Le système solaire** — les sept archétypes, choix du berceau, installation sur les autres planètes | Rend la spécialisation réelle |
+| **005** | **La recherche** — laboratoire et arbre technologique | Prérequis de tout ce qui suit |
+| **006** | **Le Toboggan** — logistique interne | Rend la spécialisation *payante*. Doit suivre le système solaire de près, sinon celui-ci est une contrainte sans récompense. |
+| **007** | **L'adjacence** | Approfondissement, pas un prérequis. Relance si le puzzle s'essouffle. |
+| **008** | **Le Chamboule-Tout** | Après les flottes, dont dépendent ses verrous anti-exploit |
 
 *Décalage du 2026-08-27 (R18 de 002).* Le système solaire portait le numéro 002 ;
 il devient 003, et les quatre tranches suivantes se décalent d'autant. **Les motifs
@@ -434,6 +456,18 @@ d'ordre sont inchangés** : seuls les numéros bougent, et la seule dépendance
 réordonnée est celle du Toboggan, qui suit toujours le système solaire.
 Laisser cette table dire autre chose que la réalité des branches est exactement
 l'écart implicite que le principe I de la constitution proscrit.
+
+*Décalage du 2026-08-30 (003 — Le Gong).* Le système solaire portait le numéro
+003 ; il devient **004**, et les quatre tranches suivantes se décalent d'autant.
+**Les motifs d'ordre sont inchangés** : seuls les numéros bougent, et aucune
+dépendance n'est réordonnée — le Toboggan suit toujours le système solaire.
+
+Le Gong entre ici plutôt que dans la bande outillage parce qu'il est du
+**vocabulaire de jeu** : il touche le catalogue, le contrat, le domaine et la
+page de règles. C'est cette distinction qui a fait scinder le besoin d'origine en
+deux tranches — 003 pour l'unité, **900** pour le banc d'essai qui s'en sert.
+Les specs `0xx` sont le jeu, les `9xx` l'outillage ; c'est ce qui évite de
+décaler la feuille de route du jeu pour un besoin d'atelier.
 
 Non encore ordonnancés : flottes, colonisation, combat, marché, alliances,
 échanges, diplomatie, mini-jeux, monétisation cosmétique.
@@ -454,6 +488,27 @@ Non encore ordonnancés : flottes, colonisation, combat, marché, alliances,
   entre les parties.
 - **La perte par saturation est-elle tenable ?** Elle est en tension avec le
   principe produit 5 du README (§3.7). À réexaminer à l'équilibrage.
+- **Le gong doit-il devenir l'unité *native* du domaine ?** Ouverte le
+  2026-08-31 par la tranche 003, qui a délibérément arrêté le gong à la
+  **déclaration** : le catalogue est en gongs, le domaine reste en secondes, et
+  `resolveCatalogs` fait le pont une fois au démarrage.
+
+  *Le bénéfice d'aller plus loin* : le temps du jeu s'exprimerait dans une seule
+  unité de bout en bout, et la résolution disparaîtrait — avec elle la classe
+  d'erreur « un catalogue déclaré passé là où un résolu est attendu », que le
+  typage tient aujourd'hui mais qu'il faut tenir.
+
+  *Le coût* : rouvrir `kernel/time.ts` et `kernel/projection.ts`, c'est-à-dire le
+  cœur de 001, et sa réponse la plus éprouvée. *Le défaut connu*, qui est le vrai
+  motif du report : à dix secondes par gong, les compteurs extrapolés de 002
+  décriraient un état **faux** entre deux gongs — le joueur verrait des
+  ressources qui n'existent pas encore, ou pas celles qui existent. Il faudrait
+  soit afficher par paliers de dix secondes, soit réintroduire une conversion à
+  l'affichage, c'est-à-dire refaire à la sortie ce qu'on aurait supprimé à
+  l'entrée.
+
+  À rouvrir seulement si un besoin le réclame ; la profondeur n'a pas été
+  implémentée « au cas où » (principe V).
 
 ---
 
@@ -465,3 +520,4 @@ Non encore ordonnancés : flottes, colonisation, combat, marché, alliances,
 | 2026-08-23 | Corrections induites par la spécification 001 : nom des extracteurs, Berceau à 10 obstacles, L et T fixés à quatre cases, 1×3 écartée en 001, variantes d'empreinte, chantier non annulable, ajout du stockage avec saturation (§3.7) et de l'énergie (§3.8), trois questions ouvertes nouvelles. |
 | 2026-08-23 | Rôle des ressources tranché (§1) : Camelote et Bave d'étoiles pour la construction et la recherche, Jus pour la propulsion des flottes et la recherche. **Le conflit lexical Jus / énergie est clos** : l'énergie est une ressource à part, le Jus est un carburant. §3.8 réécrit — l'énergie est produite par un bâtiment dédié et consommée par **tous** les autres bâtiments, et le rapport ne dégrade que la production. |
 | 2026-08-23 | **Nom de l'extracteur de Bave d'étoiles tranché : « racloir ».** La proposition issue de la spécification 001 est retenue ; la question ouverte du §11 est close. C'était la dernière question de vocabulaire en suspens. |
+| 2026-08-31 | **Le Gong entre au vocabulaire** (§1), tranche 003. Le catalogue déclare ses durées en gongs et ses productions en grains par gong ; chaque serveur déclare la longueur de la sienne, l'applique et l'annonce au client. Le gong canonique vaut dix secondes — le PGCD exact des quinze durées —, donc **aucun chiffre du jeu n'a bougé**. La feuille de route se décale : le système solaire passe de 003 à **004** (§10). Une question ouverte s'ajoute (§11) : faire du gong l'unité *native* du domaine, écartée pour l'instant parce qu'elle rendrait les compteurs extrapolés de 002 faux entre deux gongs. |

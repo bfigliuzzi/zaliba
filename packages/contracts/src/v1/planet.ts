@@ -151,6 +151,36 @@ export const PlanetSnapshotV1 = z
     serverInstant: instantSchema,
     /** Rend une divergence client/serveur détectable, non silencieuse (R15). */
     catalogVersion: z.string().min(1).max(64),
+    /**
+     * **La longueur du gong du serveur, en secondes** — une fraction entière.
+     *
+     * Elle voyage ici, avec l'état qu'elle explique, et non par un point d'accès
+     * à elle : celui-là pourrait être appelé une fois puis mis en cache, et le
+     * client dériverait alors des chiffres exacts pour un serveur qui a changé
+     * de rythme depuis. La réponse qui porte l'état porte les règles qui
+     * l'expliquent — exactement comme `serverInstant` et `catalogVersion`, qui
+     * sont là pour la même raison : le client ne date rien et ne dérive rien
+     * sans que le serveur le lui ait dit d'abord.
+     *
+     * **Facultative, et son absence n'est pas un accord.** Un client qui ne
+     * reçoit pas de longueur n'affiche **aucun** chiffre dérivé, au lieu de se
+     * replier sur le gong canonique : le repli afficherait des chiffres
+     * d'apparence exacte pour un monde peut-être différent, ce qui est la faute
+     * que la vérification de version a déjà nommée — croire à l'accord sur la
+     * foi d'une absence fait afficher des chiffres faux précisément quand on ne
+     * sait rien.
+     *
+     * **Aucune borne supérieure.** La règle qui rend une longueur utilisable —
+     * que tous les taux du catalogue s'y résolvent en entiers — ne s'exprime pas
+     * dans un schéma : c'est la validation de démarrage du serveur qui la porte.
+     */
+    gong: z
+      .object({
+        num: z.number().int().positive(),
+        den: z.number().int().positive(),
+      })
+      .strict()
+      .optional(),
     planet: z
       .object({
         id: uuid,

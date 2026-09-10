@@ -1,6 +1,4 @@
-import { BUILDINGS } from '@zaliba/catalogs'
 import { describe, expect, it } from 'vitest'
-import { DEFAULT_CATALOGS } from '../../../src/kernel/catalogs.js'
 import { cumulativeCost } from '../../../src/kernel/curves.js'
 import {
   emptySnapshot,
@@ -9,6 +7,7 @@ import {
 } from '../../../src/kernel/snapshot.js'
 import { instant } from '../../../src/kernel/time.js'
 import { effectsOnCompletion } from '../../../src/modules/construction/completion.js'
+import { CATALOGS } from '../../catalogs.js'
 
 /**
  * Les effets d'un chantier à son achèvement — **redérivés, jamais stockés**.
@@ -23,7 +22,6 @@ import { effectsOnCompletion } from '../../../src/modules/construction/completio
  */
 
 const T0 = instant(1_787_750_000)
-const CATALOGS = DEFAULT_CATALOGS
 
 function fresh(): PlanetSnapshot {
   return emptySnapshot({
@@ -152,7 +150,7 @@ describe('une démolition retire le bâtiment et rembourse (FR-046)', () => {
     )
     const credit = effects.find((e) => e.kind === 'credit-resources')
 
-    const { cost, refund } = BUILDINGS['mine']
+    const { cost, refund } = CATALOGS.buildings['mine']
     for (const [resourceId, curve] of Object.entries(cost)) {
       const expected = Math.floor((cumulativeCost(curve, level) * refund.num) / refund.den)
       const amount =

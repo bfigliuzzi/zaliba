@@ -1,6 +1,10 @@
 {
   "serverInstant": 1787750000,
-  "catalogVersion": "2026-08-26.1",
+  "catalogVersion": "2026-08-30.1",
+  "gong": {
+    "num": 10,
+    "den": 1
+  },
   "planet": {
     "id": "33333333-3333-4333-8333-333333333333",
     "archetypeId": "berceau",

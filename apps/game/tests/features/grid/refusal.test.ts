@@ -1,8 +1,9 @@
 import type { BuildingView, CellView, PlacementCheck } from '@zaliba/domain'
-import { DEFAULT_CATALOGS, ratePerHour } from '@zaliba/domain'
+import { ratePerHour } from '@zaliba/domain'
 import { describe, expect, it } from 'vitest'
 import { appearanceOf } from '../../../src/features/grid/appearance.js'
 import { type ContexteDeRefus, raisonDeRefus } from '../../../src/features/grid/refusal.js'
+import { CATALOGS } from '../../catalogs.js'
 
 /**
  * La raison d'un refus, **portée par la case** (FR-021, R12).
@@ -89,7 +90,7 @@ const contexte = (patch: Partial<ContexteDeRefus> = {}): ContexteDeRefus => ({
   bounds: BOUNDS,
   grid: grille(),
   buildings: [],
-  catalogs: DEFAULT_CATALOGS,
+  catalogs: CATALOGS,
   ...patch,
 })
 
@@ -327,7 +328,7 @@ describe('un débordement porte sa raison sur les cases qui existent', () => {
         valide: false,
         raison,
       },
-      DEFAULT_CATALOGS,
+      CATALOGS,
     )
 
     expect(vue.etat).toBe('visee-refusee')

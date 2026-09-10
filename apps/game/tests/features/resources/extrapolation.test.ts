@@ -1,7 +1,8 @@
 import { PlanetSnapshotV1 } from '@zaliba/contracts'
-import { DEFAULT_CATALOGS, instant, projectPlanet } from '@zaliba/domain'
+import { instant, projectPlanet } from '@zaliba/domain'
 import { describe, expect, it, vi } from 'vitest'
 import { extrapolate, snapshotFromContract } from '../../../src/features/resources/extrapolation.js'
+import { CATALOGS } from '../../catalogs.js'
 import rawFresh from '../../fixtures/planet-fresh.json' with { type: 'json' }
 
 /**
@@ -17,8 +18,6 @@ import rawFresh from '../../fixtures/planet-fresh.json' with { type: 'json' }
  * verrait un compteur, cliquerait, et le serveur lui répondrait avec un autre
  * chiffre — sans qu'aucun des deux ait tort de son point de vue.
  */
-
-const CATALOGS = DEFAULT_CATALOGS
 
 /**
  * L'échantillon est **analysé** par le schéma du contrat, jamais transtypé.

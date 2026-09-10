@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest'
-import { DEFAULT_CATALOGS } from '../../../src/kernel/catalogs.js'
 import type { Cell } from '../../../src/kernel/effects.js'
 import { gridView, placementCells, validatePlacement } from '../../../src/kernel/grid.js'
 import {
@@ -9,6 +8,7 @@ import {
 } from '../../../src/kernel/snapshot.js'
 import { instant } from '../../../src/kernel/time.js'
 import { placementAvailability } from '../../../src/modules/construction/availability.js'
+import { CATALOGS } from '../../catalogs.js'
 
 /**
  * **L'impossibilité de placer un type, énoncée** (cas limite de la spécification).
@@ -27,7 +27,6 @@ import { placementAvailability } from '../../../src/modules/construction/availab
  * confondrait, et le joueur démolirait au hasard.
  */
 
-const CATALOGS = DEFAULT_CATALOGS
 const T0 = instant(1_787_750_000)
 
 function fresh(): PlanetSnapshot {

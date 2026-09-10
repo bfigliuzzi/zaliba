@@ -1,9 +1,13 @@
-import { BUILDINGS } from '@zaliba/catalogs'
+import { GONG_CANONICAL } from '@zaliba/catalogs'
 import { projectPlanet } from '../src/game.js'
-import { DEFAULT_CATALOGS } from '../src/kernel/catalogs.js'
+import { DECLARED_CATALOGS } from '../src/kernel/catalogs.js'
+import { resolveCatalogs } from '../src/kernel/gong.js'
 import { grains } from '../src/kernel/resources.js'
 import { emptySnapshot, type PlacedBuilding, type PlanetSnapshot } from '../src/kernel/snapshot.js'
 import { instant } from '../src/kernel/time.js'
+
+/** Le catalogue du jeu, résolu au gong canonique — la charge réelle (003). */
+const CATALOGS = resolveCatalogs(DECLARED_CATALOGS, GONG_CANONICAL)
 
 /**
  * **La mesure de l'objectif « projection d'une planète sous la milliseconde »**
@@ -30,7 +34,6 @@ import { instant } from '../src/kernel/time.js'
  * domaine, lui, reçoit toujours son instant en argument.
  */
 
-const CATALOGS = DEFAULT_CATALOGS
 const T0 = instant(1_787_750_000)
 const THREE_WEEKS = 21 * 86_400
 const ITERATIONS = 10_000
@@ -53,7 +56,7 @@ function loaded(): PlanetSnapshot {
 
   for (let index = 0; index < 20; index += 1) {
     const typeId = types[index % types.length] as (typeof types)[number]
-    const variantId = BUILDINGS[typeId].variants[0]
+    const variantId = CATALOGS.buildings[typeId].variants[0]
     if (variantId === undefined) throw new Error(`${typeId} n’a aucune variante`)
 
     buildings.push({

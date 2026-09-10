@@ -1,5 +1,4 @@
-import type { BuildingView, CellView, WorkView } from '@zaliba/domain'
-import { DEFAULT_CATALOGS } from '@zaliba/domain'
+import type { BuildingView, Catalogs, CellView, WorkView } from '@zaliba/domain'
 import type React from 'react'
 import { type KeyboardEvent, useEffect, useRef } from 'react'
 import { Glyphe } from '../../design/Glyphe.js'
@@ -50,6 +49,17 @@ const CONFIRM = new Set(['Enter', ' '])
 
 export interface GridViewProps {
   readonly cells: readonly CellView[]
+  /**
+   * Le catalogue **résolu à la longueur du serveur** — une propriété, et non un
+   * import.
+   *
+   * La grille l'importait de `@zaliba/domain` avant 003, ce qui était possible
+   * tant qu'il existait un catalogue « par défaut ». Il n'y en a plus : résoudre
+   * demande une longueur de gong, et cette longueur appartient au serveur. Le
+   * recevoir en propriété rend au passage cette vue éprouvable contre un monde
+   * synthétique, ce qu'un import cachait.
+   */
+  readonly catalogs: Catalogs
   readonly width: number
   readonly height: number
   /** Les bâtiments projetés : l'emprise, le niveau, et le gisement exploité. */
@@ -135,6 +145,7 @@ function DessinDeCase({ vue }: { readonly vue: CellAppearance }) {
 
 export function GridView({
   cells,
+  catalogs,
   width,
   height,
   buildings,
@@ -267,7 +278,7 @@ export function GridView({
                 pour une constante que le client embarque déjà, et que
                 l'avertissement de divergence garde honnête (R15).
               */
-              const vue = appearanceOf(cell, buildings, work, pose, DEFAULT_CATALOGS)
+              const vue = appearanceOf(cell, buildings, work, pose, catalogs)
               const mark = ghostMarkOf(ghost, cell)
 
               return (

@@ -1,7 +1,6 @@
-import { OBSTACLES, type ObstacleId } from '@zaliba/catalogs'
+import { OBSTACLE_IDS, type ObstacleId } from '@zaliba/catalogs'
 import { describe, expect, it } from 'vitest'
 import { projectPlanet } from '../../../src/game.js'
-import { DEFAULT_CATALOGS } from '../../../src/kernel/catalogs.js'
 import type { DebitResources, ScheduleWork } from '../../../src/kernel/effects.js'
 import type { ProjectedState } from '../../../src/kernel/projection.js'
 import { grains } from '../../../src/kernel/resources.js'
@@ -14,6 +13,7 @@ import {
   decideClear,
 } from '../../../src/modules/construction/clear.js'
 import { previewClear } from '../../../src/modules/construction/preview.js'
+import { CATALOGS } from '../../catalogs.js'
 
 /**
  * Le déblaiement : libérer du terrain contre des ressources et du temps.
@@ -38,7 +38,6 @@ import { previewClear } from '../../../src/modules/construction/preview.js'
  */
 
 const T0 = instant(1_787_750_000)
-const CATALOGS = DEFAULT_CATALOGS
 const WORK_ID = '99999999-9999-4999-8999-999999999999'
 
 /** L'éboulis de (3,0) : le moins cher, et il rend du terrain nu. */
@@ -72,12 +71,12 @@ function command(cell = EBOULIS.cell): ClearCommand {
 
 /** Le coût attendu, relu du catalogue — jamais recopié. */
 function expectedCost(obstacleId: ObstacleId): Record<string, number> {
-  return { ...OBSTACLES[obstacleId].cost } as Record<string, number>
+  return { ...CATALOGS.obstacles[obstacleId].cost } as Record<string, number>
 }
 
 describe('le coût, la durée et le résultat sont lus du type d’obstacle (FR-042, FR-043)', () => {
   it('le coût est celui du catalogue, pour chacun des cinq types', () => {
-    for (const obstacleId of Object.keys(OBSTACLES) as readonly ObstacleId[]) {
+    for (const obstacleId of OBSTACLE_IDS) {
       const cost = clearCost(obstacleId, CATALOGS)
       expect(Object.fromEntries(cost.map((one) => [one.resourceId, one.grains]))).toEqual(
         expectedCost(obstacleId),
@@ -86,13 +85,15 @@ describe('le coût, la durée et le résultat sont lus du type d’obstacle (FR-
   })
 
   it('la durée est celle du catalogue, pour chacun des cinq types', () => {
-    for (const obstacleId of Object.keys(OBSTACLES) as readonly ObstacleId[]) {
-      expect(clearDuration(obstacleId, CATALOGS)).toBe(OBSTACLES[obstacleId].durationSeconds)
+    for (const obstacleId of OBSTACLE_IDS) {
+      expect(clearDuration(obstacleId, CATALOGS)).toBe(
+        CATALOGS.obstacles[obstacleId].durationSeconds,
+      )
     }
   })
 
   it('aucun coût de déblaiement n’est libellé en Jus (FR-062)', () => {
-    for (const obstacleId of Object.keys(OBSTACLES) as readonly ObstacleId[]) {
+    for (const obstacleId of OBSTACLE_IDS) {
       expect(clearCost(obstacleId, CATALOGS).map((one) => one.resourceId)).not.toContain('jus')
     }
   })
@@ -114,7 +115,7 @@ describe('decide() retourne des effets, et ne mute rien', () => {
     expect(scheduled.nature).toBe('clear')
     expect(scheduled.target).toEqual({ kind: 'cell', cell: EBOULIS.cell })
     expect(scheduled.startedAt).toBe(T0)
-    expect(scheduled.dueAt).toBe(T0 + OBSTACLES[EBOULIS.obstacleId].durationSeconds)
+    expect(scheduled.dueAt).toBe(T0 + CATALOGS.obstacles[EBOULIS.obstacleId].durationSeconds)
   })
 
   it('la cible ne porte **aucune** géométrie de bâtiment', () => {
@@ -189,8 +190,8 @@ describe('le résultat est déterminé, et jamais tiré au sort (FR-044, US5-3)'
     expect(Object.fromEntries(preview.preview.cost.map((o) => [o.resourceId, o.grains]))).toEqual(
       expectedCost(POCHE.obstacleId),
     )
-    expect(preview.preview.duration).toBe(OBSTACLES[POCHE.obstacleId].durationSeconds)
-    expect(preview.preview.dueAt).toBe(T0 + OBSTACLES[POCHE.obstacleId].durationSeconds)
+    expect(preview.preview.duration).toBe(CATALOGS.obstacles[POCHE.obstacleId].durationSeconds)
+    expect(preview.preview.dueAt).toBe(T0 + CATALOGS.obstacles[POCHE.obstacleId].durationSeconds)
   })
 
   it('ce que l’aperçu annonce est ce que la décision engage', () => {

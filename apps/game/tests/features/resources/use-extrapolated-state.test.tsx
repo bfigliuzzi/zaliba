@@ -1,9 +1,9 @@
 import { act, cleanup, renderHook } from '@testing-library/react'
 import { PlanetSnapshotV1 } from '@zaliba/contracts'
-import { DEFAULT_CATALOGS } from '@zaliba/domain'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { useExtrapolatedState } from '../../../src/features/resources/useExtrapolatedState.js'
 import { createClock } from '../../../src/lib/clock.js'
+import { CATALOGS } from '../../catalogs.js'
 import rawFresh from '../../fixtures/planet-fresh.json' with { type: 'json' }
 
 /**
@@ -19,7 +19,6 @@ import rawFresh from '../../fixtures/planet-fresh.json' with { type: 'json' }
  * téléphone pour animer un chiffre immobile.
  */
 
-const CATALOGS = DEFAULT_CATALOGS
 const payload = PlanetSnapshotV1.parse(rawFresh)
 
 beforeEach(() => {

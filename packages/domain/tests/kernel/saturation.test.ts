@@ -1,8 +1,7 @@
-import { BERCEAU, BUILDINGS } from '@zaliba/catalogs'
+import { BERCEAU } from '@zaliba/catalogs'
 import fc from 'fast-check'
 import { describe, expect, it } from 'vitest'
 import { projectPlanet } from '../../src/game.js'
-import { DEFAULT_CATALOGS } from '../../src/kernel/catalogs.js'
 import { evaluateCurve } from '../../src/kernel/curves.js'
 import { grains } from '../../src/kernel/resources.js'
 import {
@@ -11,6 +10,7 @@ import {
   type PlanetSnapshot,
 } from '../../src/kernel/snapshot.js'
 import { instant } from '../../src/kernel/time.js'
+import { CATALOGS } from '../catalogs.js'
 
 /**
  * **La saturation longue : trois semaines d'absence, au grain près** (US1-5, US7-3,
@@ -39,7 +39,6 @@ import { instant } from '../../src/kernel/time.js'
  */
 
 const T0 = instant(1_787_750_000)
-const CATALOGS = DEFAULT_CATALOGS
 const RESOURCES = CATALOGS.resourceIds
 const THREE_WEEKS = 21 * 86_400
 
@@ -70,7 +69,7 @@ function placed(level: number, x: number): PlacedBuilding {
 
 /** La capacité d'un entrepôt, **recalculée depuis la courbe** du catalogue. */
 function warehouseCapacity(level: number): number {
-  const curve = BUILDINGS.entrepot.capacity
+  const curve = CATALOGS.buildings.entrepot.capacity
   if (curve === null) throw new Error('l’entrepôt n’a pas de courbe de capacité')
   return evaluateCurve(curve, level)
 }
@@ -87,7 +86,7 @@ function expected(
   extraCapacity = 0,
 ): { amount: number; lost: number; saturatedAtSecond: number | null } {
   const cap = BERCEAU.baseCapacityGrains[resourceId] + extraCapacity
-  const rate = BERCEAU.baseProductionPerHour[resourceId]
+  const rate = CATALOGS.layouts['berceau-v1'].baseProductionPerHour[resourceId]
   const start = BERCEAU.startingStockGrains[resourceId]
 
   // Une unité par heure vaut exactement un grain par seconde (R1) : le gain brut est
@@ -132,7 +131,7 @@ describe('trois semaines d’absence, au grain près (SC-003, US1-5)', () => {
     expect(second.holdings[resourceId].lost).toBeGreaterThan(first.holdings[resourceId].lost)
 
     // Et la perte supplémentaire vaut exactement la production de la période.
-    const rate = BERCEAU.baseProductionPerHour[resourceId]
+    const rate = CATALOGS.layouts['berceau-v1'].baseProductionPerHour[resourceId]
     expect(second.holdings[resourceId].lost - first.holdings[resourceId].lost).toBe(
       rate * THREE_WEEKS,
     )
@@ -240,7 +239,7 @@ describe('I-2 — la projection reste additive, plafond et perte compris', () =>
       fc.property(
         fc.integer({ min: 1, max: THREE_WEEKS }),
         fc.integer({ min: 1, max: THREE_WEEKS }),
-        fc.integer({ min: 1, max: BUILDINGS.entrepot.maxLevel }),
+        fc.integer({ min: 1, max: CATALOGS.buildings.entrepot.maxLevel }),
         (first, second, level) => {
           const start: PlanetSnapshot = { ...fresh(), buildings: [placed(level, 5)] }
 

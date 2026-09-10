@@ -41,7 +41,7 @@ function levelOneCost(typeId: (typeof BUILDING_TYPE_IDS)[number]): Record<string
 
 describe('la base du Berceau ne bloque jamais un joueur', () => {
   it.each(RESOURCE_IDS)('produit de la %s sans rien poser (FR-018)', (resourceId) => {
-    expect(BERCEAU.baseProductionPerHour[resourceId]).toBeGreaterThan(0)
+    expect(BERCEAU.baseProductionPerGong[resourceId]).toBeGreaterThan(0)
   })
 
   it.each(RESOURCE_IDS)('offre une capacité de départ pour la %s (FR-025)', (resourceId) => {
@@ -127,7 +127,7 @@ describe('aucun coût n’est libellé en Jus (FR-062, R22)', () => {
   })
 
   it('produit tout de même du Jus, stocké et plafonné comme le reste', () => {
-    expect(BERCEAU.baseProductionPerHour['jus']).toBeGreaterThan(0)
+    expect(BERCEAU.baseProductionPerGong['jus']).toBeGreaterThan(0)
     expect(BERCEAU.baseCapacityGrains['jus']).toBeGreaterThan(0)
   })
 })
@@ -137,8 +137,13 @@ describe('chaque type déclare ses bornes (FR-040, FR-046)', () => {
     expect(BUILDINGS[typeId].maxLevel).toBeGreaterThanOrEqual(1)
   })
 
+  /**
+   * En **gongs** depuis 003, comme toute durée déclarée. Ce que l'assertion
+   * garde est inchangé : une durée nulle rendrait la démolition instantanée, et
+   * `work-in-progress` n'aurait plus rien à opposer.
+   */
   it.each(BUILDING_TYPE_IDS)('%s déclare une durée de démolition', (typeId) => {
-    expect(BUILDINGS[typeId].demolitionSeconds).toBeGreaterThan(0)
+    expect(BUILDINGS[typeId].demolitionGongs).toBeGreaterThan(0)
   })
 
   /**

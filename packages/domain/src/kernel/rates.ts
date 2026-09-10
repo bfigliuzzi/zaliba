@@ -31,6 +31,13 @@ import type { PlacedBuilding, PlanetSnapshot } from './snapshot.js'
  * d'où vient le déficit — et c'est ce qui permet d'éprouver les deux moitiés
  * séparément.
  *
+ * **Ce fichier ne connaît pas le gong**, et c'est la frontière que 003 a posée.
+ * Le catalogue déclare ses productions en grains par gong ; `kernel/gong.ts` les
+ * a résolues en grains par seconde **avant** que ce fichier ne voie quoi que ce
+ * soit, et une longueur qui ne s'y résoudrait pas en entier refuse le démarrage.
+ * Les taux qui arrivent ici sont donc entiers, comme ils l'ont toujours été —
+ * `RatePerHour` n'a pas changé de sens, seulement de provenance.
+ *
  * La règle de production tient en une ligne, et c'est une exigence : SC-002
  * promet au joueur de pouvoir refaire n'importe quel chiffre affiché.
  *

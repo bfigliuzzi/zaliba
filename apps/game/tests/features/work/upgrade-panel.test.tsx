@@ -1,10 +1,11 @@
 import { cleanup, render, screen } from '@testing-library/react'
 import { PlanetSnapshotV1 } from '@zaliba/contracts'
 import type { BuildingView, UpgradePreviewResult } from '@zaliba/domain'
-import { DEFAULT_CATALOGS, instant, previewUpgrade, projectPlanet } from '@zaliba/domain'
+import { instant, previewUpgrade, projectPlanet } from '@zaliba/domain'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { snapshotFromContract } from '../../../src/features/resources/extrapolation.js'
 import { UpgradePanel } from '../../../src/features/work/UpgradePanel.js'
+import { CATALOGS } from '../../catalogs.js'
 import rawWithMine from '../../fixtures/planet-with-mine.json' with { type: 'json' }
 
 /**
@@ -27,7 +28,6 @@ import rawWithMine from '../../fixtures/planet-with-mine.json' with { type: 'jso
 
 afterEach(cleanup)
 
-const CATALOGS = DEFAULT_CATALOGS
 const payload = PlanetSnapshotV1.parse(rawWithMine)
 const BUILDING_ID = '88888888-8888-4888-8888-888888888888'
 

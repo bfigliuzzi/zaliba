@@ -108,6 +108,26 @@
                       "maxItems": 36,
                       "type": "array"
                     },
+                    "gong": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "den": {
+                          "exclusiveMinimum": 0,
+                          "minimum": 0,
+                          "type": "integer"
+                        },
+                        "num": {
+                          "exclusiveMinimum": 0,
+                          "minimum": 0,
+                          "type": "integer"
+                        }
+                      },
+                      "required": [
+                        "den",
+                        "num"
+                      ],
+                      "type": "object"
+                    },
                     "holdings": {
                       "items": {
                         "additionalProperties": false,
@@ -556,6 +576,26 @@
                       "maxItems": 36,
                       "type": "array"
                     },
+                    "gong": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "den": {
+                          "exclusiveMinimum": 0,
+                          "minimum": 0,
+                          "type": "integer"
+                        },
+                        "num": {
+                          "exclusiveMinimum": 0,
+                          "minimum": 0,
+                          "type": "integer"
+                        }
+                      },
+                      "required": [
+                        "den",
+                        "num"
+                      ],
+                      "type": "object"
+                    },
                     "holdings": {
                       "items": {
                         "additionalProperties": false,
@@ -916,6 +956,26 @@
                       },
                       "maxItems": 36,
                       "type": "array"
+                    },
+                    "gong": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "den": {
+                          "exclusiveMinimum": 0,
+                          "minimum": 0,
+                          "type": "integer"
+                        },
+                        "num": {
+                          "exclusiveMinimum": 0,
+                          "minimum": 0,
+                          "type": "integer"
+                        }
+                      },
+                      "required": [
+                        "den",
+                        "num"
+                      ],
+                      "type": "object"
                     },
                     "holdings": {
                       "items": {
@@ -1457,6 +1517,26 @@
                       },
                       "maxItems": 36,
                       "type": "array"
+                    },
+                    "gong": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "den": {
+                          "exclusiveMinimum": 0,
+                          "minimum": 0,
+                          "type": "integer"
+                        },
+                        "num": {
+                          "exclusiveMinimum": 0,
+                          "minimum": 0,
+                          "type": "integer"
+                        }
+                      },
+                      "required": [
+                        "den",
+                        "num"
+                      ],
+                      "type": "object"
                     },
                     "holdings": {
                       "items": {

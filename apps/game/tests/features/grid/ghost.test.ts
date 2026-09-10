@@ -1,7 +1,7 @@
-import { DEFAULT_CATALOGS } from '@zaliba/domain'
 import { describe, expect, it } from 'vitest'
 import { appearanceOf } from '../../../src/features/grid/appearance.js'
 import { type GhostState, ghostMarkOf } from '../../../src/features/grid/FootprintGhost.js'
+import { CATALOGS } from '../../catalogs.js'
 
 /**
  * Le fantôme de l'empreinte : quelle case porte quelle marque.
@@ -105,7 +105,7 @@ describe('la case visée s’entend autant qu’elle se voit (FR-012, FR-021)', 
         valide,
         ...(raison === undefined ? {} : { raison }),
       },
-      DEFAULT_CATALOGS,
+      CATALOGS,
     ).nomAccessible
 
   it('nomme l’empreinte dans les deux cas', () => {
@@ -122,9 +122,7 @@ describe('la case visée s’entend autant qu’elle se voit (FR-012, FR-021)', 
   })
 
   it('ne dit rien de l’empreinte hors d’elle', () => {
-    expect(appearanceOf(libre, [], null, null, DEFAULT_CATALOGS).nomAccessible).not.toMatch(
-      /empreinte/,
-    )
+    expect(appearanceOf(libre, [], null, null, CATALOGS).nomAccessible).not.toMatch(/empreinte/)
   })
 
   it('donne deux phrases distinctes pour deux verdicts distincts', () => {

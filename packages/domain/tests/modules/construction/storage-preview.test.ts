@@ -1,13 +1,13 @@
-import { BERCEAU, BUILDINGS } from '@zaliba/catalogs'
+import { BERCEAU } from '@zaliba/catalogs'
 import { describe, expect, it } from 'vitest'
 import { projectPlanet } from '../../../src/game.js'
-import { DEFAULT_CATALOGS } from '../../../src/kernel/catalogs.js'
 import { evaluateCurve } from '../../../src/kernel/curves.js'
 import { grains } from '../../../src/kernel/resources.js'
 import { applyEffects, emptySnapshot, type PlanetSnapshot } from '../../../src/kernel/snapshot.js'
 import { instant } from '../../../src/kernel/time.js'
 import { type BuildCommand, decideBuild } from '../../../src/modules/construction/build.js'
 import { previewBuild } from '../../../src/modules/construction/preview.js'
+import { CATALOGS } from '../../catalogs.js'
 
 /**
  * **L'effet d'un entrepôt, annoncé avant la pose** (US7-1, FR-050, FR-051).
@@ -28,7 +28,6 @@ import { previewBuild } from '../../../src/modules/construction/preview.js'
  */
 
 const T0 = instant(1_787_750_000)
-const CATALOGS = DEFAULT_CATALOGS
 const RESOURCES = CATALOGS.resourceIds
 const WORK_ID = '99999999-9999-4999-8999-999999999999'
 
@@ -61,7 +60,7 @@ function command(overrides: Partial<BuildCommand> = {}): BuildCommand {
 
 /** La capacité du niveau 1, **recalculée depuis la courbe** du catalogue. */
 function capacityAtLevelOne(): number {
-  const curve = BUILDINGS.entrepot.capacity
+  const curve = CATALOGS.buildings.entrepot.capacity
   if (curve === null) throw new Error('l’entrepôt n’a pas de courbe de capacité')
   return evaluateCurve(curve, 1)
 }
@@ -107,7 +106,7 @@ describe('l’aperçu annonce l’effet sur les trois plafonds (US7-1)', () => {
    */
   it('les autres types n’annoncent aucune capacité', () => {
     for (const typeId of ['mine', 'centrale', 'racloir', 'puits'] as const) {
-      const variantId = BUILDINGS[typeId].variants[0]
+      const variantId = CATALOGS.buildings[typeId].variants[0]
       if (variantId === undefined) throw new Error(`${typeId} n’a aucune variante`)
 
       const preview = previewBuild(

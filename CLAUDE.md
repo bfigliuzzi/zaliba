@@ -5,6 +5,12 @@ Guide opérationnel du quotidien. La
 divergence : ce fichier ne redit pas ses règles, il indique comment travailler
 avec elles.
 
+> [!IMPORTANT]
+> **Projet en pause depuis le 2026-09-10.** Avant toute action, lire
+> [`docs/REPRISE.md`](docs/REPRISE.md) : état réel des quatre tranches, ce qui
+> était en cours, comment redémarrer à froid, et ce qu'il ne faut pas refaire.
+> Retirer cet encadré à la reprise effective.
+
 ## Le projet en une phrase
 
 **Zany Alien Battles** (`zaliba`) : jeu web de stratégie spatiale inspiré
@@ -13,8 +19,8 @@ d'OGame, modernisé, sans pay2win. Vision produit, personas et périmètre :
 
 ## État du dépôt
 
-Les tranches **001 — La planète mère** et **002 — La Régie approximative** sont
-implémentées : deux applications, quatre paquets, la chaîne de portes de CI. Le
+Les tranches **001 — La planète mère**, **002 — La Régie approximative** et
+**003 — Le Gong** sont implémentées : deux applications, quatre paquets, la chaîne de portes de CI. Le
 monorepo pnpm et Turborepo est amorcé.
 
 002 n'a touché qu'`apps/game` et la documentation : **aucun paquet, aucune règle de
@@ -23,10 +29,17 @@ tenu par trois portes, sept silhouettes qui identifient douze états sans la cou
 adresse courte de case, raison du refus portée par la case, région d'annonce unique
 et relevé à la demande, ratures, guichet à trois colonnes.
 
+003 a changé l'**unité de déclaration** du temps sans déplacer aucun chiffre du
+jeu : le catalogue déclare en gongs, chaque serveur déclare la longueur de la
+sienne (`GONG_SECONDS`), résout son catalogue **une fois** au démarrage et
+**annonce** cette longueur au client dans l'instantané de planète. Au gong
+canonique de dix secondes, les 240 valeurs comparables sont strictement
+inchangées, et un test le tient. `packages/db` n'a pas bougé.
+
 | Emplacement | Ce qu'on y trouve |
 | --- | --- |
-| `packages/catalogs` | le contenu de jeu, déclaratif et typé. **N'importe rien** |
-| `packages/domain` | les règles, en fonctions pures. `kernel/` (temps, ressources, grille, énergie, taux, projection) et `modules/construction/` (pose, amélioration, démolition, déblaiement, aperçus). N'importe que `catalogs` |
+| `packages/catalogs` | le contenu de jeu, déclaratif et typé. **N'importe rien**. Il déclare ses durées en **gongs** et ses productions en **grains par gong** — jamais en secondes : `gong.ts` porte l'unité, et les formes `Declared*` sont les seules exportées |
+| `packages/domain` | les règles, en fonctions pures. `kernel/` (temps, ressources, grille, énergie, taux, projection, **résolution du gong**) et `modules/construction/` (pose, amélioration, démolition, déblaiement, aperçus). N'importe que `catalogs`. `kernel/gong.ts` est le **seul** pont du déclaré vers le résolu |
 | `packages/contracts` | les schémas Zod et les routes `/v1` via `ts-rest`. **N'importe pas `domain`** : la duplication est volontaire |
 | `packages/db` | le schéma Drizzle, ses migrations et le dépôt d'instantané. N'importe ni `domain` ni `contracts` |
 | `apps/api` | Fastify, serveur autoritaire : greffons, routes, forme unique de commande, et le `mapping/` qui traduit entre persistance, domaine et contrat |
@@ -87,7 +100,14 @@ corrigeant explicitement le code **ou** la spécification.
 L'extension git de Spec Kit n'est pas enregistrée (`.specify/extensions.yml`
 absent) : **les branches sont à créer à la main**, aucune commande ne le fait.
 
-La numérotation des specs est séquentielle (`specs/001-*`, `002-*`, …).
+La numérotation des specs est séquentielle (`specs/001-*`, `002-*`, …), et la
+bande le dit : **les `0xx` sont le jeu, les `9xx` l'outillage**. Une tranche de
+banc d'essai, de semis ou de diagnostic prend un numéro `9xx` — elle ne décale
+pas la feuille de route du jeu, qui est celle du § 10 de
+[`docs/design/conception-du-jeu.md`](docs/design/conception-du-jeu.md). Une
+tranche qui touche le catalogue, le contrat, le domaine ou ce que le joueur voit
+est du jeu, quel qu'ait été le besoin qui l'a fait naître : c'est ce qui a fait
+scinder le Gong (003) du banc d'essai qui s'en sert (900).
 
 ## Rappels qui se trompent souvent
 
@@ -112,6 +132,17 @@ La numérotation des specs est séquentielle (`specs/001-*`, `002-*`, …).
   seulement validé. Un champ qu'on ne peut pas envoyer ne peut pas être exploité.
 - **Le canvas est une vue, jamais le contrôle.** L'interaction passe par des
   éléments du document focalisables, dont l'état est la source de vérité.
+- **Le catalogue déclare en gongs, le serveur résout et annonce, le client
+  reçoit.** Aucune longueur de gong ne vit dans `apps/game/src` — ni constante,
+  ni littéral, ni variable d'environnement : le client la reçoit du serveur et
+  résout en **un seul endroit**, `src/lib/catalogs.ts`. Une longueur absente ne
+  vaut pas accord : le client n'affiche alors **aucun** chiffre dérivé, plutôt
+  que de se replier sur le canonique. Deux portes lexicales le tiennent, et
+  chacune échoue si elle a parcouru zéro fichier.
+- **Résoudre la base d'une courbe, jamais sa valeur évaluée.** `⌊12 × 1,4²⌋ × 10`
+  donne 230 là où le jeu met 235, qui est `⌊120 × 1,4²⌋`. Une seule troncature,
+  en fin de calcul — c'est ce qui rend un chiffre refaisable à la main, et ce qui
+  rend l'égalité au gong canonique exacte plutôt qu'approchée.
 - **Aucune valeur visuelle hors de `tokens.css`.** Ni hexadécimal, ni angle, ni
   longueur en pixels — et **aucune taille de police en pixels nulle part**, ce qui
   est ce qui rend WCAG 1.4.4 vrai. Deux portes le refusent, et l'une d'elles échoue

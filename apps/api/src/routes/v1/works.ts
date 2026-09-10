@@ -68,7 +68,6 @@ export interface WorksRouteDependencies {
   readonly sql: GameSql
   readonly authenticator: Authenticator
   readonly catalogs: Catalogs
-  readonly catalogVersion: string
   /** Injectable pour rendre les identifiants prévisibles en test. */
   readonly newId?: () => string
 }
@@ -268,7 +267,7 @@ export function registerWorksRoutes(app: FastifyInstance, deps: WorksRouteDepend
         writeSnapshot: (tx: Transaction, snapshot) =>
           writePlanet(tx, toWrite(snapshot, deps.catalogs)),
 
-        respond: (snapshot, _state, at) => toContract(snapshot, at, deps.catalogVersion),
+        respond: (snapshot, _state, at) => toContract(snapshot, at, deps.catalogs),
 
         refusalToError,
       },

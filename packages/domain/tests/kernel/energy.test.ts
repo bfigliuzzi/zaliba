@@ -1,7 +1,6 @@
-import { BERCEAU, BUILDINGS } from '@zaliba/catalogs'
+import { BERCEAU } from '@zaliba/catalogs'
 import fc from 'fast-check'
 import { describe, expect, it } from 'vitest'
-import { DEFAULT_CATALOGS } from '../../src/kernel/catalogs.js'
 import { evaluateCurve } from '../../src/kernel/curves.js'
 import { applyEnergyRatio, energyAfterRemoval, energyReport } from '../../src/kernel/energy.js'
 import { productionRates } from '../../src/kernel/rates.js'
@@ -11,6 +10,7 @@ import {
   type PlanetSnapshot,
 } from '../../src/kernel/snapshot.js'
 import { instant } from '../../src/kernel/time.js'
+import { CATALOGS } from '../catalogs.js'
 
 /**
  * L'énergie : une grandeur **instantanée**, ni stockée ni accumulée (FR-021).
@@ -28,7 +28,6 @@ import { instant } from '../../src/kernel/time.js'
  */
 
 const T0 = instant(1_787_750_000)
-const CATALOGS = DEFAULT_CATALOGS
 
 function fresh(): PlanetSnapshot {
   return emptySnapshot({
@@ -49,7 +48,7 @@ function placed(
   level = 1,
 ): PlacedBuilding {
   counter += 1
-  const variantId = BUILDINGS[typeId].variants[0]
+  const variantId = CATALOGS.buildings[typeId].variants[0]
   if (variantId === undefined) throw new Error(`${typeId} n’a aucune variante.`)
   return { id: `b-${counter}`, typeId, variantId, orientation: 0, anchor, level }
 }
@@ -60,14 +59,14 @@ function withBuildings(...buildings: readonly PlacedBuilding[]): PlanetSnapshot 
 
 /** La valeur de la courbe du catalogue, recalculée par un second chemin. */
 function consumptionOf(typeId: PlacedBuilding['typeId'], level = 1): number {
-  const curve = BUILDINGS[typeId].energyConsumption
+  const curve = CATALOGS.buildings[typeId].energyConsumption
   if (curve === null) throw new Error(`${typeId} ne consomme rien.`)
   return evaluateCurve(curve, level)
 }
 
 /** Idem pour la production d'un extracteur, par gisement recouvert (R5). */
 function productionOf(typeId: PlacedBuilding['typeId'], level = 1): number {
-  const curve = BUILDINGS[typeId].production
+  const curve = CATALOGS.buildings[typeId].production
   if (curve === null) throw new Error(`${typeId} n’extrait rien.`)
   return evaluateCurve(curve, level)
 }
@@ -81,7 +80,7 @@ describe('E₊ — le Berceau et les centrales, et rien d’autre (FR-022)', () 
   })
 
   it('ajoute la production de chaque centrale', () => {
-    const curve = BUILDINGS.centrale.energyProduction
+    const curve = CATALOGS.buildings.centrale.energyProduction
     expect(curve, 'la centrale doit porter une courbe de production').not.toBeNull()
     if (curve === null) return
 
@@ -118,7 +117,9 @@ describe('E₊ — le Berceau et les centrales, et rien d’autre (FR-022)', () 
 
     const rates = productionRates(snapshot, CATALOGS, report.ratio)
     expect(rates['camelote'].effective).toBe(rates['camelote'].nominal)
-    expect(rates['camelote'].effective).toBeGreaterThan(BERCEAU.baseProductionPerHour['camelote'])
+    expect(rates['camelote'].effective).toBeGreaterThan(
+      CATALOGS.layouts['berceau-v1'].baseProductionPerHour['camelote'],
+    )
   })
 })
 
@@ -175,7 +176,7 @@ describe('E₋ — tous les bâtiments sauf la centrale (FR-022, R21)', () => {
 
   it('suit la courbe de consommation avec le niveau', () => {
     fc.assert(
-      fc.property(fc.integer({ min: 1, max: BUILDINGS.mine.maxLevel }), (level) => {
+      fc.property(fc.integer({ min: 1, max: CATALOGS.buildings.mine.maxLevel }), (level) => {
         const report = energyReport(withBuildings(placed('mine', { x: 0, y: 4 }, level)), CATALOGS)
         expect(report.consumed).toBe(consumptionOf('mine', level))
       }),
@@ -266,7 +267,7 @@ describe('en déficit, une seule troncature, sur le taux (R5, US3-2)', () => {
 
     const rates = productionRates(snapshot, CATALOGS, report.ratio)
     const mineNominal = productionOf('mine')
-    const base = BERCEAU.baseProductionPerHour['camelote']
+    const base = CATALOGS.layouts['berceau-v1'].baseProductionPerHour['camelote']
 
     expect(rates['camelote'].nominal).toBe(base + mineNominal)
     expect(rates['camelote'].effective).toBe(
@@ -291,7 +292,7 @@ describe('la production de base du Berceau n’est jamais touchée (FR-018)', ()
 
       const rates = productionRates(snapshot, CATALOGS, report.ratio)
       expect(rates[resourceId].effective).toBeGreaterThanOrEqual(
-        BERCEAU.baseProductionPerHour[resourceId],
+        CATALOGS.layouts['berceau-v1'].baseProductionPerHour[resourceId],
       )
     },
   )
@@ -306,7 +307,9 @@ describe('la production de base du Berceau n’est jamais touchée (FR-018)', ()
     'laisse la base de %s intacte à rapport nul',
     (resourceId) => {
       const rates = productionRates(fresh(), CATALOGS, { numerator: 0, denominator: 100 })
-      expect(rates[resourceId].effective).toBe(BERCEAU.baseProductionPerHour[resourceId])
+      expect(rates[resourceId].effective).toBe(
+        CATALOGS.layouts['berceau-v1'].baseProductionPerHour[resourceId],
+      )
       expect(rates[resourceId].effective).toBeGreaterThan(0)
     },
   )

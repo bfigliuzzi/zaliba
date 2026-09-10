@@ -1,6 +1,6 @@
-import type { BuildingTypeId, Curve, ObstacleId, ResourceId } from '@zaliba/catalogs'
+import type { BuildingTypeId, Curve, GongLength, ObstacleId, ResourceId } from '@zaliba/catalogs'
 import { GRAINS_PER_UNIT } from '@zaliba/catalogs'
-import { type Catalogs, evaluateCurve, layoutOf } from '@zaliba/domain'
+import { type Catalogs, type DeclaredCatalogs, evaluateCurve } from '@zaliba/domain'
 import type React from 'react'
 import { formatWhole } from '../../lib/format.js'
 import {
@@ -30,13 +30,51 @@ import {
  * *règles*, pas un tableau de bord — et elle doit rester lisible sans être connecté,
  * puisque son sujet est ce qui vaut pour tous.
  *
+ * **Ce qu'elle publie a changé de nature avec 003**, et la nuance décide de ce
+ * qu'elle a à confronter. Elle publiait « le catalogue qu'elle embarque » ; elle
+ * publie désormais ce catalogue **résolu par la longueur du serveur**. La
+ * première moitié — coûts, empreintes, plafonds, énergie, et les durées en gongs
+ * — vient toujours du bundle et ne dépend de personne. La seconde — les secondes
+ * et les taux par heure — vient d'un chiffre que le serveur a annoncé, et n'existe
+ * donc que si un instantané a été reçu. C'est pourquoi cette page a maintenant
+ * **deux états**, là où elle en avait un.
+ *
  * **La table des niveaux s'arrête à dix**, et le paramètre de la courbe prend le
  * relais. Trente lignes par type feraient cent cinquante lignes de tableau que
  * personne ne lit ; la fraction, elle, permet de calculer le niveau trente-et-un.
+ *
+ * ## Depuis 003 : deux catalogues, et deux colonnes
+ *
+ * Le catalogue **déclare** ses durées en gongs et ses productions en grains par
+ * gong ; le serveur les **résout** en secondes avec la longueur de son gong. La
+ * page publie les deux — le gong parce que c'est ce que le catalogue dit, la
+ * seconde parce que c'est ce que le joueur vit — et **énonce la longueur** qui
+ * fait passer de l'un à l'autre. Sans elle, la moitié des chiffres de cette page
+ * serait invérifiable, ce qui reviendrait à une formule cachée.
+ *
+ * **Elle publie aussi la base résolue**, et c'est le point qui évite le piège :
+ * hors gong canonique, `12 gongs × 1/6 s` ne donne pas la durée du niveau 3 en
+ * divisant celle du canonique. La résolution porte sur la **base** de la courbe,
+ * puis la courbe est évaluée — une seule troncature, en fin de calcul. Un joueur
+ * qui multiplie de tête tomberait à côté et conclurait qu'il s'est trompé.
+ *
+ * **Et elle est lisible sans compte.** La page n'appelle aucune route : hors
+ * session, elle ne connaît pas la longueur du serveur. Elle publie alors les
+ * gongs seuls — des valeurs déclarées, pas des chiffres dérivés —, **dit** que
+ * la longueur ne lui est pas connue, et n'affiche **aucune seconde** (FR-013).
+ * Afficher des secondes calculées avec une longueur supposée serait exactement
+ * la faute que la vérification de version a déjà nommée.
  */
 
 export interface RulesContentProps {
-  readonly catalogs: Catalogs
+  /** Le catalogue **déclaré**, embarqué dans le bundle : en gongs. */
+  readonly declared: DeclaredCatalogs
+  /**
+   * Le catalogue **résolu** à la longueur du serveur, ou `null` tant qu'aucun
+   * instantané de planète n'a été reçu. `null` n'est pas une erreur : c'est
+   * l'état normal d'un visiteur qui lit les règles sans être connecté.
+   */
+  readonly resolved: Catalogs | null
 }
 
 /** Les niveaux tabulés. Au-delà, la fraction de la courbe suffit. */
@@ -68,7 +106,7 @@ function describeCurve(curve: Curve, unit: 'grains' | 'brut'): string {
 }
 
 /** Ce qu'un déblaiement révèle, dans le vocabulaire du jeu. */
-function describeReveals(obstacleId: ObstacleId, catalogs: Catalogs): string {
+function describeReveals(obstacleId: ObstacleId, catalogs: DeclaredCatalogs): string {
   const reveals = catalogs.obstacles[obstacleId]?.reveals
   if (reveals === undefined || reveals.kind === 'bare-ground') return 'terrain nu'
   return DEPOSIT_LABELS[reveals.resourceId] ?? reveals.resourceId
@@ -111,9 +149,18 @@ function ScrollableTable({
   )
 }
 
-export function RulesContent({ catalogs }: RulesContentProps) {
-  const layout = layoutOf(catalogs, 'berceau-v1')
+/** La longueur du gong, telle qu'on l'écrit au joueur : « 10 s » ou « 1/2 s ». */
+function describeGong(gong: GongLength): string {
+  return gong.den === 1 ? `${formatWhole(gong.num)} s` : `${gong.num}/${gong.den} s`
+}
+
+export function RulesContent({ declared, resolved }: RulesContentProps) {
+  const catalogs = declared
+  const layout = declared.layouts['berceau-v1']
+  const resolvedLayout = resolved?.layouts['berceau-v1'] ?? null
   const resourceLabel = (id: ResourceId) => RESOURCE_LABELS[id] ?? id
+
+  if (layout === undefined) throw new RangeError('Disposition inconnue : berceau-v1.')
 
   return (
     <>
@@ -123,6 +170,39 @@ export function RulesContent({ catalogs }: RulesContentProps) {
         jour sans qu’une phrase soit réécrite.
       </p>
 
+      <section aria-labelledby="regles-gong">
+        <h2 id="regles-gong">Le gong</h2>
+        <p>
+          Le catalogue déclare ses durées en <strong>gongs</strong> et ses productions en{' '}
+          <strong>grains par gong</strong>. Le <strong>gong</strong> est l’unité de temps du jeu ;
+          chaque serveur déclare la longueur de la sienne, et c’est elle qui décide du rythme —
+          chantiers <em>et</em> accumulation de ressources, dans le même rapport.
+        </p>
+        {resolved === null ? (
+          <p>
+            <strong>La longueur du gong de ce serveur n’est pas connue de cette page.</strong> Elle
+            voyage avec l’état de votre planète : connectez-vous et ouvrez votre planète, puis
+            revenez ici pour voir chaque durée en secondes. En attendant, les durées ci-dessous sont
+            données en <strong>gongs</strong>, tels que le catalogue les déclare.
+          </p>
+        ) : (
+          <>
+            <p>
+              <strong>Sur ce serveur, un gong dure {describeGong(resolved.gong)}.</strong> Chaque
+              durée est donnée ci-dessous en gongs et en secondes, et chaque production par gong et
+              par heure.
+            </p>
+            <p>
+              <strong>Attention au sens de la conversion.</strong> Une durée de niveau supérieur ne
+              s’obtient pas en multipliant la durée en gongs de ce niveau par la longueur du gong :
+              c’est la <strong>base</strong> de la courbe qui est convertie, <em>puis</em> la courbe
+              qui est évaluée. Une seule troncature, à la fin. La base résolue est publiée avec
+              chaque type, pour que le calcul se refasse à la main sans tomber à côté.
+            </p>
+          </>
+        )}
+      </section>
+
       <section aria-labelledby="regles-unites">
         <h2 id="regles-unites">Unités et arrondis</h2>
         <p>
@@ -130,6 +210,12 @@ export function RulesContent({ catalogs }: RulesContentProps) {
           {formatWhole(GRAINS_PER_UNIT)} grains. Un taux se compte en{' '}
           <strong>unités par heure</strong>, et le choix du diviseur fait tomber la division — un
           taux d’une unité par heure produit exactement un grain par seconde.
+        </p>
+        <p>
+          Le catalogue, lui, déclare ses taux en <strong>grains par gong</strong> et ses durées en{' '}
+          <strong>gongs</strong>. C’est ce qui couple le rythme des chantiers à celui de la
+          production : les deux se convertissent avec la même longueur, et ne peuvent donc pas
+          diverger.
         </p>
         <p>
           <strong>Où tombent les arrondis.</strong> Il n’y en a jamais plus d’un par formule, et
@@ -163,11 +249,12 @@ export function RulesContent({ catalogs }: RulesContentProps) {
         </p>
         <ScrollableTable label="Production et plafonds de base">
           <table>
-            <caption>Production de base de la planète, en unités par heure</caption>
+            <caption>Production de base de la planète</caption>
             <thead>
               <tr>
                 <th scope="col">Ressource</th>
-                <th scope="col">Par heure</th>
+                <th scope="col">Par gong</th>
+                {resolvedLayout !== null && <th scope="col">Par heure</th>}
                 <th scope="col">Plafond de base</th>
               </tr>
             </thead>
@@ -175,7 +262,10 @@ export function RulesContent({ catalogs }: RulesContentProps) {
               {catalogs.resourceIds.map((resourceId) => (
                 <tr key={resourceId}>
                   <th scope="row">{resourceLabel(resourceId)}</th>
-                  <td>{formatWhole(layout.baseProductionPerHour[resourceId] ?? 0)}</td>
+                  <td>{formatWhole(layout.baseProductionPerGong[resourceId] ?? 0)}</td>
+                  {resolvedLayout !== null && (
+                    <td>{formatWhole(resolvedLayout.baseProductionPerHour[resourceId] ?? 0)}</td>
+                  )}
                   <td>{units(layout.baseCapacityGrains[resourceId] ?? 0)}</td>
                 </tr>
               ))}
@@ -245,6 +335,11 @@ export function RulesContent({ catalogs }: RulesContentProps) {
         <h2 id="regles-batiments">Bâtiments</h2>
         {(Object.keys(catalogs.buildings) as readonly BuildingTypeId[]).map((typeId) => {
           const type = catalogs.buildings[typeId]
+          // Le même type, résolu — ou `null` tant que la longueur du serveur est
+          // inconnue. Les deux se lisent côte à côte, jamais l'un à la place de
+          // l'autre : le gong est ce que le catalogue déclare, la seconde ce que
+          // le joueur vit.
+          const become = resolved?.buildings[typeId] ?? null
           const label = BUILDING_LABELS[typeId] ?? typeId
 
           return (
@@ -267,13 +362,33 @@ export function RulesContent({ catalogs }: RulesContentProps) {
                   </div>
                 ))}
 
-                <dt>Durée de construction, en secondes</dt>
+                <dt>Durée de construction, en gongs</dt>
                 <dd>{describeCurve(type.buildDuration, 'brut')}</dd>
+
+                {become !== null && (
+                  <>
+                    <dt>Durée de construction, en secondes</dt>
+                    {/*
+                      La **base résolue** est publiée, et pas seulement la durée
+                      du niveau 1 : c'est elle qui permet de refaire n'importe
+                      quel niveau à la main, avec une seule troncature. Diviser
+                      la durée canonique donnerait un chiffre voisin et faux.
+                    */}
+                    <dd>{describeCurve(become.buildDuration, 'brut')}</dd>
+                  </>
+                )}
 
                 {type.production !== null && (
                   <>
-                    <dt>Production par gisement, en unités par heure</dt>
+                    <dt>Production par gisement, en grains par gong</dt>
                     <dd>{describeCurve(type.production, 'brut')}</dd>
+                  </>
+                )}
+
+                {become?.production != null && (
+                  <>
+                    <dt>Production par gisement, en unités par heure</dt>
+                    <dd>{describeCurve(become.production, 'brut')}</dd>
                   </>
                 )}
 
@@ -298,8 +413,15 @@ export function RulesContent({ catalogs }: RulesContentProps) {
                   </>
                 )}
 
-                <dt>Durée de démolition, en secondes</dt>
-                <dd>{formatWhole(type.demolitionSeconds)}</dd>
+                <dt>Durée de démolition, en gongs</dt>
+                <dd>{formatWhole(type.demolitionGongs)}</dd>
+
+                {become !== null && (
+                  <>
+                    <dt>Durée de démolition, en secondes</dt>
+                    <dd>{formatWhole(become.demolitionSeconds)}</dd>
+                  </>
+                )}
 
                 <dt>Fraction remboursée</dt>
                 <dd>{`${type.refund.num} ÷ ${type.refund.den}`}</dd>
@@ -322,8 +444,14 @@ export function RulesContent({ catalogs }: RulesContentProps) {
                           {resourceLabel(resourceId as ResourceId)}
                         </th>
                       ))}
-                      <th scope="col">Durée (s)</th>
-                      {type.production !== null && <th scope="col">Production / gisement</th>}
+                      <th scope="col">Durée (gongs)</th>
+                      {become !== null && <th scope="col">Durée (s)</th>}
+                      {type.production !== null && (
+                        <th scope="col">Production / gisement (gr/gong)</th>
+                      )}
+                      {become?.production != null && (
+                        <th scope="col">Production / gisement (u/h)</th>
+                      )}
                       {type.capacity !== null && <th scope="col">Capacité</th>}
                     </tr>
                   </thead>
@@ -335,8 +463,14 @@ export function RulesContent({ catalogs }: RulesContentProps) {
                           <td key={resourceId}>{units(evaluateCurve(curve, level))}</td>
                         ))}
                         <td>{formatWhole(evaluateCurve(type.buildDuration, level))}</td>
+                        {become !== null && (
+                          <td>{formatWhole(evaluateCurve(become.buildDuration, level))}</td>
+                        )}
                         {type.production !== null && (
                           <td>{formatWhole(evaluateCurve(type.production, level))}</td>
+                        )}
+                        {become?.production != null && (
+                          <td>{formatWhole(evaluateCurve(become.production, level))}</td>
                         )}
                         {type.capacity !== null && (
                           <td>{units(evaluateCurve(type.capacity, level))}</td>
@@ -364,7 +498,8 @@ export function RulesContent({ catalogs }: RulesContentProps) {
               <tr>
                 <th scope="col">Obstacle</th>
                 <th scope="col">Coût</th>
-                <th scope="col">Durée (s)</th>
+                <th scope="col">Durée (gongs)</th>
+                {resolved !== null && <th scope="col">Durée (s)</th>}
                 <th scope="col">Ce qui apparaît</th>
               </tr>
             </thead>
@@ -377,7 +512,10 @@ export function RulesContent({ catalogs }: RulesContentProps) {
                   <tr key={obstacleId}>
                     <th scope="row">{OBSTACLE_LABELS[obstacleId] ?? obstacleId}</th>
                     <td>{describeCost(obstacle.cost, resourceLabel)}</td>
-                    <td>{formatWhole(obstacle.durationSeconds)}</td>
+                    <td>{formatWhole(obstacle.durationGongs)}</td>
+                    {resolved !== null && (
+                      <td>{formatWhole(resolved.obstacles[obstacleId]?.durationSeconds ?? 0)}</td>
+                    )}
                     <td>{describeReveals(obstacleId, catalogs)}</td>
                   </tr>
                 )

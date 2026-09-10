@@ -1,12 +1,13 @@
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { PlanetSnapshotV1 } from '@zaliba/contracts'
 import type { CellView } from '@zaliba/domain'
-import { DEFAULT_CATALOGS, instant, layoutOf, projectPlanet } from '@zaliba/domain'
+import { instant, layoutOf, projectPlanet } from '@zaliba/domain'
 import { afterEach, describe, expect, it } from 'vitest'
 import { ETATS_DE_CASE, type PoseVisee } from '../../../src/features/grid/appearance.js'
 import { GridView } from '../../../src/features/grid/GridView.js'
 import { useGridCursor } from '../../../src/features/grid/useGridCursor.js'
 import { snapshotFromContract } from '../../../src/features/resources/extrapolation.js'
+import { CATALOGS } from '../../catalogs.js'
 import rawDouzeEtats from '../../fixtures/planet-douze-etats.json' with { type: 'json' }
 import rawFresh from '../../fixtures/planet-fresh.json' with { type: 'json' }
 
@@ -26,7 +27,6 @@ import rawFresh from '../../fixtures/planet-fresh.json' with { type: 'json' }
 
 afterEach(cleanup)
 
-const CATALOGS = DEFAULT_CATALOGS
 const payload = PlanetSnapshotV1.parse(rawFresh)
 
 /**
@@ -85,6 +85,7 @@ function ControlledGrid({ payload: donnees = payload, bounds, pose = null }: Har
   return (
     <GridView
       cells={cells}
+      catalogs={CATALOGS}
       width={dimensions.width}
       height={dimensions.height}
       buildings={bounds === undefined ? state.buildings : []}

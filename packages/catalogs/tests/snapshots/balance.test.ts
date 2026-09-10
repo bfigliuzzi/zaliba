@@ -35,6 +35,28 @@ import { GRAINS_PER_UNIT } from '../../src/units.js'
  * ni production effective, ni temps avant saturation, ni remboursement. Ce sont des
  * fonctions du catalogue *et* d'une planète, et les figer ici ferait échouer
  * l'instantané pour des raisons qui ne sont pas de l'équilibrage.
+ *
+ * **Il ne contient pas non plus de secondes, depuis 003.** Le catalogue déclare
+ * en **gongs** et en **grains par gong** ; ce sont ces valeurs-là qui sont
+ * figées, parce que ce sont celles qui existent ici — `packages/catalogs`
+ * n'importe rien, donc ne résout pas. La longueur du gong, elle, n'est pas une
+ * valeur d'équilibrage mais un paramètre de serveur : elle n'a rien à faire dans
+ * cet instantané, et l'y mettre ferait échouer le relevé au changement de
+ * rythme d'un serveur, ce qui n'est pas du rééquilibrage.
+ *
+ * Le passage aux gongs a fait bouger tout le tableau **sans changer aucun
+ * chiffre du jeu** : au gong canonique, les 240 valeurs résolues sont
+ * strictement égales à celles d'avant la tranche, et c'est
+ * `packages/domain/tests/kernel/gong-egalite.test.ts` qui le tient.
+ *
+ * **Le piège de lecture, et il est réel** : les colonnes de durée et de
+ * production ne se multiplient pas par la longueur du gong pour donner la valeur
+ * du jeu. La résolution porte sur la **base** de la courbe et non sur la valeur
+ * évaluée (G4) — `⌊12 × 1,4²⌋ × 10` donne 230 là où le jeu met 235, qui est
+ * `⌊120 × 1,4²⌋`. C'est la règle d'une seule troncature en fin de calcul (R19),
+ * et c'est elle qui rend l'égalité au gong canonique **exacte** plutôt
+ * qu'approchée. L'avertissement figure dans l'en-tête de l'instantané parce
+ * qu'un lecteur qui multiplie de tête conclurait à un écart d'équilibrage.
  */
 
 /** Le niveau jusqu'où l'instantané descend. Au-delà du plafond de chaque type. */
@@ -92,8 +114,8 @@ function headerOf(costKeys: readonly (typeof RESOURCE_IDS)[number][]): string {
   return [
     cell('niveau', 7),
     ...costKeys.map((id) => cell(`coût ${id}`, 18)),
-    cell('durée (s)'),
-    cell('production'),
+    cell('durée (gongs)'),
+    cell('prod. (gr/gong)'),
     cell('capacité'),
     cell('énergie −'),
     cell('énergie +'),
@@ -136,7 +158,7 @@ function buildingTable(): string {
     }
 
     lines.push('')
-    lines.push(`démolition : ${type.demolitionSeconds} s`)
+    lines.push(`démolition : ${type.demolitionGongs} gongs`)
     lines.push(`remboursement : ${type.refund.num}/${type.refund.den}`)
     lines.push(`empreintes : ${type.variants.join(', ')}`)
     lines.push(`extrait : ${type.extracts ?? '—'}`)
@@ -147,7 +169,9 @@ function buildingTable(): string {
 
 function obstacleTable(): string {
   const lines = ['', '## obstacles', '']
-  lines.push([cell('type', 20), cell('durée (s)'), cell('révèle', 20), cell('coût', 40)].join(' |'))
+  lines.push(
+    [cell('type', 20), cell('durée (gongs)'), cell('révèle', 20), cell('coût', 40)].join(' |'),
+  )
 
   for (const obstacleId of OBSTACLE_IDS) {
     const obstacle = OBSTACLES[obstacleId]
@@ -158,7 +182,7 @@ function obstacleTable(): string {
     lines.push(
       [
         cell(obstacleId, 20),
-        cell(obstacle.durationSeconds),
+        cell(obstacle.durationGongs),
         cell(
           obstacle.reveals.kind === 'deposit' ? `dépôt ${obstacle.reveals.resourceId}` : 'nu',
           20,
@@ -183,8 +207,15 @@ describe('l’instantané d’équilibrage est figé', () => {
       '# Instantané d’équilibrage — niveaux 1 à 30',
       '',
       'Engendré depuis `packages/catalogs`. Un diff se lit et s’approuve.',
-      'Les coûts et les capacités sont en **unités**, les durées en **secondes**,',
-      'la production en **unités par heure et par gisement recouvert**.',
+      'Les coûts et les capacités sont en **unités**, les durées en **gongs**,',
+      'la production en **grains par gong et par gisement recouvert**.',
+      'Le gong est l’unité de déclaration ; sa longueur en secondes appartient au',
+      'serveur et ne figure donc pas ici.',
+      '',
+      '⚠ Les colonnes de durée et de production **ne se multiplient pas** par la',
+      'longueur du gong. La résolution porte sur la **base** de la courbe, puis la',
+      'courbe est évaluée : `⌊12 × 1,4²⌋ × 10 = 230`, mais le jeu met `235`, qui est',
+      '`⌊120 × 1,4²⌋`. Une seule troncature, en fin de calcul (R19, G4).',
       buildingTable(),
       obstacleTable(),
       '',

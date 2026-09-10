@@ -1,7 +1,6 @@
 import { FOOTPRINT_IDS, type FootprintId, type Offset } from '@zaliba/catalogs'
 import fc from 'fast-check'
 import { describe, expect, it } from 'vitest'
-import { DEFAULT_CATALOGS } from '../../src/kernel/catalogs.js'
 import type { Cell } from '../../src/kernel/effects.js'
 import {
   cellsOf,
@@ -16,6 +15,7 @@ import {
   type PlanetSnapshot,
 } from '../../src/kernel/snapshot.js'
 import { instant } from '../../src/kernel/time.js'
+import { CATALOGS } from '../catalogs.js'
 
 /**
  * Les invariants de grille (data-model § 1.7).
@@ -34,7 +34,6 @@ import { instant } from '../../src/kernel/time.js'
  */
 
 const T0 = instant(1_787_750_000)
-const CATALOGS = DEFAULT_CATALOGS
 const LAYOUT = CATALOGS.layouts['berceau-v1']
 
 function fresh(): PlanetSnapshot {

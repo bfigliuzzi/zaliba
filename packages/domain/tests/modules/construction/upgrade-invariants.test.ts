@@ -1,13 +1,8 @@
-import {
-  BUILDING_TYPE_IDS,
-  BUILDINGS,
-  type BuildingTypeId,
-  type FootprintId,
-} from '@zaliba/catalogs'
+import { BUILDING_TYPE_IDS, type BuildingTypeId, type FootprintId } from '@zaliba/catalogs'
 import fc from 'fast-check'
 import { describe, expect, it } from 'vitest'
 import { projectPlanet } from '../../../src/game.js'
-import { type Catalogs, DEFAULT_CATALOGS } from '../../../src/kernel/catalogs.js'
+import type { Catalogs } from '../../../src/kernel/catalogs.js'
 import { evaluateCurve } from '../../../src/kernel/curves.js'
 import type { Cell } from '../../../src/kernel/effects.js'
 import { cellsOf, gridView, placementCells, validatePlacement } from '../../../src/kernel/grid.js'
@@ -20,6 +15,7 @@ import {
 } from '../../../src/kernel/snapshot.js'
 import { instant } from '../../../src/kernel/time.js'
 import { decideUpgrade } from '../../../src/modules/construction/upgrade.js'
+import { CATALOGS as GAME_CATALOGS } from '../../catalogs.js'
 
 /**
  * **I-7 — une amélioration laisse l'ensemble des cases occupées identique**, à la
@@ -61,10 +57,10 @@ const T0 = instant(1_787_750_000)
  */
 const SPACIOUS = 10 ** 14
 const CATALOGS: Catalogs = {
-  ...DEFAULT_CATALOGS,
+  ...GAME_CATALOGS,
   layouts: {
     'berceau-v1': {
-      ...DEFAULT_CATALOGS.layouts['berceau-v1'],
+      ...GAME_CATALOGS.layouts['berceau-v1'],
       baseCapacityGrains: { camelote: SPACIOUS, jus: SPACIOUS, 'bave-etoiles': SPACIOUS },
     },
   },
@@ -121,11 +117,11 @@ interface Placement {
 const placement: fc.Arbitrary<Placement> = fc.constantFrom(...BUILDING_TYPE_IDS).chain((typeId) =>
   fc.record({
     typeId: fc.constant(typeId),
-    variantId: fc.constantFrom(...BUILDINGS[typeId].variants),
+    variantId: fc.constantFrom(...CATALOGS.buildings[typeId].variants),
     orientation: fc.integer({ min: 0, max: 3 }),
     x: fc.integer({ min: 0, max: LAYOUT.width - 1 }),
     y: fc.integer({ min: 0, max: LAYOUT.height - 1 }),
-    level: fc.integer({ min: 1, max: BUILDINGS[typeId].maxLevel - 1 }),
+    level: fc.integer({ min: 1, max: CATALOGS.buildings[typeId].maxLevel - 1 }),
   }),
 )
 
@@ -229,7 +225,10 @@ describe('I-7 : une amélioration ne déplace aucune case (FR-039, US4-1)', () =
         }
 
         const launched = applyEffects(snapshot, decision.effects, T0)
-        const seconds = evaluateCurve(BUILDINGS[building.typeId].buildDuration, building.level + 1)
+        const seconds = evaluateCurve(
+          CATALOGS.buildings[building.typeId].buildDuration,
+          building.level + 1,
+        )
         const raised = projectPlanet(launched, CATALOGS, instant(T0 + seconds)).buildings[0]
         if (raised === undefined) throw new Error('le bâtiment a disparu de la projection')
 

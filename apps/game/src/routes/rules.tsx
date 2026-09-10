@@ -1,6 +1,6 @@
 import { createRoute, Link } from '@tanstack/react-router'
-import { DEFAULT_CATALOGS } from '@zaliba/domain'
 import { RulesContent } from '../features/rules/RulesContent.js'
+import { DECLARED_CATALOGS, lastResolvedCatalogs } from '../lib/catalogs.js'
 import { rootRoute } from './root.js'
 
 /**
@@ -23,6 +23,18 @@ import { rootRoute } from './root.js'
  * bord, et son sujet est ce qui vaut pour tous. C'est aussi ce qui la dispense de
  * l'avertissement de divergence de catalogue : elle publie le catalogue **qu'elle
  * embarque**, en le nommant, et n'a donc rien à confronter à celui du serveur.
+ *
+ * **Deux états depuis 003, et le second est le cas normal du visiteur.** Lisible
+ * sans compte, la page n'appelle aucune route : hors session, elle ne connaît
+ * pas la longueur du gong du serveur. Elle publie alors les durées en **gongs**
+ * — le contenu déclaré du catalogue, pas un chiffre dérivé — et dit que la
+ * longueur du serveur ne lui est pas connue, sans afficher aucune seconde
+ * (FR-013). Dès qu'un instantané de planète a été reçu, elle publie les deux
+ * colonnes.
+ *
+ * Le `GET /v1/config` qui la renseignerait toujours a été écarté : la longueur
+ * voyage avec l'état qu'elle explique, et un point d'accès séparé pourrait être
+ * appelé une fois puis démenti par un redémarrage (G7).
  */
 export const rulesRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -31,11 +43,18 @@ export const rulesRoute = createRoute({
 })
 
 function RulesScreen() {
+  /*
+    Lu au rendu et non mémorisé : la page est consultée entre deux allers-retours
+    vers la planète, et une valeur figée au premier rendu afficherait des gongs
+    seuls à un joueur qui vient précisément d'en recevoir la longueur.
+  */
+  const resolved = lastResolvedCatalogs()
+
   return (
     <>
       <h1>Règles du jeu</h1>
 
-      <RulesContent catalogs={DEFAULT_CATALOGS} />
+      <RulesContent declared={DECLARED_CATALOGS} resolved={resolved} />
 
       {/*
         Le chemin du retour, en clair. Une page de référence se consulte *pendant*

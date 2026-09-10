@@ -1,8 +1,7 @@
-import { BERCEAU, BUILDINGS } from '@zaliba/catalogs'
+import { BERCEAU, BUILDING_TYPE_IDS } from '@zaliba/catalogs'
 import fc from 'fast-check'
 import { describe, expect, it } from 'vitest'
 import { projectPlanet } from '../../src/game.js'
-import { DEFAULT_CATALOGS } from '../../src/kernel/catalogs.js'
 import { evaluateCurve } from '../../src/kernel/curves.js'
 import { storageCaps, storageContribution } from '../../src/kernel/rates.js'
 import {
@@ -11,6 +10,7 @@ import {
   type PlanetSnapshot,
 } from '../../src/kernel/snapshot.js'
 import { instant } from '../../src/kernel/time.js'
+import { CATALOGS } from '../catalogs.js'
 
 /**
  * **Le plafond de stockage : la base du Berceau, plus les entrepôts posés**
@@ -36,9 +36,8 @@ import { instant } from '../../src/kernel/time.js'
  */
 
 const T0 = instant(1_787_750_000)
-const CATALOGS = DEFAULT_CATALOGS
 const RESOURCES = CATALOGS.resourceIds
-const WAREHOUSE = BUILDINGS.entrepot
+const WAREHOUSE = CATALOGS.buildings.entrepot
 
 function fresh(): PlanetSnapshot {
   return emptySnapshot({
@@ -59,7 +58,7 @@ function placed(
   level = 1,
 ): PlacedBuilding {
   counter += 1
-  const variantId = BUILDINGS[typeId].variants[0]
+  const variantId = CATALOGS.buildings[typeId].variants[0]
   if (variantId === undefined) throw new Error(`${typeId} n’a aucune variante.`)
   return { id: `b-${counter}`, typeId, variantId, orientation: 0, anchor, level }
 }
@@ -79,9 +78,9 @@ describe('le catalogue publie une courbe de capacité pour l’entrepôt (T145)'
   it('l’entrepôt en porte une, et lui seul', () => {
     expect(WAREHOUSE.capacity).not.toBeNull()
 
-    for (const typeId of Object.keys(BUILDINGS) as readonly (keyof typeof BUILDINGS)[]) {
+    for (const typeId of BUILDING_TYPE_IDS) {
       if (typeId === 'entrepot') continue
-      expect(BUILDINGS[typeId].capacity, `${typeId} ne devrait rien stocker`).toBeNull()
+      expect(CATALOGS.buildings[typeId].capacity, `${typeId} ne devrait rien stocker`).toBeNull()
     }
   })
 
@@ -92,8 +91,8 @@ describe('le catalogue publie une courbe de capacité pour l’entrepôt (T145)'
    * compliquerait tous les autres champs pour une seule ligne de garantie.
    */
   it('un type qui stocke n’extrait rien', () => {
-    for (const typeId of Object.keys(BUILDINGS) as readonly (keyof typeof BUILDINGS)[]) {
-      const type = BUILDINGS[typeId]
+    for (const typeId of BUILDING_TYPE_IDS) {
+      const type = CATALOGS.buildings[typeId]
       if (type.capacity === null) continue
       expect(type.extracts, `${typeId} stocke et extrait`).toBeNull()
       expect(type.production, `${typeId} stocke et produit`).toBeNull()
@@ -132,7 +131,7 @@ describe('storageContribution — ce qu’un bâtiment apporte au plafond', () =
   })
 
   it('tout autre type n’apporte rien', () => {
-    for (const typeId of Object.keys(BUILDINGS) as readonly (keyof typeof BUILDINGS)[]) {
+    for (const typeId of BUILDING_TYPE_IDS) {
       if (typeId === 'entrepot') continue
       const contribution = storageContribution(placed(typeId, { x: 0, y: 0 }, 4), CATALOGS)
       for (const resourceId of RESOURCES) {

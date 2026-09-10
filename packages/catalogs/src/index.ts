@@ -7,6 +7,7 @@
 export * from './buildings.js'
 export * from './curves.js'
 export * from './footprints.js'
+export * from './gong.js'
 export * from './layouts/berceau.js'
 export * from './obstacles.js'
 export * from './resources.js'

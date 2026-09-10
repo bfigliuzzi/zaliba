@@ -1,3 +1,4 @@
+import type { GongLength } from '@zaliba/catalogs'
 import type { ReactNode } from 'react'
 import { catalogDivergence } from '../../lib/catalogVersion.js'
 
@@ -16,18 +17,56 @@ import { catalogDivergence } from '../../lib/catalogVersion.js'
  * **Le rechargement est proposé, jamais imposé** : recharger d'autorité perdrait la
  * frappe en cours, et pourrait boucler si la divergence venait d'un cache
  * intermédiaire que le rechargement ne vide pas.
+ *
+ * **Depuis 003, une longueur de gong absente appelle le même geste** (FR-013).
+ * Les deux états convergent volontairement : ne rien savoir et se savoir en
+ * désaccord demandent la même prudence, puisque tout l'écran est dérivé. Le
+ * message, lui, est **distinct** — ce ne sont pas les mêmes causes, ce ne sont
+ * pas les mêmes remèdes, et un message qui parlerait de rééquilibrage là où le
+ * serveur n'a simplement pas annoncé son rythme enverrait le lecteur enquêter
+ * au mauvais endroit.
  */
 
 export interface CatalogNoticeProps {
   /** La version annoncée par la réponse du serveur. */
   readonly fromServer: string | null | undefined
+  /**
+   * La longueur de gong annoncée. Absente, aucun chiffre dérivé n'est
+   * affichable : le client ne sait pas à quel rythme le serveur bat, donc il ne
+   * sait convertir aucune durée ni aucun taux.
+   */
+  readonly gong?: GongLength | null | undefined
   /** Injectable pour rendre le rechargement éprouvable sans naviguer. */
   readonly onReload?: () => void
   readonly children: ReactNode
 }
 
-export function CatalogNotice({ fromServer, onReload, children }: CatalogNoticeProps) {
+export function CatalogNotice({ fromServer, gong, onReload, children }: CatalogNoticeProps) {
   const divergence = catalogDivergence(fromServer)
+
+  /*
+    L'absence de longueur passe **avant** la divergence de version, et l'ordre
+    n'est pas indifférent : un serveur qui n'annonce pas son rythme est
+    probablement antérieur à 003, donc sa version de catalogue diverge aussi.
+    Annoncer le rééquilibrage plutôt que le rythme manquant enverrait enquêter
+    sur la mauvaise cause.
+  */
+  if (divergence === null && (gong === null || gong === undefined)) {
+    return (
+      <div role="alert">
+        <h1>Le rythme du serveur est inconnu</h1>
+        <p>
+          Ce serveur n’a pas annoncé la longueur de son gong — l’unité de temps avec laquelle il
+          convertit les durées et les productions. Sans elle, aucune durée ni aucun taux ne peut
+          être affiché sans risque d’être faux. Rechargez la page ; si le message revient, le
+          serveur est plus ancien que ce client.
+        </p>
+        <button type="button" onClick={() => (onReload ?? defaultReload)()}>
+          Recharger le jeu
+        </button>
+      </div>
+    )
+  }
 
   /*
     **Une enveloppe, et non un fragment** (FR-011, § 1.1 du contrat de 002).

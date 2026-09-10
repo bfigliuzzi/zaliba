@@ -149,7 +149,7 @@ describe('aucune référence ne pointe dans le vide', () => {
 
   it('la production, la capacité et le stock couvrent exactement les ressources', () => {
     for (const table of [
-      BERCEAU.baseProductionPerHour,
+      BERCEAU.baseProductionPerGong,
       BERCEAU.baseCapacityGrains,
       BERCEAU.startingStockGrains,
     ]) {

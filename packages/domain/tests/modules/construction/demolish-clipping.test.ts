@@ -1,7 +1,5 @@
-import { BUILDINGS } from '@zaliba/catalogs'
 import { describe, expect, it } from 'vitest'
 import { projectPlanet } from '../../../src/game.js'
-import { DEFAULT_CATALOGS } from '../../../src/kernel/catalogs.js'
 import type { CreditResources } from '../../../src/kernel/effects.js'
 import { storageCaps } from '../../../src/kernel/rates.js'
 import { grains } from '../../../src/kernel/resources.js'
@@ -19,6 +17,7 @@ import {
   grossRefund,
 } from '../../../src/modules/construction/demolish.js'
 import { previewDemolish } from '../../../src/modules/construction/preview.js'
+import { CATALOGS } from '../../catalogs.js'
 
 /**
  * **L'écrêtement du remboursement, annoncé avant confirmation** (FR-049).
@@ -46,7 +45,6 @@ import { previewDemolish } from '../../../src/modules/construction/preview.js'
  */
 
 const T0 = instant(1_787_750_000)
-const CATALOGS = DEFAULT_CATALOGS
 const WORK_ID = '99999999-9999-4999-8999-999999999999'
 const BUILDING_ID = '88888888-8888-4888-8888-888888888888'
 const LAYOUT = CATALOGS.layouts['berceau-v1']
@@ -102,7 +100,7 @@ function planetAt(amounts: Readonly<Record<string, number>>, level = 3): PlanetS
 }
 
 const CAP = LAYOUT.baseCapacityGrains
-const DEMOLITION = BUILDINGS.mine.demolitionSeconds
+const DEMOLITION = CATALOGS.buildings.mine.demolitionSeconds
 
 const amountsOf = (amounts: readonly { resourceId: string; grains: number }[]) =>
   Object.fromEntries(amounts.map((one) => [one.resourceId, one.grains]))
@@ -308,7 +306,7 @@ describe('ce que l’aperçu annonce est exactement ce que l’achèvement créd
     const work = launched.work
     if (work === null) throw new Error('le chantier manque')
 
-    const seconds = BUILDINGS.entrepot.demolitionSeconds
+    const seconds = CATALOGS.buildings.entrepot.demolitionSeconds
 
     // L'instantané **tel que la projection le construit à l'échéance**, puis les
     // effets d'achèvement tels qu'elle les demande.
@@ -411,7 +409,7 @@ describe('ce que l’aperçu annonce est exactement ce que l’achèvement créd
     const after = projectPlanet(
       applyEffects(snapshot, decision.effects, T0),
       CATALOGS,
-      instant(T0 + BUILDINGS.entrepot.demolitionSeconds),
+      instant(T0 + CATALOGS.buildings.entrepot.demolitionSeconds),
     )
     expect(after.holdings.camelote.amount).toBe(capWithout.camelote)
     expect(after.holdings.camelote.lost).toBeGreaterThanOrEqual(

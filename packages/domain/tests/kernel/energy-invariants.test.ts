@@ -1,8 +1,6 @@
-import { BUILDINGS } from '@zaliba/catalogs'
 import fc from 'fast-check'
 import { describe, expect, it } from 'vitest'
 import { consolidatePlanet, projectPlanet } from '../../src/game.js'
-import { DEFAULT_CATALOGS } from '../../src/kernel/catalogs.js'
 import { energyReport } from '../../src/kernel/energy.js'
 import { productionRates } from '../../src/kernel/rates.js'
 import {
@@ -11,6 +9,7 @@ import {
   type PlanetSnapshot,
 } from '../../src/kernel/snapshot.js'
 import { instant } from '../../src/kernel/time.js'
+import { CATALOGS } from '../catalogs.js'
 
 /**
  * I-2 sous déficit d'énergie (data-model § 1.7).
@@ -29,7 +28,6 @@ import { instant } from '../../src/kernel/time.js'
  */
 
 const T0 = instant(1_787_750_000)
-const CATALOGS = DEFAULT_CATALOGS
 const RESOURCES = CATALOGS.resourceIds
 
 /** Des durées qui couvrent la seconde comme les quatre semaines. */
@@ -54,7 +52,7 @@ function placed(
   level = 1,
 ): PlacedBuilding {
   counter += 1
-  const variantId = BUILDINGS[typeId].variants[0]
+  const variantId = CATALOGS.buildings[typeId].variants[0]
   if (variantId === undefined) throw new Error(`${typeId} n’a aucune variante.`)
   return { id: `b-${counter}`, typeId, variantId, orientation: 0, anchor, level }
 }

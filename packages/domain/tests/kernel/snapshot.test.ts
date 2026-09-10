@@ -1,6 +1,5 @@
 import { BERCEAU } from '@zaliba/catalogs'
 import { describe, expect, it } from 'vitest'
-import { DEFAULT_CATALOGS } from '../../src/kernel/catalogs.js'
 import type { Effect } from '../../src/kernel/effects.js'
 import {
   applyEffects,
@@ -9,6 +8,7 @@ import {
   sameCell,
 } from '../../src/kernel/snapshot.js'
 import { instant } from '../../src/kernel/time.js'
+import { CATALOGS } from '../catalogs.js'
 
 /**
  * L'instantané daté et l'application des effets.
@@ -30,7 +30,7 @@ function fresh(): PlanetSnapshot {
     archetypeId: 'berceau',
     layoutId: 'berceau-v1',
     consolidatedAt: T0,
-    catalogs: DEFAULT_CATALOGS,
+    catalogs: CATALOGS,
   })
 }
 
@@ -62,7 +62,7 @@ describe('une planète fondée part du catalogue, jamais d’une constante recop
       emptySnapshot({
         ...fresh(),
         layoutId: 'inexistante' as 'berceau-v1',
-        catalogs: DEFAULT_CATALOGS,
+        catalogs: CATALOGS,
       }),
     ).toThrow(RangeError)
   })
@@ -109,7 +109,7 @@ describe('les effets de ressource', () => {
       [{ kind: 'credit-resources', amounts: [{ resourceId: 'inexistante' as 'jus', grains: 10 }] }],
       T1,
     )
-    expect(Object.keys(after.holdings).sort()).toEqual([...DEFAULT_CATALOGS.resourceIds].sort())
+    expect(Object.keys(after.holdings).sort()).toEqual([...CATALOGS.resourceIds].sort())
   })
 })
 

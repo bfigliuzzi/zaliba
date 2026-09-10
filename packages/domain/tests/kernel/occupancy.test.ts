@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest'
-import { DEFAULT_CATALOGS } from '../../src/kernel/catalogs.js'
 import type { Cell } from '../../src/kernel/effects.js'
 import { gridOccupancy, gridView } from '../../src/kernel/grid.js'
 import { grains } from '../../src/kernel/resources.js'
@@ -9,6 +8,7 @@ import {
   type PlanetSnapshot,
 } from '../../src/kernel/snapshot.js'
 import { instant } from '../../src/kernel/time.js'
+import { CATALOGS } from '../catalogs.js'
 
 /**
  * **L'occupation de la grille, comptée** — et le cas limite qu'elle sert.
@@ -24,7 +24,6 @@ import { instant } from '../../src/kernel/time.js'
  * décisions opposées, et une seule des deux se paie en bâtiment perdu.
  */
 
-const CATALOGS = DEFAULT_CATALOGS
 const T0 = instant(1_787_750_000)
 
 function fresh(): PlanetSnapshot {

@@ -126,7 +126,7 @@ describe('les bornes et les valeurs de refus existent (FR-040, FR-046)', () => {
   })
 
   it.each(BUILDING_TYPE_IDS)('%s porte une durée de démolition > 0', (id) => {
-    expect(BUILDINGS[id].demolitionSeconds).toBeGreaterThan(0)
+    expect(BUILDINGS[id].demolitionGongs).toBeGreaterThan(0)
   })
 
   /**
@@ -140,6 +140,71 @@ describe('les bornes et les valeurs de refus existent (FR-040, FR-046)', () => {
     expect(den).toBeGreaterThan(0)
     expect(num).toBeGreaterThan(0)
     expect(num / den).toBeLessThanOrEqual(1)
+  })
+})
+
+/**
+ * **Le catalogue déclare en gongs, jamais en secondes** (003, G16).
+ *
+ * Ces assertions ont changé d'unité avec la tranche : `300` y est devenu `30`.
+ * C'est l'un des deux seuls endroits du dépôt où une valeur attendue a été
+ * réécrite plutôt que redirigée, et c'est une conséquence de la règle
+ * `catalogs-n-importe-rien` : ce paquet ne peut pas résoudre, puisque résoudre
+ * vit dans `domain`. Il n'éprouve donc que le catalogue **déclaré**.
+ *
+ * Ce que ces tests tiennent est l'**intégrité de la déclaration** : un nombre
+ * de gongs fractionnaire, ou un taux qui ne serait pas un entier de grains par
+ * gong, rendrait la résolution approximative au gong canonique et ferait tomber
+ * l'égalité stricte de FR-010 — silencieusement, puisque la troncature d'une
+ * base ne lève rien.
+ */
+describe('le catalogue déclare ses durées en gongs entiers (003)', () => {
+  it('déclare une base de construction entière, en gongs', () => {
+    for (const id of BUILDING_TYPE_IDS) {
+      const base = BUILDINGS[id].buildDuration.base
+      expect(Number.isInteger(base), `${id} : ${base}`).toBe(true)
+      expect(base, id).toBeGreaterThan(0)
+    }
+  })
+
+  it('donne aux cinq types les gongs de la table de vérité', () => {
+    expect(BUILDINGS.mine.buildDuration.base).toBe(12)
+    expect(BUILDINGS.puits.buildDuration.base).toBe(15)
+    expect(BUILDINGS.racloir.buildDuration.base).toBe(20)
+    expect(BUILDINGS.centrale.buildDuration.base).toBe(9)
+    expect(BUILDINGS.entrepot.buildDuration.base).toBe(10)
+  })
+
+  it('déclare une durée de démolition entière, en gongs', () => {
+    for (const id of BUILDING_TYPE_IDS) {
+      const gongs = BUILDINGS[id].demolitionGongs
+      expect(Number.isInteger(gongs), `${id} : ${gongs}`).toBe(true)
+      expect(gongs, id).toBeGreaterThan(0)
+    }
+  })
+
+  it('donne aux cinq démolitions les gongs de la table de vérité', () => {
+    expect(BUILDINGS.mine.demolitionGongs).toBe(30)
+    expect(BUILDINGS.puits.demolitionGongs).toBe(42)
+    expect(BUILDINGS.racloir.demolitionGongs).toBe(60)
+    expect(BUILDINGS.centrale.demolitionGongs).toBe(24)
+    expect(BUILDINGS.entrepot.demolitionGongs).toBe(18)
+  })
+
+  it('déclare une base de production entière, en grains par gong', () => {
+    for (const id of EXTRACTOR_TYPE_IDS) {
+      const curve = BUILDINGS[id].production
+      expect(curve, id).not.toBeNull()
+      if (curve === null) continue
+      expect(Number.isInteger(curve.base), `${id} : ${curve.base}`).toBe(true)
+      expect(curve.base, id).toBeGreaterThan(0)
+    }
+  })
+
+  it('donne aux trois extracteurs les grains par gong de la table de vérité', () => {
+    expect(BUILDINGS.mine.production?.base).toBe(150)
+    expect(BUILDINGS.puits.production?.base).toBe(80)
+    expect(BUILDINGS.racloir.production?.base).toBe(40)
   })
 })
 

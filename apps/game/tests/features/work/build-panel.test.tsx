@@ -2,7 +2,6 @@ import { cleanup, render, screen } from '@testing-library/react'
 import { PlanetSnapshotV1 } from '@zaliba/contracts'
 import type { CellView, GridOccupancy, PlacementAvailability } from '@zaliba/domain'
 import {
-  DEFAULT_CATALOGS,
   gridOccupancy,
   instant,
   placementAvailability,
@@ -12,6 +11,7 @@ import {
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { snapshotFromContract } from '../../../src/features/resources/extrapolation.js'
 import { BuildPanel, type BuildSelection } from '../../../src/features/work/BuildPanel.js'
+import { CATALOGS } from '../../catalogs.js'
 import rawFresh from '../../fixtures/planet-fresh.json' with { type: 'json' }
 
 /**
@@ -31,7 +31,6 @@ import rawFresh from '../../fixtures/planet-fresh.json' with { type: 'json' }
 
 afterEach(cleanup)
 
-const CATALOGS = DEFAULT_CATALOGS
 const payload = PlanetSnapshotV1.parse(rawFresh)
 
 /** L'état projeté d'une planète neuve, à l'instant de son instantané. */
