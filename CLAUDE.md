@@ -5,6 +5,17 @@ Guide opérationnel du quotidien. La
 divergence : ce fichier ne redit pas ses règles, il indique comment travailler
 avec elles.
 
+> [!IMPORTANT]
+> **Projet en pause depuis le 2026-09-10, et cette branche n'est pas à jour.**
+> Tout le travail en cours vit sur la branche **`003-le-gong`** : les tranches
+> 003 — Le Gong et 900 — Les cinq doublures, ainsi que la note de reprise.
+>
+> ```bash
+> git switch 003-le-gong && cat docs/REPRISE.md
+> ```
+>
+> Ne reprenez rien depuis `main` : vous repartiriez douze jours en arrière.
+
 ## Le projet en une phrase
 
 **Zany Alien Battles** (`zaliba`) : jeu web de stratégie spatiale inspiré
