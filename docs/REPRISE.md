@@ -17,9 +17,15 @@ contextes profonds sont pointés au § 7.
 | **003 — Le Gong** | 81 / 84 | implémentée, **non close** | **3 portes de clôture** : T025, T077, T078 |
 | **900 — Les cinq doublures** | 0 | **spécifiée seulement** | tout, après la clôture de 003 |
 
-Branche courante : **`003-le-gong`**. `.specify/feature.json` pointe sur
-`specs/003-le-gong`. La branche `900-les-cinq-doublures` existe, créée puis
-quittée.
+### Les branches, et laquelle vous voulez
+
+| Branche | Ce qu'elle contient | À la reprise |
+| --- | --- | --- |
+| **`003-le-gong`** | **tout le travail** : 003 implémentée, la spécification de 900, cette note. Suivie sur `origin`. | **C'est ici qu'on reprend.** |
+| `main` | l'état au 27 août — 001 et 002 fusionnées — plus un renvoi vers `003-le-gong` | ne rien y reprendre |
+| `900-les-cinq-doublures` | **pointeur périmé**, resté sur la fusion de 002. Créée puis quittée, jamais poussée, elle ne contient **pas** le travail de 900 — celui-ci vit sur `003-le-gong`. | à supprimer et recréer depuis `003-le-gong` |
+
+`.specify/feature.json` pointe sur `specs/003-le-gong`.
 
 ---
 
